@@ -1,0 +1,27 @@
+﻿@model RestaurantManager.Models.ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="card mx-auto" style="max-width:500px">
+    <div class="card-body text-center">
+        <h3 class="card-title mb-4">My Profile</h3>
+
+        @if (ViewBag.Success != null)
+        {
+            <div class="alert alert-success">@ViewBag.Success</div>
+        }
+
+        @if (Model.ExistingPicturePath != null)
+        {
+            <img src="@Model.ExistingPicturePath"
+                 class="rounded-circle mb-3"
+                 style="width:120px;height:120px;object-fit:cover" />
+        }
+
+        <p><strong>Username:</strong> @Model.Username</p>
+        <p><strong>Email:</strong> @Model.Email</p>
+
+        <a asp-action="EditProfile" asp-controller="Auth" class="btn btn-primary mt-3">Edit Profile</a>
+    </div>
+</div>

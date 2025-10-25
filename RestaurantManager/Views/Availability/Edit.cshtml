@@ -1,0 +1,115 @@
+﻿@model RestaurantManager.ViewModels.AvailabilityViewModel
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Your Availability";
+    var monthName = CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(Model.Month);
+    var firstOfMonth = new DateTime(Model.Year, Model.Month, 1);
+    var daysInMonth = DateTime.DaysInMonth(Model.Year, Model.Month);
+    int offset = ((int)firstOfMonth.DayOfWeek + 6) % 7;
+}
+
+<style>
+    /* równy układ kolumn i jednakowa wysokość wierszy */
+    .availability-calendar {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+        .availability-calendar td,
+        .availability-calendar th {
+            height: 120px;
+            vertical-align: top;
+            overflow: hidden;
+        }
+</style>
+
+<h2>@monthName @Model.Year</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<form method="get" class="row g-2 mb-4">
+    <!-- ... selector miesiąc/rok jak dotychczas ... -->
+</form>
+
+<form asp-action="Edit" method="post">
+    <input asp-for="Year" hidden />
+    <input asp-for="Month" hidden />
+
+    <table class="table table-bordered text-center align-middle availability-calendar">
+        <thead class="table-light">
+            <tr>
+                <th>Mon</th>
+                <th>Tue</th>
+                <th>Wed</th>
+                <th>Thu</th>
+                <th>Fri</th>
+                <th>Sat</th>
+                <th>Sun</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int dayCounter = 1 - offset;
+                while (dayCounter <= daysInMonth)
+                {
+                    <tr>
+                        @for (int col = 0; col < 7; col++, dayCounter++)
+                        {
+                            if (dayCounter < 1 || dayCounter > daysInMonth)
+                            {
+                                <td></td>
+                            }
+                            else
+                            {
+                                var idx = dayCounter - 1;
+                                var isToday =
+                                dayCounter == DateTime.Now.Day &&
+                                Model.Month == DateTime.Now.Month &&
+                                Model.Year == DateTime.Now.Year;
+
+                                <td class="@(isToday ? "bg-warning" : "")">
+                                    <div><strong>@dayCounter</strong></div>
+                                    <div class="form-check">
+                                        <input class="form-check-input avail-check"
+                                               type="checkbox"
+                                               asp-for="Days[@idx].IsAvailable" />
+                                        <label class="form-check-label small">Available</label>
+                                    </div>
+                                    <input asp-for="Days[@idx].Day" type="hidden" />
+
+                                    <div class="mt-1">
+                                        <input asp-for="Days[@idx].StartTime"
+                                               class="form-control form-control-sm time-input"
+                                               type="time" />
+                                        <input asp-for="Days[@idx].EndTime"
+                                               class="form-control form-control-sm time-input mt-1"
+                                               type="time" />
+                                    </div>
+                                </td>
+                            }
+                        }
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    <button class="btn btn-primary mt-3">Save Availability</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.availability-calendar td').forEach(cell => {
+          const chk = cell.querySelector('.avail-check');
+          if (!chk) return;
+          const inputs = cell.querySelectorAll('.time-input');
+          const toggle = () => inputs.forEach(i => i.style.display = chk.checked ? '' : 'none');
+          toggle();
+          chk.addEventListener('change', toggle);
+        });
+    </script>
+}

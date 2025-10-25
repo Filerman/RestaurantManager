@@ -1,0 +1,35 @@
+﻿@model RestaurantManager.ViewModels.ProvideAvailabilityViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Provide availability";
+}
+
+<h2>Provide availability</h2>
+
+<form asp-action="Provide" method="post" class="w-25">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+    <div class="mb-3">
+        <label class="form-label">Month</label>
+        <select asp-for="Month" class="form-select">
+            @for (int m = 1; m <= 12; m++)
+            {
+                var name = CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(m);
+                <option value="@m">@name</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Year" class="form-label"></label>
+        <input asp-for="Year" class="form-control" type="number" min="2000" max="3000" />
+        <span asp-validation-for="Year" class="text-danger"></span>
+    </div>
+
+    <button class="btn btn-primary">Continue</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

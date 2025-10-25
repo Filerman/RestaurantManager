@@ -1,0 +1,58 @@
+﻿@model IEnumerable<RestaurantManager.ViewModels.MonthEntryViewModel>
+@{
+    ViewData["Title"] = "My Availability";
+}
+
+<h2>My Availability</h2>
+
+<p>
+    <a asp-action="Provide" class="btn btn-success">Provide availability</a>
+</p>
+
+<form method="get" class="mb-3">
+    <select name="year" class="form-select w-auto d-inline">
+        <option value="">All years</option>
+        @foreach (var y in (IEnumerable<int>)ViewBag.Years)
+        {
+            if (ViewBag.SelectedYear != null && y == (int)ViewBag.SelectedYear)
+            {
+                <option value="@y" selected>@y</option>
+            }
+            else
+            {
+                <option value="@y">@y</option>
+            }
+        }
+    </select>
+    <button class="btn btn-secondary">Filter</button>
+</form>
+
+<table class="table table-bordered w-auto">
+    <thead class="table-light">
+        <tr><th>Month</th><th>Year</th><th></th></tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr><td colspan="3">No availability submitted yet.</td></tr>
+        }
+        else
+        {
+            @foreach (var m in Model)
+            {
+                <tr>
+                    <td>@m.MonthName</td>
+                    <td>@m.Year</td>
+                    <td>
+                        <a asp-action="Edit"
+                           asp-route-year="@m.Year"
+                           asp-route-month="@m.Month"
+                           class="btn btn-sm btn-primary">
+                            Edit
+                        </a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

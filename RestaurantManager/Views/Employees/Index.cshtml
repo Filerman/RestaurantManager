@@ -1,0 +1,56 @@
+﻿@model IEnumerable<RestaurantManager.Models.User>
+@{
+    ViewData["Title"] = "Employees";
+    var defaultAvatar = (string)ViewBag.DefaultAvatar;
+}
+
+<h2>Employees</h2>
+
+<form asp-action="Index" method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <input name="searchTerm" value="@ViewBag.SearchTerm"
+               class="form-control" placeholder="Search by name or email" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Search</button>
+        <a asp-action="Index" class="btn btn-secondary">Clear</a>
+    </div>
+</form>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">Create Employee</a>
+</p>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Photo</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model)
+        {
+            var img = string.IsNullOrEmpty(u.ProfilePicturePath)
+            ? defaultAvatar
+            : u.ProfilePicturePath;
+            <tr>
+                <td style="width:60px">
+                    <a asp-action="Details" asp-route-id="@u.Id">
+                        <img src="@img"
+                             class="rounded-circle"
+                             style="width:50px; height:50px; object-fit:cover" />
+                    </a>
+                </td>
+                <td>@u.Username</td>
+                <td>@u.Email</td>
+                <td>
+                    <a asp-action="Delete" asp-route-id="@u.Id"
+                       class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

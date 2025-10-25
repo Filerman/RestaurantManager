@@ -1,0 +1,18 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to RestaurantManager</h1>
+
+    @if (ViewBag.Username != null)
+    {
+        <p>Hello, <strong>@ViewBag.Username</strong>! You are logged in.</p>
+        <p><a asp-controller="Auth" asp-action="Logout" class="btn btn-outline-danger">Logout</a></p>
+    }
+    else
+    {
+        <p>You are not logged in.</p>
+        <p><a asp-controller="Auth" asp-action="Login" class="btn btn-primary">Login</a></p>
+    }
+</div>
