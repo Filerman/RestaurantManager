@@ -15,6 +15,7 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
+        // Widok menu jest publiczny
         public IActionResult Index()
         {
             var items = _context.MenuItems.ToList();
@@ -22,12 +23,14 @@ namespace RestaurantManager.Controllers
         }
 
         [HttpGet]
+        [RoleAuthorize("Employee", "Manager", "Admin")] // POPRAWKA
         public IActionResult Create()
         {
             return View();
         }
 
         [HttpPost]
+        [RoleAuthorize("Employee", "Manager", "Admin")] // POPRAWKA
         public IActionResult Create(MenuItem item)
         {
             if (ModelState.IsValid)
@@ -40,6 +43,7 @@ namespace RestaurantManager.Controllers
         }
 
         [HttpGet]
+        [RoleAuthorize("Employee", "Manager", "Admin")] // POPRAWKA
         public IActionResult Edit(int id)
         {
             var item = _context.MenuItems.Find(id);
@@ -50,6 +54,7 @@ namespace RestaurantManager.Controllers
         }
 
         [HttpPost]
+        [RoleAuthorize("Employee", "Manager", "Admin")] // POPRAWKA
         public IActionResult Edit(MenuItem item)
         {
             if (ModelState.IsValid)
@@ -62,6 +67,7 @@ namespace RestaurantManager.Controllers
                 existingItem.Description = item.Description;
                 existingItem.Price = item.Price;
                 existingItem.Category = item.Category;
+                existingItem.IsAvailable = item.IsAvailable; // To pole pozostaje
 
                 _context.SaveChanges();
                 return RedirectToAction("Index");
@@ -70,6 +76,7 @@ namespace RestaurantManager.Controllers
         }
 
         [HttpGet]
+        [RoleAuthorize("Employee", "Manager", "Admin")] // POPRAWKA
         public IActionResult Delete(int id)
         {
             var item = _context.MenuItems.Find(id);
@@ -80,6 +87,7 @@ namespace RestaurantManager.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
+        [RoleAuthorize("Employee", "Manager", "Admin")] // POPRAWKA
         public IActionResult DeleteConfirmed(int id)
         {
             var item = _context.MenuItems.Find(id);

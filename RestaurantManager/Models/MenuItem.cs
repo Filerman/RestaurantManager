@@ -16,5 +16,9 @@ namespace RestaurantManager.Models
         public decimal Price { get; set; }
 
         public string? Category { get; set; }
+
+        // --- NOWO DODANE POLE ---
+        [Display(Name = "Czy dostępne?")]
+        public bool IsAvailable { get; set; } = true;
     }
 }

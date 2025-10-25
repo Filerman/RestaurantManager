@@ -18,12 +18,19 @@
     <div class="mb-3">
         <label asp-for="Price" class="form-label"></label>
         <input asp-for="Price" class="form-control" />
+
         <span asp-validation-for="Price" class="text-danger"></span>
     </div>
     <div class="mb-3">
         <label asp-for="Category" class="form-label"></label>
         <input asp-for="Category" class="form-control" />
     </div>
+
+    <div class="mb-3 form-check">
+        <input asp-for="IsAvailable" class="form-check-input" />
+        <label asp-for="IsAvailable" class="form-check-label"></label>
+    </div>
+
     <button type="submit" class="btn btn-success">Save</button>
     <a asp-action="Index" class="btn btn-secondary">Cancel</a>
 </form>

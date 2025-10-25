@@ -1,13 +1,21 @@
 ﻿@model IEnumerable<RestaurantManager.Models.MenuItem>
+@using Microsoft.AspNetCore.Http
 @{
     ViewData["Title"] = "Menu";
+    // Sprawdzamy rolę, aby ukryć przyciski zarządzania
+    var role = Context.Session.GetString("UserRole");
+    // POPRAWKA: Zmiana "Cook" na "Employee"
+    var canManageMenu = (role == "Employee" || role == "Manager" || role == "Admin");
 }
 
 <h2>Menu</h2>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Add New Dish</a>
-</p>
+@if (canManageMenu)
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Add New Dish</a>
+    </p>
+}
 
 <table class="table table-striped">
     <thead>
@@ -16,8 +24,12 @@
             <th>Description</th>
             <th>Price</th>
             <th>Category</th>
-            <th></th>
+            <th>Status</th> @if (canManageMenu)
+            {
+                <th></th>
+            }
         </tr>
+
     </thead>
     <tbody>
         @foreach (var item in Model)
@@ -26,12 +38,27 @@
                 <td>@item.Name</td>
                 <td>@item.Description</td>
                 <td>@item.Price.ToString("C")</td>
+
                 <td>@item.Category</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                    @if (item.IsAvailable)
+                    {
+                        <span class="text-success">Dostępne</span>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Niedostępne</span>
+                    }
                 </td>
+                @if (canManageMenu)
+                {
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                }
             </tr>
+
         }
     </tbody>
 </table>
