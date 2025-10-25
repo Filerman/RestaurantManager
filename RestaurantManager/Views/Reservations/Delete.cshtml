@@ -12,6 +12,7 @@
     <li class="list-group-item"><strong>Guest:</strong> @Model.CustomerName</li>
     <li class="list-group-item"><strong>Phone:</strong> @Model.Phone</li>
     <li class="list-group-item"><strong>Party size:</strong> @Model.PartySize</li>
+    <li class="list-group-item"><strong>Table:</strong> @(Model.Table?.Name ?? "Brak")</li>
 </ul>
 
 <form asp-action="Delete" method="post" class="mt-3">

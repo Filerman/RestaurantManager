@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema; // DODAJ TO
 
 namespace RestaurantManager.Models
 {
@@ -25,6 +26,14 @@ namespace RestaurantManager.Models
         public int PartySize { get; set; }
 
         public string? Notes { get; set; }
+
+        // --- NOWO DODANE POLA ---
+
+        [Display(Name = "Table")]
+        public int? TableId { get; set; } // Klucz obcy (nullable)
+
+        [ForeignKey("TableId")]
+        public virtual Table? Table { get; set; } // Właściwość nawigacyjna
 
         // data nie może  być w przeszłości
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

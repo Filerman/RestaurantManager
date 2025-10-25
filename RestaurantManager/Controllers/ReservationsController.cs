@@ -4,6 +4,8 @@ using RestaurantManager.Data;
 using RestaurantManager.Models;
 using RestaurantManager.Filters;
 using System.Linq;
+using Microsoft.EntityFrameworkCore; // DODAJ TO
+using Microsoft.AspNetCore.Mvc.Rendering; // DODAJ TO
 
 namespace RestaurantManager.Controllers
 {
@@ -20,6 +22,7 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction("Login", "Auth");
 
             var list = _ctx.Reservations
+                           .Include(r => r.Table) // DODAJ TO
                            .OrderBy(r => r.DateTime)
                            .ToList();
             return View(list);
@@ -32,6 +35,7 @@ namespace RestaurantManager.Controllers
             if (!HttpContext.Session.GetInt32("UserId").HasValue)
                 return RedirectToAction("Login", "Auth");
 
+            PopulateTablesDropDownList(); // DODAJ TO
             return View();
         }
 
@@ -43,7 +47,10 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction("Login", "Auth");
 
             if (!ModelState.IsValid)
+            {
+                PopulateTablesDropDownList(r.TableId); // DODAJ TO
                 return View(r);
+            }
 
             _ctx.Reservations.Add(r);
             _ctx.SaveChanges();
@@ -57,6 +64,8 @@ namespace RestaurantManager.Controllers
         {
             var r = _ctx.Reservations.Find(id);
             if (r == null) return NotFound();
+
+            PopulateTablesDropDownList(r.TableId); // DODAJ TO
             return View(r);
         }
 
@@ -66,7 +75,10 @@ namespace RestaurantManager.Controllers
         public IActionResult Edit(Reservation r)
         {
             if (!ModelState.IsValid)
+            {
+                PopulateTablesDropDownList(r.TableId); // DODAJ TO
                 return View(r);
+            }
 
             _ctx.Reservations.Update(r);
             _ctx.SaveChanges();
@@ -78,7 +90,11 @@ namespace RestaurantManager.Controllers
         [RoleAuthorize("Employee", "Manager", "Admin")]
         public IActionResult Delete(int id)
         {
-            var r = _ctx.Reservations.Find(id);
+            // ZMIANA: Użyj Include, aby pobrać nazwę stolika dla widoku
+            var r = _ctx.Reservations
+                        .Include(r => r.Table)
+                        .FirstOrDefault(r => r.Id == id);
+
             if (r == null) return NotFound();
             return View(r);
         }
@@ -95,6 +111,25 @@ namespace RestaurantManager.Controllers
                 _ctx.SaveChanges();
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        // --- NOWA METODA POMOCNICZA ---
+        private void PopulateTablesDropDownList(object selectedTable = null)
+        {
+            // Pobieramy tylko dostępne stoliki
+            var tablesQuery = from t in _ctx.Tables
+                              where t.IsAvailable == true
+                              orderby t.Name
+                              select t;
+
+            // Tworzymy listę SelectList. Dodajemy pole Name i Capacity dla lepszej czytelności w dropdown
+            var tableListItems = tablesQuery.AsNoTracking().Select(t => new
+            {
+                t.Id,
+                DisplayText = $"{t.Name} (Pojemność: {t.Capacity})"
+            });
+
+            ViewBag.TableId = new SelectList(tableListItems, "Id", "DisplayText", selectedTable);
         }
     }
 }
