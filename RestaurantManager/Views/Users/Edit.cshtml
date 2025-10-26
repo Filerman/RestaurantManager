@@ -1,0 +1,57 @@
+﻿@model RestaurantManager.Models.User
+
+@{
+    ViewData["Title"] = "Edytuj Użytkownika";
+    // Odczytujemy flagę z ViewBag
+    bool canEdit = ViewBag.CanEdit ?? true; // Domyślnie można edytować
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<h4>Użytkownik: @Model.Username</h4>
+<hr />
+
+@if (!canEdit && ViewBag.CannotEditMessage != null)
+{
+    <div class="alert alert-warning">@ViewBag.CannotEditMessage</div>
+}
+
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+
+            <div class="form-group">
+                <label asp-for="Username" class="control-label"></label>
+                <input asp-for="Username" class="form-control" disabled="@(!canEdit)" />
+                <span asp-validation-for="Username" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" disabled="@(!canEdit)" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Role" class="control-label"></label>
+                <select asp-for="Role" class="form-control" asp-items="ViewBag.Roles" disabled="@(!canEdit)"></select>
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                @if (canEdit)
+                {
+                    <input type="submit" value="Zapisz" class="btn btn-primary" />
+                }
+                <a asp-action="Index" class="btn btn-secondary">Powrót do listy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

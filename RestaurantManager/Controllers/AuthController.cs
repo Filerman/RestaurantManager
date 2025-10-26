@@ -4,6 +4,8 @@ using RestaurantManager.Data;
 using RestaurantManager.Models;
 using System.IO;
 using System.Linq;
+using Microsoft.EntityFrameworkCore; // Potrzebne dla AsNoTracking
+using System.Threading.Tasks; // Potrzebne dla async
 
 namespace RestaurantManager.Controllers
 {
@@ -27,9 +29,10 @@ namespace RestaurantManager.Controllers
         public IActionResult Login(string login, string password)
         {
             var user = _context.Users
+                .AsNoTracking() // Dodane dla wydajności - nie śledzimy zmian
                 .FirstOrDefault(u =>
                     (u.Username == login || u.Email == login) &&
-                    u.Password == password);
+                    u.Password == password); // Używamy Twojej logiki (czysty tekst)
 
             if (user == null)
             {
@@ -37,11 +40,14 @@ namespace RestaurantManager.Controllers
                 return View();
             }
 
+            // Zapis do Sesji (tak jak było)
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("Username", user.Username);
             HttpContext.Session.SetString("UserRole", user.Role);
+            HttpContext.Session.SetString("ProfilePicturePath", user.ProfilePicturePath ?? DefaultAvatar); // Dodano zapis ścieżki zdjęcia
 
             TempData["Success"] = "Logged in successfully!";
+            // Przekierowanie do Home/Index po poprawnym logowaniu
             return RedirectToAction("Index", "Home");
         }
 
@@ -51,9 +57,10 @@ namespace RestaurantManager.Controllers
 
         // POST: /Auth/Register
         [HttpPost, ValidateAntiForgeryToken]
-        public IActionResult Register(string username, string email, string password)
+        public async Task<IActionResult> Register(string username, string email, string password) // Zmienione na async
         {
-            if (_context.Users.Any(u => u.Username == username || u.Email == email))
+            // Zmienione na async
+            if (await _context.Users.AnyAsync(u => u.Username == username || u.Email == email))
             {
                 TempData["Error"] = "Username or email is already taken!";
                 return View();
@@ -63,14 +70,13 @@ namespace RestaurantManager.Controllers
             {
                 Username = username,
                 Email = email,
-                Password = password,
-                Role = "Guest",
-                // ustawiamy od razu defaultowe zdjęcie
+                Password = password, // Używamy Twojej logiki (czysty tekst)
+                Role = "Guest", // *** ZMIANA DOMYŚLNEJ ROLI ***
                 ProfilePicturePath = DefaultAvatar
             };
 
             _context.Users.Add(newUser);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync(); // Zmienione na async
 
             TempData["Success"] = "Registration successful! You can now log in.";
             return RedirectToAction("Login");
@@ -91,7 +97,8 @@ namespace RestaurantManager.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue) return RedirectToAction("Login");
 
-            var user = _context.Users.Find(userId.Value);
+            // Używamy AsNoTracking, bo tylko czytamy dane
+            var user = _context.Users.AsNoTracking().FirstOrDefault(u => u.Id == userId.Value);
             if (user == null) return RedirectToAction("Login");
 
             var vm = new ProfileViewModel
@@ -116,7 +123,7 @@ namespace RestaurantManager.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue) return RedirectToAction("Login");
 
-            var user = _context.Users.Find(userId.Value);
+            var user = _context.Users.Find(userId.Value); // Tutaj Find jest OK, bo zaraz będziemy edytować
             if (user == null) return RedirectToAction("Login");
 
             var vm = new ProfileViewModel
@@ -133,18 +140,19 @@ namespace RestaurantManager.Controllers
 
         // POST: /Auth/EditProfile
         [HttpPost, ValidateAntiForgeryToken]
-        public IActionResult EditProfile(ProfileViewModel vm)
+        public async Task<IActionResult> EditProfile(ProfileViewModel vm) // Zmienione na async
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue) return RedirectToAction("Login");
 
-            var user = _context.Users.Find(userId.Value);
+            var user = await _context.Users.FindAsync(userId.Value); // Zmienione na async
             if (user == null) return RedirectToAction("Login");
 
             // 1) Email
             if (vm.Email != user.Email)
             {
-                if (_context.Users.Any(u => u.Email == vm.Email && u.Id != user.Id))
+                // Zmienione na async
+                if (await _context.Users.AnyAsync(u => u.Email == vm.Email && u.Id != user.Id))
                     ModelState.AddModelError("Email", "This email is already taken.");
                 else
                     user.Email = vm.Email;
@@ -155,15 +163,14 @@ namespace RestaurantManager.Controllers
                 || !string.IsNullOrWhiteSpace(vm.NewPassword)
                 || !string.IsNullOrWhiteSpace(vm.ConfirmPassword))
             {
-                if (vm.OldPassword != user.Password)
+                if (vm.OldPassword != user.Password) // Używamy Twojej logiki (czysty tekst)
                     ModelState.AddModelError("OldPassword", "Current password is incorrect.");
                 if (vm.NewPassword != vm.ConfirmPassword)
                     ModelState.AddModelError("ConfirmPassword", "Passwords do not match.");
                 if (ModelState.IsValid && !string.IsNullOrEmpty(vm.NewPassword))
-                    user.Password = vm.NewPassword;
+                    user.Password = vm.NewPassword; // Używamy Twojej logiki (czysty tekst)
             }
 
-            // Jeśli są błędy, wróć do formularza
             if (!ModelState.IsValid)
             {
                 vm.ExistingPicturePath = string.IsNullOrEmpty(user.ProfilePicturePath)
@@ -182,9 +189,8 @@ namespace RestaurantManager.Controllers
                 var fileName = $"u{user.Id}_{Path.GetRandomFileName()}{Path.GetExtension(vm.ProfileImage.FileName)}";
                 var filePath = Path.Combine(uploads, fileName);
                 using var stream = System.IO.File.Create(filePath);
-                vm.ProfileImage.CopyTo(stream);
+                await vm.ProfileImage.CopyToAsync(stream); // Zmienione na async
 
-                // Usuń stare, tylko jeśli nie jest to default.png
                 if (!string.IsNullOrEmpty(user.ProfilePicturePath)
                     && user.ProfilePicturePath != DefaultAvatar)
                 {
@@ -197,11 +203,13 @@ namespace RestaurantManager.Controllers
                 }
 
                 user.ProfilePicturePath = "/" + Path.Combine(_profileFolder, fileName)
-                                              .Replace("\\", "/");
+                                                .Replace("\\", "/");
+
+                // Aktualizacja ścieżki w sesji
+                HttpContext.Session.SetString("ProfilePicturePath", user.ProfilePicturePath);
             }
 
-            // Zapis i redirect
-            _context.SaveChanges();
+            await _context.SaveChangesAsync(); // Zmienione na async
             TempData["Success"] = "Profile updated.";
             return RedirectToAction("Profile");
         }
