@@ -12,16 +12,22 @@ namespace RestaurantManager.Models
         public int UserId { get; set; }
 
         [ForeignKey(nameof(UserId))]
-        public User User { get; set; }
+        // POPRAWKA: Dodajemy '?' aby oznaczyć jako opcjonalne dla walidatora
+        public virtual User? User { get; set; }
 
         [Required]
+        [DataType(DataType.Date)]
+        [Display(Name = "Data")]
         public DateTime Date { get; set; }
 
-        // nowe pola czasu
         [Required]
+        [DataType(DataType.Time)]
+        [Display(Name = "Godzina Rozpoczęcia")]
         public TimeSpan StartTime { get; set; }
 
         [Required]
+        [DataType(DataType.Time)]
+        [Display(Name = "Godzina Zakończenia")]
         public TimeSpan EndTime { get; set; }
     }
 }

@@ -1,35 +1,119 @@
 ﻿@model RestaurantManager.ViewModels.ProvideAvailabilityViewModel
 @using System.Globalization
 @{
-    ViewData["Title"] = "Provide availability";
+    var polishCulture = new CultureInfo("pl-PL");
+    ViewData["Title"] = "Zgłoś Dostępność Miesięczną";
 }
 
-<h2>Provide availability</h2>
+<h2>@ViewData["Title"] dla @(new DateTime(Model.Year, Model.Month, 1).ToString("MMMM yyyy", polishCulture))</h2>
 
-<form asp-action="Provide" method="post" class="w-25">
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+<form method="post" class="mb-3">
+    @Html.AntiForgeryToken()
+    <div class="row align-items-center">
+        @* Użyj align-items-center dla lepszego wyrównania *@
+        <div class="col-auto">
+            <button type="submit" name="direction" value="prev" class="btn btn-secondary @(new DateTime(Model.Year, Model.Month, 1) <= DateTime.Today.AddDays(-DateTime.Today.Day + 1) ? "disabled" : "")">&laquo; Poprzedni</button> @* Wyłącz, jeśli to bieżący miesiąc *@
+        </div>
+        <div class="col-auto">
+            <button type="submit" name="direction" value="next" class="btn btn-secondary">Następny &raquo;</button>
+        </div>
+        <div class="col-auto ms-auto">
+            <a asp-action="Index" class="btn btn-outline-secondary">Wróć do listy</a>
+        </div>
+    </div>
+</form>
 
-    <div class="mb-3">
-        <label class="form-label">Month</label>
-        <select asp-for="Month" class="form-select">
-            @for (int m = 1; m <= 12; m++)
+<form method="post" asp-action="SubmitAvailability">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Year" />
+    <input type="hidden" asp-for="Month" />
+
+    @* Pokazuje ogólne błędy walidacji (np. z IValidatableObject) *@
+    <div asp-validation-summary="All" class="text-danger mb-2"></div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+        </div>
+    }
+
+    <table class="table table-bordered table-hover">
+        @* Dodano table-hover dla lepszego UX *@
+        <thead class="table-light">
+            <tr>
+                <th style="width: 20%;">Dzień</th>
+                <th style="width: 10%;" class="text-center">Zgłoś</th>
+                <th style="width: 35%;">Godzina Rozpoczęcia</th>
+                <th style="width: 35%;">Godzina Zakończenia</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Days.Count; i++)
             {
-                var name = CultureInfo.InvariantCulture.DateTimeFormat.GetMonthName(m);
-                <option value="@m">@name</option>
+                var day = Model.Days[i];
+                bool isPast = day.Date < DateTime.Today;
+                var rowClass = isPast ? "table-secondary text-muted" : "";
+                var disabledAttribute = isPast ? "disabled" : null; // null zamiast "" dla tag helperów
+
+                // --- Ukryte pola ---
+                <input type="hidden" asp-for="Days[i].Date" />
+                <input type="hidden" asp-for="Days[i].IsInCurrentMonth" />
+                @if (day.Availability != null) // Tylko jeśli obiekt istnieje
+                {
+                    <input type="hidden" asp-for="Days[i].Availability!.Id" />
+                    <input type="hidden" asp-for="Days[i].Availability!.UserId" />
+                    <input type="hidden" asp-for="Days[i].Availability!.Date" />
+                }
+                // -------------------
+
+                <tr class="@rowClass">
+                    <td>@day.Date.ToString("ddd, dd MMM", polishCulture)</td>
+                    <td class="text-center">
+                        <input type="checkbox" asp-for="Days[i].IsSelected" class="form-check-input" disabled="@isPast" />
+                    </td>
+                    <td>
+                        @if (day.Availability != null) // Renderuj tylko jeśli jest obiekt (czyli nie jest to przeszły dzień bez wpisu)
+                        {
+                            <input type="time" asp-for="Days[i].Availability!.StartTime" class="form-control" disabled="@isPast" />
+                            <span asp-validation-for="Days[i].Availability!.StartTime" class="text-danger"></span>
+                        }
+                        else
+                        {
+                            <span>-</span>
+                            // Dla przeszłych dni bez wpisu
+                        }
+                    </td>
+                    <td>
+                        @if (day.Availability != null)
+                        {
+                            <input type="time" asp-for="Days[i].Availability!.EndTime" class="form-control" disabled="@isPast" />
+                            <span asp-validation-for="Days[i].Availability!.EndTime" class="text-danger"></span>
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </td>
+                </tr>
             }
-        </select>
-    </div>
+        </tbody>
+    </table>
 
-    <div class="mb-3">
-        <label asp-for="Year" class="form-label"></label>
-        <input asp-for="Year" class="form-control" type="number" min="2000" max="3000" />
-        <span asp-validation-for="Year" class="text-danger"></span>
-    </div>
-
-    <button class="btn btn-primary">Continue</button>
-    <a asp-action="Index" class="btn btn-secondary">Back</a>
+    <button type="submit" class="btn btn-primary">Zapisz Dostępność</button>
+    <a asp-action="Index" class="btn btn-secondary">Anuluj</a>
 </form>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

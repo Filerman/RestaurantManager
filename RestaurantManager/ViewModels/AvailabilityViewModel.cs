@@ -1,13 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using RestaurantManager.Models;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace RestaurantManager.ViewModels
 {
+    // Używany przez Views/Availability/Index.cshtml
     public class AvailabilityViewModel
     {
-        [Required] public int Year { get; set; }
-        [Required] public int Month { get; set; }
+        public List<Availability> Availabilities { get; set; }
 
-        public List<DayAvailabilityViewModel> Days { get; set; } = new();
+        // Dla formularza dodawania
+        [Display(Name = "Nowa Dostępność")]
+        public Availability NewAvailability { get; set; }
     }
 }

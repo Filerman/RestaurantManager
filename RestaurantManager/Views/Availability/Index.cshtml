@@ -1,58 +1,94 @@
-﻿@model IEnumerable<RestaurantManager.ViewModels.MonthEntryViewModel>
+﻿@model RestaurantManager.ViewModels.AvailabilityViewModel
 @{
-    ViewData["Title"] = "My Availability";
+    ViewData["Title"] = "Moja Dostępność";
 }
 
-<h2>My Availability</h2>
+<h2>@ViewData["Title"]</h2>
 
-<p>
-    <a asp-action="Provide" class="btn btn-success">Provide availability</a>
-</p>
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h4>Dodaj Nową Dostępność</h4>
+        <form asp-action="Add" method="post">
+            @Html.AntiForgeryToken() @* Zabezpieczenie *@
+            @* Pokazuje błędy tylko dla pól NewAvailability *@
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
 
-<form method="get" class="mb-3">
-    <select name="year" class="form-select w-auto d-inline">
-        <option value="">All years</option>
-        @foreach (var y in (IEnumerable<int>)ViewBag.Years)
-        {
-            if (ViewBag.SelectedYear != null && y == (int)ViewBag.SelectedYear)
-            {
-                <option value="@y" selected>@y</option>
-            }
-            else
-            {
-                <option value="@y">@y</option>
-            }
-        }
-    </select>
-    <button class="btn btn-secondary">Filter</button>
-</form>
+            <div class="mb-3">
+                <label asp-for="NewAvailability.Date" class="form-label"></label> @* Nazwa z modelu *@
+                <input asp-for="NewAvailability.Date" type="date" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                <span asp-validation-for="NewAvailability.Date" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="NewAvailability.StartTime" class="form-label"></label> @* Nazwa z modelu *@
+                <input asp-for="NewAvailability.StartTime" type="time" class="form-control" value="09:00" />
+                <span asp-validation-for="NewAvailability.StartTime" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="NewAvailability.EndTime" class="form-label"></label> @* Nazwa z modelu *@
+                <input asp-for="NewAvailability.EndTime" type="time" class="form-control" value="17:00" />
+                <span asp-validation-for="NewAvailability.EndTime" class="text-danger"></span>
+            </div>
+            <input type="hidden" asp-for="NewAvailability.UserId" />
+            <button type="submit" class="btn btn-primary">Dodaj</button>
+            <a asp-action="Provide" class="btn btn-secondary">Zgłoś Miesięczną</a>
+        </form>
+    </div>
+</div>
 
-<table class="table table-bordered w-auto">
-    <thead class="table-light">
-        <tr><th>Month</th><th>Year</th><th></th></tr>
-    </thead>
-    <tbody>
-        @if (!Model.Any())
-        {
-            <tr><td colspan="3">No availability submitted yet.</td></tr>
-        }
-        else
-        {
-            @foreach (var m in Model)
+<h4>Istniejące Dostępności (od dzisiaj)</h4>
+@* Wyświetlanie komunikatów sukcesu/błędu *@
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+    </div>
+}
+
+@if (!Model.Availabilities.Any())
+{
+    <p>Nie masz zgłoszonych żadnych przyszłych dostępności.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Godzina Rozpoczęcia</th>
+                <th>Godzina Zakończenia</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Availabilities)
             {
                 <tr>
-                    <td>@m.MonthName</td>
-                    <td>@m.Year</td>
+                    <td>@item.Date.ToString("yyyy-MM-dd")</td>
+                    <td>@item.StartTime.ToString(@"hh\:mm")</td> @* Poprawny format dla TimeSpan *@
+                    <td>@item.EndTime.ToString(@"hh\:mm")</td>   @* Poprawny format dla TimeSpan *@
                     <td>
-                        <a asp-action="Edit"
-                           asp-route-year="@m.Year"
-                           asp-route-month="@m.Month"
-                           class="btn btn-sm btn-primary">
-                            Edit
-                        </a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edytuj</a>
+                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Czy na pewno chcesz usunąć ten wpis?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-danger">Usuń</button>
+                        </form>
                     </td>
                 </tr>
             }
-        }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,11 +1,14 @@
-﻿namespace RestaurantManager.ViewModels
+﻿using RestaurantManager.Models;
+using System;
+
+namespace RestaurantManager.ViewModels
 {
+    // Używany przez ProvideAvailabilityViewModel i AvailabilityController
     public class MonthEntryViewModel
     {
-        public int Year { get; set; }
-        public int Month { get; set; }
-        public string MonthName =>
-            System.Globalization.CultureInfo.InvariantCulture
-                 .DateTimeFormat.GetMonthName(Month);
+        public DateTime Date { get; set; }
+        public bool IsInCurrentMonth { get; set; }
+        public Availability? Availability { get; set; } // Może być null
+        public bool IsSelected { get; set; } // Dla checkboxa
     }
 }
