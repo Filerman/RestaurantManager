@@ -1,54 +1,71 @@
 ﻿@model IEnumerable<RestaurantManager.Models.User>
+
 @{
-    ViewData["Title"] = "Employees";
-    var defaultAvatar = (string)ViewBag.DefaultAvatar;
+    ViewData["Title"] = "Pracownicy";
 }
 
-<h2>Employees</h2>
+<h1>Pracownicy</h1>
 
-<form asp-action="Index" method="get" class="row g-2 mb-3">
-    <div class="col-auto">
-        <input name="searchTerm" value="@ViewBag.SearchTerm"
-               class="form-control" placeholder="Search by name or email" />
-    </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-primary">Search</button>
-        <a asp-action="Index" class="btn btn-secondary">Clear</a>
-    </div>
-</form>
-
-<p>
-    <a asp-action="Create" class="btn btn-success">Create Employee</a>
-</p>
-
-<table class="table table-striped align-middle">
+<table class="table">
     <thead>
         <tr>
-            <th>Photo</th>
-            <th>Username</th>
-            <th>Email</th>
+            <th>
+                Nazwa użytkownika (Login)
+            </th>
+            <th>
+                Imię i nazwisko (Profil)
+            </th>
+            <th>
+                Tagi / Stanowiska
+            </th>
+            <th>
+                Telefon
+            </th>
+            <th>
+                Stawka godzinowa
+            </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var u in Model)
+        @foreach (var user in Model)
         {
-            var img = string.IsNullOrEmpty(u.ProfilePicturePath)
-            ? defaultAvatar
-            : u.ProfilePicturePath;
             <tr>
-                <td style="width:60px">
-                    <a asp-action="Details" asp-route-id="@u.Id">
-                        <img src="@img"
-                             class="rounded-circle"
-                             style="width:50px; height:50px; object-fit:cover" />
-                    </a>
-                </td>
-                <td>@u.Username</td>
-                <td>@u.Email</td>
                 <td>
-                    <a asp-action="Delete" asp-route-id="@u.Id"
-                       class="btn btn-sm btn-danger">Delete</a>
+                    @Html.DisplayFor(modelItem => user.Username)
+                </td>
+                <td>
+                    @if (user.Employee != null)
+                    {
+                        @Html.DisplayFor(modelItem => user.Employee.FullName)
+                    }
+                    else
+                    {
+                        <span class="text-danger">Profil nieuzupełniony</span>
+                    }
+                </td>
+                <td>
+                    @if (user.Employee != null && user.Employee.PositionTags.Any())
+                    {
+                        @string.Join(", ", user.Employee.PositionTags.Select(t => t.Name))
+                    }
+                    else
+                    {
+                        <span class="text-muted">---</span>
+                    }
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => user.Employee.Phone)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => user.Employee.HourlyRate)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-primary">
+                        @(user.Employee == null ? "Uzupełnij profil" : "Edytuj")
+                    </a> |
+                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-outline-info">Szczegóły</a> |
+                    <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-sm btn-outline-danger">Usuń</a>
                 </td>
             </tr>
         }

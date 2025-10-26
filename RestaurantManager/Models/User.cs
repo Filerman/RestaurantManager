@@ -21,5 +21,8 @@ namespace RestaurantManager.Models
 
         // ścieżka do pliku w wwwroot/images/profiles
         public string? ProfilePicturePath { get; set; }
+
+        // Relacja 1:1 - Użytkownik może (ale nie musi) być pracownikiem
+        public virtual Employee? Employee { get; set; }
     }
 }

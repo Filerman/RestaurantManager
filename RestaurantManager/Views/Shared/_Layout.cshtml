@@ -37,7 +37,6 @@
                             <a class="nav-link text-dark" asp-controller="Menu" asp-action="Index">Menu</a>
                         </li>
                         @if (logged)
-
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Reservations" asp-action="Index">
@@ -58,12 +57,16 @@
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Employees" asp-action="Index">
-
                                     Employees
                                 </a>
                             </li>
 
-                            @if (role == "Manager" || role == "Admin")
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="PositionTags" asp-action="Index">
+                                    Tagi Stanowisk
+                                </a>
+                            </li>
+                            @if (role == "Manager" || role == "Admin") // Ten if jest z Twojego kodu
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-controller="Tables" asp-action="Index">
@@ -71,7 +74,6 @@
                                     </a>
                                 </li>
                             }
-
                         }
                     </ul>
 
@@ -94,11 +96,9 @@
                             </li>
                         }
                         else
-
                         {
                             <li class="nav-item">
                                 <span class="nav-link text-dark">
-
                                     Hello, @usernameInSession!
                                     (@role)
                                 </span>
@@ -116,7 +116,6 @@
                                     Logout
                                 </a>
                             </li>
-
                         }
                     </ul>
 

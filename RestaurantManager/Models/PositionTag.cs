@@ -5,6 +5,11 @@ namespace RestaurantManager.Models
 {
     public class PositionTag
     {
+        public PositionTag()
+        {
+            Employees = new HashSet<Employee>();
+        }
+
         [Key]
         public int Id { get; set; }
 
@@ -13,7 +18,7 @@ namespace RestaurantManager.Models
         [Display(Name = "Nazwa stanowiska/tagu")]
         public string Name { get; set; }
 
-        // Relacja: Jeden tag może mieć wielu pracowników
+        // Relacja: Wiele tagów może mieć wielu pracowników
         public virtual ICollection<Employee> Employees { get; set; }
     }
 }

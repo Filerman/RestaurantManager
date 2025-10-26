@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RestaurantManager.Data;
 
@@ -11,9 +12,11 @@ using RestaurantManager.Data;
 namespace RestaurantManager.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251026132201_dodanie tagów dla pracowników")]
+    partial class dodanietagówdlapracowników
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,13 +27,13 @@ namespace RestaurantManager.Migrations
 
             modelBuilder.Entity("EmployeePositionTag", b =>
                 {
-                    b.Property<int>("EmployeesUserId")
+                    b.Property<int>("EmployeesId")
                         .HasColumnType("int");
 
                     b.Property<int>("PositionTagsId")
                         .HasColumnType("int");
 
-                    b.HasKey("EmployeesUserId", "PositionTagsId");
+                    b.HasKey("EmployeesId", "PositionTagsId");
 
                     b.HasIndex("PositionTagsId");
 
@@ -66,8 +69,11 @@ namespace RestaurantManager.Migrations
 
             modelBuilder.Entity("RestaurantManager.Models.Employee", b =>
                 {
-                    b.Property<int>("UserId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -75,13 +81,13 @@ namespace RestaurantManager.Migrations
                         .HasColumnType("nvarchar(60)");
 
                     b.Property<decimal?>("HourlyRate")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("UserId");
+                    b.HasKey("Id");
 
                     b.ToTable("Employees");
                 });
@@ -108,7 +114,7 @@ namespace RestaurantManager.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18, 2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -228,7 +234,7 @@ namespace RestaurantManager.Migrations
                 {
                     b.HasOne("RestaurantManager.Models.Employee", null)
                         .WithMany()
-                        .HasForeignKey("EmployeesUserId")
+                        .HasForeignKey("EmployeesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -250,17 +256,6 @@ namespace RestaurantManager.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RestaurantManager.Models.Employee", b =>
-                {
-                    b.HasOne("RestaurantManager.Models.User", "User")
-                        .WithOne("Employee")
-                        .HasForeignKey("RestaurantManager.Models.Employee", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("RestaurantManager.Models.Reservation", b =>
                 {
                     b.HasOne("RestaurantManager.Models.Table", "Table")
@@ -268,11 +263,6 @@ namespace RestaurantManager.Migrations
                         .HasForeignKey("TableId");
 
                     b.Navigation("Table");
-                });
-
-            modelBuilder.Entity("RestaurantManager.Models.User", b =>
-                {
-                    b.Navigation("Employee");
                 });
 #pragma warning restore 612, 618
         }
