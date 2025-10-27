@@ -28,55 +28,75 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
+
                 <a class="navbar-brand" asp-controller="Menu"
                    asp-action="Index">RestaurantManager</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarNav" aria-controls="navbarNav"
                         aria-expanded="false" aria-label="Toggle navigation">
+
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
 
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
+
                             <a class="nav-link text-dark" asp-controller="Menu" asp-action="Index">Menu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Gallery" asp-action="Index">Galeria</a>
                         </li>
                         @if (logged)
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Reservations" asp-action="Index">Reservations</a>
                             </li>
+
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Availability" asp-action="Index">Availability</a>
                             </li>
-                            @if (role == "Employee" || role == "Manager" || role == "Admin") // Pokaż dla wszystkich z rolą pracowniczą
+
+                            @if (role == "Employee" ||
+                                                    role == "Manager" || role == "Admin") // Pokaż dla wszystkich z rolą pracowniczą
                             {
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark" asp-controller="Schedules" asp-action="MySchedule">Mój Grafik</a>
                                 </li>
                             }
                         }
+
                         @if (logged && (role == "Manager" || role == "Admin"))
                         {
                             <li class="nav-item">
+
                                 <a class="nav-link text-dark" asp-controller="Employees" asp-action="Index">Employees</a>
                             </li>
                             <li class="nav-item">
+
                                 <a class="nav-link text-dark" asp-controller="PositionTags" asp-action="Index">Tagi Stanowisk</a>
                             </li>
                             <li class="nav-item">
+
                                 <a class="nav-link text-dark" asp-controller="Tables" asp-action="Index">Tables</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Users" asp-action="Index">Zarządzaj Użytkownikami</a>
+                                <a class="nav-link text-dark"
+                                   asp-controller="Users" asp-action="Index">Zarządzaj Użytkownikami</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Schedules" asp-action="Index">Grafiki</a>
+
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Gallery" asp-action="Manage">Zarządzaj Galerią</a>
                             </li>
                         }
                     </ul>
 
                     <ul class="navbar-nav ms-auto">
+
                         @if (!logged)
                         {
                             <li class="nav-item">
@@ -84,25 +104,32 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Auth" asp-action="Register">Register</a>
+
                             </li>
                         }
                         else
                         {
+
                             <li class="nav-item">
                                 <span class="nav-link text-dark">
-                                    Hello, @usernameInSession! (@role)
+                                    Hello, @usernameInSession!
+                                    (@role)
                                 </span>
                             </li>
                             <li class="nav-item">
+
                                 <a class="nav-link text-dark" asp-controller="Auth" asp-action="Profile">
                                     My Profile
-                                    <img src="@picturePath" alt="Avatar" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
+                                    <img src="@picturePath"
+                                         alt="Avatar" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
                                 </a>
                             </li>
                             <li class="nav-item">
+
                                 <a class="nav-link text-dark" asp-controller="Auth" asp-action="Logout">Logout</a>
                             </li>
                         }
+
                     </ul>
                 </div>
             </div>
@@ -113,6 +140,7 @@
         @if (TempData["SuccessMessage"] != null)
         {
             <div class="alert alert-success alert-dismissible fade show" role="alert">
+
                 @TempData["SuccessMessage"]
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -121,6 +149,7 @@
         {
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 @TempData["ErrorMessage"]
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
@@ -128,6 +157,7 @@
         {
             <div class="alert alert-info alert-dismissible fade show" role="alert">
                 @TempData["InfoMessage"]
+
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
@@ -136,7 +166,8 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; @DateTime.Now.Year - RestaurantManager
+            &copy;
+            @DateTime.Now.Year - RestaurantManager
         </div>
     </footer>
 

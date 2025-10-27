@@ -18,12 +18,11 @@ namespace RestaurantManager.Data
         public DbSet<Table> Tables { get; set; }
         public DbSet<PositionTag> PositionTags { get; set; }
 
-        // *** NOWE DbSet'y ***
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<Shift> Shifts { get; set; }
         public DbSet<ScheduleTemplate> ScheduleTemplates { get; set; }
         public DbSet<TemplateShiftSlot> TemplateShiftSlots { get; set; }
-        // *** KONIEC NOWYCH DbSet'ów ***
+        public DbSet<GalleryImage> GalleryImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

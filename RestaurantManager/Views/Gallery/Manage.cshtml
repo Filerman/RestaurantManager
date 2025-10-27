@@ -1,0 +1,80 @@
+﻿@model IEnumerable<RestaurantManager.Models.GalleryImage>
+
+@{
+    ViewData["Title"] = "Zarządzaj Galerią";
+}
+
+<style>
+    .manage-gallery-item {
+        position: relative;
+        margin-bottom: 15px;
+    }
+
+        .manage-gallery-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .manage-gallery-item .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 15px; /* Dodatkowy margines, bo kolumna ma padding */
+        }
+</style>
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        Dodaj nowe zdjęcie
+    </div>
+    <div class="card-body">
+        <form asp-action="Upload" asp-controller="Gallery" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label for="imageFile" class="form-label">Plik zdjęcia</label>
+                <input type="file" name="imageFile" class="form-control" id="imageFile" accept="image/png, image/jpeg, image/gif" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="caption" class="form-label">Opcjonalny opis</label>
+                <input type="text" name="caption" class="form-control" id="caption" placeholder="Np. Widok na salę główną" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Prześlij zdjęcie</button>
+        </form>
+    </div>
+</div>
+
+<hr />
+
+<h3>Istniejące zdjęcia</h3>
+
+@if (!Model.Any())
+{
+    <p>W galerii nie ma jeszcze żadnych zdjęć.</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var image in Model)
+        {
+            <div class="col-md-3">
+                <div class="manage-gallery-item">
+                    <img src="@Url.Content(image.FilePath)" alt="@(image.Caption ?? "Zdjęcie z galerii")" class="img-fluid" />
+
+                    <form asp-action="Delete" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć to zdjęcie?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@image.Id" />
+                        <button type="submit" class="btn btn-danger btn-sm delete-btn" title="Usuń">
+                            X
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}
