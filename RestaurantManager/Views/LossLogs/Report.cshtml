@@ -1,0 +1,58 @@
+﻿@model RestaurantManager.Models.LossLog
+
+@{
+    ViewData["Title"] = "Zgłoś Stratę";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>Użyj tego formularza, aby zarejestrować straty (np. rozbite naczynia, przeterminowane produkty).</p>
+<hr />
+
+<div classrow="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="Report" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="All" class="alert alert-danger" role="alert" data-valmsg-summary="true"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="LossType" class="form-label"></label>
+                        <select asp-for="LossType" class="form-select">
+                            <option value="">-- Wybierz typ --</option>
+                            <option value="Uszkodzenie">Uszkodzenie (np. rozbity talerz)</option>
+                            <option value="Zepsucie">Zepsucie (np. przeterminowane mleko)</option>
+                            <option value="Odpady">Odpady (np. resztki kuchenne)</option>
+                            <option value="Inne">Inne</option>
+                        </select>
+                        <span asp-validation-for="LossType" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="EstimatedValue" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="EstimatedValue" type="number" step="0.01" class="form-control" />
+                            <span class="input-group-text">PLN</span>
+                        </div>
+                        <span asp-validation-for="EstimatedValue" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Zarejestruj Stratę</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

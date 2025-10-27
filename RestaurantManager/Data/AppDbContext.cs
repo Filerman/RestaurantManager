@@ -23,6 +23,7 @@ namespace RestaurantManager.Data
         public DbSet<ScheduleTemplate> ScheduleTemplates { get; set; }
         public DbSet<TemplateShiftSlot> TemplateShiftSlots { get; set; }
         public DbSet<GalleryImage> GalleryImages { get; set; }
+        public DbSet<LossLog> LossLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

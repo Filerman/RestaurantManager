@@ -1,0 +1,76 @@
+﻿@model IEnumerable<RestaurantManager.Models.LossLog>
+
+@{
+    ViewData["Title"] = "Rejestr Strat";
+    var totalLoss = Model.Sum(l => l.EstimatedValue);
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>Poniżej znajduje się lista wszystkich zarejestrowanych strat w restauracji.</p>
+
+<div class="alert alert-warning" role="alert">
+    <strong>Całkowita suma strat: @totalLoss.ToString("C", new System.Globalization.CultureInfo("pl-PL"))</strong>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.DateReported)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Description)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.LossType)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.EstimatedValue)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ReportedByUser)
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="6" class="text-center">Nie zarejestrowano jeszcze żadnych strat.</td>
+                </tr>
+            }
+
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.DateReported)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Description)
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">@Html.DisplayFor(modelItem => item.LossType)</span>
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.EstimatedValue)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ReportedByUser.Username)
+                    </td>
+                    <td>
+                        <form asp-action="Delete" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć ten wpis straty?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="btn btn-danger btn-sm" title="Usuń wpis">
+                                Usuń
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
