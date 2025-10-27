@@ -1,0 +1,364 @@
+﻿@model RestaurantManager.ViewModels.ScheduleEditViewModel
+
+@{
+    ViewData["Title"] = $"Edytuj Grafik ({Model.StartDate:yyyy-MM-dd} - {Model.EndDate:yyyy-MM-dd})";
+    var availableTags = Model.AvailableTags ?? new List<PositionTag>();
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["InfoMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["InfoMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+
+<form asp-action="Edit">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="StartDate" />
+    <input type="hidden" asp-for="EndDate" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="form-check form-switch fs-5">
+            <input type="checkbox" class="form-check-input" asp-for="IsPublished" role="switch" id="publishSwitch">
+            <label class="form-check-label" asp-for="IsPublished" for="publishSwitch">Opublikuj grafik (widoczny dla pracowników)</label>
+        </div>
+        <div>
+            <input type="submit" value="Zapisz Status Publikacji" class="btn btn-primary" />
+            <a asp-action="Index" class="btn btn-secondary">Wróć do listy grafików</a>
+        </div>
+    </div>
+
+    <hr />
+    <p>Zarządzaj zmianami poniżej. Zmiany są zapisywane automatycznie po dodaniu/edycji/usunięciu w okienku modalnym.</p>
+
+    <div class="schedule-grid">
+        @if (Model.Days != null && Model.Days.Any())
+        {
+            @foreach (var day in Model.Days)
+            {
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5>@day.DayName, @day.Date.ToString("yyyy-MM-dd")</h5>
+                    </div>
+                    <div class="card-body" id="day-@day.Date.ToString("yyyyMMdd")">
+                        <p class="text-muted no-shifts-message" style="@(day.Shifts.Any() ? "display: none;" : "")">Brak zmian w tym dniu.</p>
+                        <ul class="list-group list-group-flush shifts-list" style="@(day.Shifts.Any() ? "" : "display: none;")">
+                            @foreach (var shift in day.Shifts.OrderBy(s => s.StartTime))
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center" data-shift-id="@shift.Id">
+                                    <div>
+                                        <strong>@shift.StartTime.ToString(@"hh\:mm") - @shift.EndTime.ToString(@"hh\:mm")</strong><br />
+                                        Stanowisko: <span class="badge bg-secondary">@shift.PositionTagName</span><br />
+                                        Pracownik: <span class="badge @(shift.AssignedUserId.HasValue && shift.AssignedUserId > 0 ? "bg-info text-dark" : "bg-warning text-dark")">@(shift.AssignedUserName ?? "Nieprzypisany")</span>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary edit-shift-btn" data-shift-id="@shift.Id">Edytuj</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-direct-btn" data-shift-id="@shift.Id">Usuń</button>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                        <button type="button" class="btn btn-success btn-sm mt-2 add-shift-btn" data-date="@day.Date.ToString("yyyy-MM-dd")">Dodaj zmianę</button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="text-warning">Nie udało się załadować dni.</p>
+        }
+    </div>
+</form>
+
+<div class="modal fade" id="shiftModal" tabindex="-1" aria-labelledby="shiftModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shiftModalLabel">Dodaj/Edytuj Zmianę</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="shiftForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="shift-id" name="Id" value="0" />
+                    <input type="hidden" id="shift-date" name="Date" />
+                    <input type="hidden" id="shift-scheduleId" name="ScheduleId" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label for="shift-tag" class="form-label">Wymagane Stanowisko <span class="text-danger">*</span></label>
+                        <select id="shift-tag" name="PositionTagId" class="form-select" required>
+                            <option value="">-- Wybierz tag --</option>
+                            @foreach (var tag in availableTags)
+                            {
+                                <option value="@tag.Id">@tag.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="shift-start" class="form-label">Start <span class="text-danger">*</span></label>
+                            <input type="time" id="shift-start" name="StartTime" class="form-control" required step="1800" />
+                        </div>
+                        <div class="col">
+                            <label for="shift-end" class="form-label">Koniec <span class="text-danger">*</span></label>
+                            <input type="time" id="shift-end" name="EndTime" class="form-control" required step="1800" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="shift-employee" class="form-label">Przypisz Pracownika</label>
+                        <select id="shift-employee" name="AssignedUserId" class="form-select">
+                            <option value="">-- Nieprzypisany --</option>
+                        </select>
+                        <small id="availability-info" class="form-text text-muted"></small>
+                    </div>
+                    <div id="shift-validation-errors" class="text-danger mt-2"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-danger me-auto" id="deleteShiftBtn" style="display: none;">Usuń Zmianę</button>
+                <button type="button" class="btn btn-primary" id="saveShiftBtn">Zapisz Zmianę</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Upewnij się, że Moment.js jest załadowany
+        if (typeof moment === 'undefined') { console.error("Moment.js nie jest załadowany."); }
+        else if (moment.locale) { moment.locale('pl'); }
+
+        $(document).ready(function () {
+            const shiftModalElement = document.getElementById('shiftModal');
+            if (!shiftModalElement) { console.error("Nie znaleziono modala #shiftModal."); return; }
+            const shiftModal = new bootstrap.Modal(shiftModalElement);
+            const shiftForm = $('#shiftForm');
+            const shiftIdInput = $('#shift-id');
+            const shiftDateInput = $('#shift-date');
+            const shiftTagSelect = $('#shift-tag');
+            const shiftStartInput = $('#shift-start');
+            const shiftEndInput = $('#shift-end');
+            const shiftEmployeeSelect = $('#shift-employee');
+            const availabilityInfo = $('#availability-info');
+            const validationErrors = $('#shift-validation-errors');
+            const saveShiftBtn = $('#saveShiftBtn');
+            const deleteShiftBtn = $('#deleteShiftBtn');
+            const scheduleId = @Model.Id;
+            const csrfToken = $('#shiftForm input[name="__RequestVerificationToken"]').val();
+
+            if (!csrfToken) { console.error("Nie znaleziono tokenu CSRF."); }
+
+            function prepareModal(date, shiftDetails = null) {
+                validationErrors.empty().hide();
+                shiftForm[0].reset();
+                shiftIdInput.val(shiftDetails ? shiftDetails.id : '0');
+                shiftDateInput.val(date); // Format YYYY-MM-DD
+                deleteShiftBtn.hide();
+                let modalTitleDate = moment(date).isValid() ? moment(date).format('dddd, DD.MM') : 'Nieprawidłowa data';
+
+                if (shiftDetails) {
+                    shiftTagSelect.val(shiftDetails.positionTagId || '');
+                    shiftStartInput.val(shiftDetails.startTime);
+                    shiftEndInput.val(shiftDetails.endTime);
+                    deleteShiftBtn.show();
+                    $('#shiftModalLabel').text(`Edytuj Zmianę (${modalTitleDate})`);
+                    // Pracownik zostanie załadowany przez loadAvailableEmployees
+                    loadAvailableEmployees(shiftDetails.userId);
+                } else {
+                    shiftStartInput.val('09:00');
+                    shiftEndInput.val('17:00');
+                    $('#shiftModalLabel').text(`Dodaj Zmianę (${modalTitleDate})`);
+                    // Wyczyść listę pracowników dla nowej zmiany
+                    loadAvailableEmployees();
+                }
+                try { shiftModal.show(); } catch (e) { console.error("Błąd pokazywania modala:", e); }
+            }
+
+            function loadAvailableEmployees(selectedUserId = null) {
+                const date = shiftDateInput.val();
+                const startTime = shiftStartInput.val();
+                const endTime = shiftEndInput.val();
+                const tagId = shiftTagSelect.val();
+
+                shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">-- Ładowanie... --</option>');
+                availabilityInfo.text('');
+
+                if (!date || !startTime || !endTime || !tagId || !moment(date, 'YYYY-MM-DD', true).isValid()) {
+                    shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">-- Wybierz tag i poprawne godziny/datę --</option>'); return;
+                }
+                if (endTime <= startTime) { shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">-- Błąd: Koniec <= Start --</option>'); return; }
+
+                 $.ajax({
+                     url: '@Url.Action("GetAvailableEmployees", "Schedules")', type: 'GET',
+                     data: { date: date, startTime: startTime, endTime: endTime, positionTagId: tagId },
+                     success: function (employees) {
+                         shiftEmployeeSelect.prop('disabled', false).empty();
+                         if (employees && employees.length > 0) {
+                              shiftEmployeeSelect.append('<option value="">-- Nieprzypisany --</option>');
+                             $.each(employees, function (i, employee) { shiftEmployeeSelect.append($('<option>', { value: employee.id, text: employee.displayName })); });
+                             if (selectedUserId && shiftEmployeeSelect.find(`option[value="${selectedUserId}"]`).length > 0) { shiftEmployeeSelect.val(selectedUserId); }
+                             else { shiftEmployeeSelect.val(''); }
+                              availabilityInfo.text(`Znaleziono ${employees.length} dostępnych.`);
+                         } else if (employees && employees.error) {
+                             console.error("Błąd serwera (GetAvailableEmployees):", employees.error);
+                             shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">-- Błąd serwera --</option>'); availabilityInfo.text('Błąd wyszukiwania.');
+                         } else {
+                             shiftEmployeeSelect.append('<option value="">-- Brak dostępnych --</option>'); availabilityInfo.text('Brak pracowników.');
+                         }
+                     },
+                     error: function (xhr) {
+                         console.error("Błąd AJAX (GetAvailableEmployees):", xhr.status, xhr.responseText);
+                         shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">-- Błąd ładowania --</option>'); availabilityInfo.text('Błąd serwera.');
+                     }
+                 });
+            }
+
+            $('.add-shift-btn').click(function () {
+                const date = $(this).data('date');
+                if (date) { prepareModal(date); } else { console.error("Brak data-date."); }
+            });
+
+             $(document).on('click', '.edit-shift-btn', function () {
+                 const shiftId = $(this).data('shift-id');
+                 if (!shiftId) return;
+                 $.ajax({
+                     url: '@Url.Action("GetShiftDetails", "Schedules")', type: 'GET', data: { shiftId: shiftId },
+                     success: function (shiftDetails) {
+                          if (shiftDetails.error) { alert(shiftDetails.error); return; }
+                          prepareModal(shiftDetails.date, shiftDetails);
+                     },
+                     error: function (xhr) { console.error("Błąd AJAX (GetShiftDetails):", xhr.status, xhr.responseText); alert('Nie pobrano danych zmiany.'); }
+                 });
+            });
+
+            shiftTagSelect.change(function () { loadAvailableEmployees(); });
+            shiftStartInput.change(function () { loadAvailableEmployees(); });
+            shiftEndInput.change(function () { loadAvailableEmployees(); });
+
+            saveShiftBtn.click(function () {
+                validationErrors.empty().hide();
+                let isValid = true;
+                if (!shiftTagSelect.val()) { validationErrors.append('<p>Wybierz wymagane stanowisko.</p>').show(); isValid = false; }
+                if (!shiftStartInput.val() || !shiftEndInput.val() || shiftEndInput.val() <= shiftStartInput.val()) { validationErrors.append('<p>Godzina zakończenia musi być późniejsza niż rozpoczęcia.</p>').show(); isValid = false; }
+                if (!isValid) return;
+
+                const formData = shiftForm.serializeArray();
+                // Token jest już w formData dzięki @Html.AntiForgeryToken() w <form id="shiftForm">
+                console.log("Sending SaveShift data:", $.param(formData));
+                $(this).prop('disabled', true).text('Zapisywanie...');
+
+                 $.ajax({
+                     url: '@Url.Action("SaveShift", "Schedules")', type: 'POST', data: $.param(formData),
+                     success: function (response) {
+                         console.log("SaveShift response:", response);
+                         saveShiftBtn.prop('disabled', false).text('Zapisz Zmianę');
+                         if (response.success && response.shift) {
+                             shiftModal.hide(); updateShiftInUI(response.shift);
+                         } else { validationErrors.append(`<p>${response.message || 'Nieznany błąd zapisu.'}</p>`).show(); }
+                     },
+                     error: function (xhr) {
+                          saveShiftBtn.prop('disabled', false).text('Zapisz Zmianę');
+                          console.error("Błąd AJAX (SaveShift):", xhr.status, xhr.responseText);
+                           let errorMsg = 'Wystąpił błąd serwera. Sprawdź konsolę.';
+                           if(xhr.responseJSON && xhr.responseJSON.message) { errorMsg = xhr.responseJSON.message; }
+                           else if (xhr.responseText) { let match = xhr.responseText.match(/<title>(.*?)<\/title>/); if (match && match[1]) { errorMsg = `Błąd serwera: ${match[1]}`; } }
+                          validationErrors.append(`<p>${errorMsg}</p>`).show();
+                     }
+                 });
+            });
+
+            $(document).on('click', '#deleteShiftBtn, .delete-direct-btn', function () {
+                 const shiftId = $(this).is('#deleteShiftBtn') ? shiftIdInput.val() : $(this).data('shift-id');
+                 const buttonElement = $(this);
+                 if (!shiftId || shiftId === '0') return;
+                 if (confirm('Czy na pewno chcesz usunąć tę zmianę?')) {
+                     buttonElement.prop('disabled', true).text('Usuwanie...');
+                      $.ajax({
+                           url: '@Url.Action("DeleteShift", "Schedules")', type: 'POST',
+                           data: { __RequestVerificationToken: csrfToken, shiftId: shiftId },
+                           success: function (response) {
+                                if (response.success) {
+                                     shiftModal.hide();
+                                     let listItem = $(`.shifts-list li[data-shift-id="${shiftId}"]`);
+                                     let dayContainer = listItem.closest('.card-body');
+                                     listItem.fadeOut(300, function() { $(this).remove(); checkEmptyList(dayContainer); });
+                                } else {
+                                     buttonElement.prop('disabled', false).text('Usuń'); alert(response.message || 'Nie usunięto zmiany.');
+                                }
+                           },
+                           error: function (xhr) {
+                                buttonElement.prop('disabled', false).text('Usuń');
+                                console.error("Błąd AJAX (DeleteShift):", xhr.status, xhr.responseText); alert('Błąd serwera podczas usuwania.');
+                           }
+                      });
+                 }
+            });
+
+            function updateShiftInUI(shiftData) {
+                 const dayId = `#day-${moment(shiftData.date).format('YYYYMMDD')}`;
+                 const listSelector = `${dayId} .shifts-list`;
+                 const noShiftsSelector = `${dayId} .no-shifts-message`;
+                 const listItemSelector = `${listSelector} li[data-shift-id="${shiftData.id}"]`;
+                 const badgeClass = shiftData.assignedUserId ? (shiftData.assignedUserId > 0 ? "bg-info text-dark" : "bg-warning text-dark") : "bg-warning text-dark";
+                 const userName = shiftData.assignedUserName || 'Nieprzypisany';
+
+                 const newShiftHtml = `
+                     <li class="list-group-item d-flex justify-content-between align-items-center" data-shift-id="${shiftData.id}" style="display: none;">
+                         <div>
+                             <strong>${shiftData.startTime} - ${shiftData.endTime}</strong><br />
+                             Stanowisko: <span class="badge bg-secondary">${shiftData.positionTagName || 'Brak'}</span><br />
+                             Pracownik: <span class="badge ${badgeClass}">${userName}</span>
+                         </div>
+                         <div>
+                             <button type="button" class="btn btn-sm btn-outline-primary edit-shift-btn" data-shift-id="${shiftData.id}">Edytuj</button>
+                             <button type="button" class="btn btn-sm btn-outline-danger delete-direct-btn" data-shift-id="${shiftData.id}">Usuń</button>
+                         </div>
+                     </li>`;
+
+                 if ($(listItemSelector).length > 0) { $(listItemSelector).replaceWith(newShiftHtml); }
+                 else { $(listSelector).append(newShiftHtml); $(noShiftsSelector).hide(); $(listSelector).show(); }
+                 $(`${listSelector} li[data-shift-id="${shiftData.id}"]`).fadeIn(300);
+                 sortShiftsInList(listSelector);
+             }
+
+            function checkEmptyList(dayContainer) {
+                 if(!dayContainer || !dayContainer.length) return;
+                 let list = dayContainer.find('.shifts-list');
+                 let message = dayContainer.find('.no-shifts-message');
+                 if (list.children('li').length === 0) { list.hide(); message.show(); }
+             }
+
+            function sortShiftsInList(listSelector) {
+                 var list = $(listSelector); var listItems = list.children('li').get();
+                 listItems.sort(function(a, b) { var timeA = $(a).find('strong').text().split(' - ')[0]; var timeB = $(b).find('strong').text().split(' - ')[0]; return timeA.localeCompare(timeB); });
+                 $.each(listItems, function(idx, itm) { list.append(itm); });
+             }
+
+        }); // Koniec document ready
+    </script>
+}

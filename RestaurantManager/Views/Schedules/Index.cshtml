@@ -1,0 +1,55 @@
+﻿@model IEnumerable<RestaurantManager.Models.Schedule>
+
+@{
+    ViewData["Title"] = "Grafiki";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["InfoMessage"] != null)
+{
+    <div class="alert alert-info">@TempData["InfoMessage"]</div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Utwórz nowy grafik</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Okres</th>
+            <th>Status</th>
+            <th>Data utworzenia</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.StartDate.ToString("yyyy-MM-dd") - @item.EndDate.ToString("yyyy-MM-dd")</td>
+                <td>
+                    @if (item.IsPublished)
+                    {
+                        <span class="badge bg-success">Opublikowany</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Roboczy</span>
+                    }
+                </td>
+                <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edytuj / Wypełnij</a> |
+                    @* <a asp-action="Details" asp-route-id="@item.Id">Details</a> | *@
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Usuń</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

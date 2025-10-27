@@ -1,0 +1,39 @@
+﻿@model IEnumerable<RestaurantManager.Models.Shift>
+
+@{
+    ViewData["Title"] = "Mój Grafik";
+    var scheduleDateRange = ViewBag.ScheduleDateRange as string ?? "Brak aktywnego grafiku";
+}
+
+<h1>@ViewData["Title"]</h1>
+<h4>@scheduleDateRange</h4>
+<hr />
+
+@if (!Model.Any())
+{
+    <p>Nie masz przypisanych żadnych zmian w bieżącym lub przyszłym opublikowanym grafiku.</p>
+}
+else
+{
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Dzień</th>
+                <th>Godziny</th>
+                <th>Stanowisko</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var shift in Model)
+            {
+                <tr>
+                    <td>@shift.Date.ToString("yyyy-MM-dd")</td>
+                    <td>@shift.Date.ToString("dddd", new System.Globalization.CultureInfo("pl-PL"))</td>
+                    <td>@shift.StartTime.ToString(@"hh\:mm") - @shift.EndTime.ToString(@"hh\:mm")</td>
+                    <td>@(shift.ShiftPositionTag?.Name ?? "---")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

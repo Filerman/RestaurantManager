@@ -12,8 +12,8 @@ using RestaurantManager.Data;
 namespace RestaurantManager.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251026132201_dodanie tagów dla pracowników")]
-    partial class dodanietagówdlapracowników
+    [Migration("20251027001611_MakeShiftUserIdNullable")]
+    partial class MakeShiftUserIdNullable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,13 +27,13 @@ namespace RestaurantManager.Migrations
 
             modelBuilder.Entity("EmployeePositionTag", b =>
                 {
-                    b.Property<int>("EmployeesId")
+                    b.Property<int>("EmployeesUserId")
                         .HasColumnType("int");
 
                     b.Property<int>("PositionTagsId")
                         .HasColumnType("int");
 
-                    b.HasKey("EmployeesId", "PositionTagsId");
+                    b.HasKey("EmployeesUserId", "PositionTagsId");
 
                     b.HasIndex("PositionTagsId");
 
@@ -69,11 +69,8 @@ namespace RestaurantManager.Migrations
 
             modelBuilder.Entity("RestaurantManager.Models.Employee", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -81,13 +78,13 @@ namespace RestaurantManager.Migrations
                         .HasColumnType("nvarchar(60)");
 
                     b.Property<decimal?>("HourlyRate")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("Employees");
                 });
@@ -114,7 +111,7 @@ namespace RestaurantManager.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.HasKey("Id");
 
@@ -168,11 +165,96 @@ namespace RestaurantManager.Migrations
                     b.Property<int?>("TableId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TableId");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Reservations");
+                });
+
+            modelBuilder.Entity("RestaurantManager.Models.Schedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Schedules");
+                });
+
+            modelBuilder.Entity("RestaurantManager.Models.ScheduleTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScheduleTemplates");
+                });
+
+            modelBuilder.Entity("RestaurantManager.Models.Shift", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<int?>("PositionTagId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScheduleId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PositionTagId");
+
+                    b.HasIndex("ScheduleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Shifts");
                 });
 
             modelBuilder.Entity("RestaurantManager.Models.Table", b =>
@@ -196,6 +278,41 @@ namespace RestaurantManager.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tables");
+                });
+
+            modelBuilder.Entity("RestaurantManager.Models.TemplateShiftSlot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("PositionTagId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequiredEmployeeCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScheduleTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PositionTagId");
+
+                    b.HasIndex("ScheduleTemplateId");
+
+                    b.ToTable("TemplateShiftSlots");
                 });
 
             modelBuilder.Entity("RestaurantManager.Models.User", b =>
@@ -234,7 +351,7 @@ namespace RestaurantManager.Migrations
                 {
                     b.HasOne("RestaurantManager.Models.Employee", null)
                         .WithMany()
-                        .HasForeignKey("EmployeesId")
+                        .HasForeignKey("EmployeesUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -248,8 +365,19 @@ namespace RestaurantManager.Migrations
             modelBuilder.Entity("RestaurantManager.Models.Availability", b =>
                 {
                     b.HasOne("RestaurantManager.Models.User", "User")
-                        .WithMany()
+                        .WithMany("Availabilities")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RestaurantManager.Models.Employee", b =>
+                {
+                    b.HasOne("RestaurantManager.Models.User", "User")
+                        .WithOne("Employee")
+                        .HasForeignKey("RestaurantManager.Models.Employee", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -262,7 +390,76 @@ namespace RestaurantManager.Migrations
                         .WithMany()
                         .HasForeignKey("TableId");
 
+                    b.HasOne("RestaurantManager.Models.User", null)
+                        .WithMany("Reservations")
+                        .HasForeignKey("UserId");
+
                     b.Navigation("Table");
+                });
+
+            modelBuilder.Entity("RestaurantManager.Models.Shift", b =>
+                {
+                    b.HasOne("RestaurantManager.Models.PositionTag", "ShiftPositionTag")
+                        .WithMany()
+                        .HasForeignKey("PositionTagId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("RestaurantManager.Models.Schedule", "Schedule")
+                        .WithMany("Shifts")
+                        .HasForeignKey("ScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RestaurantManager.Models.User", "EmployeeUser")
+                        .WithMany("Shifts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("EmployeeUser");
+
+                    b.Navigation("Schedule");
+
+                    b.Navigation("ShiftPositionTag");
+                });
+
+            modelBuilder.Entity("RestaurantManager.Models.TemplateShiftSlot", b =>
+                {
+                    b.HasOne("RestaurantManager.Models.PositionTag", "RequiredPositionTag")
+                        .WithMany()
+                        .HasForeignKey("PositionTagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RestaurantManager.Models.ScheduleTemplate", "ScheduleTemplate")
+                        .WithMany("ShiftSlots")
+                        .HasForeignKey("ScheduleTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RequiredPositionTag");
+
+                    b.Navigation("ScheduleTemplate");
+                });
+
+            modelBuilder.Entity("RestaurantManager.Models.Schedule", b =>
+                {
+                    b.Navigation("Shifts");
+                });
+
+            modelBuilder.Entity("RestaurantManager.Models.ScheduleTemplate", b =>
+                {
+                    b.Navigation("ShiftSlots");
+                });
+
+            modelBuilder.Entity("RestaurantManager.Models.User", b =>
+                {
+                    b.Navigation("Availabilities");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Reservations");
+
+                    b.Navigation("Shifts");
                 });
 #pragma warning restore 612, 618
         }

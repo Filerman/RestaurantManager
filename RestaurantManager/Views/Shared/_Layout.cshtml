@@ -21,6 +21,8 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/RestaurantManager.styles.css" asp-append-version="true" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/pl.min.js"></script>
 </head>
 <body>
     <header>
@@ -47,6 +49,12 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Availability" asp-action="Index">Availability</a>
                             </li>
+                            @if (role == "Employee" || role == "Manager" || role == "Admin") // Pokaż dla wszystkich z rolą pracowniczą
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Schedules" asp-action="MySchedule">Mój Grafik</a>
+                                </li>
+                            }
                         }
                         @if (logged && (role == "Manager" || role == "Admin"))
                         {
@@ -59,9 +67,11 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Tables" asp-action="Index">Tables</a>
                             </li>
-
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Users" asp-action="Index">Zarządzaj Użytkownikami</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Schedules" asp-action="Index">Grafiki</a>
                             </li>
                         }
                     </ul>
@@ -102,18 +112,31 @@
     <div class="container">
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         }
         @if (TempData["ErrorMessage"] != null)
         {
-            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["InfoMessage"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @TempData["InfoMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         }
         @RenderBody()
     </div>
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - RestaurantManager
+            &copy; @DateTime.Now.Year - RestaurantManager
         </div>
     </footer>
 
