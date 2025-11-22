@@ -1,0 +1,85 @@
+﻿@model RestaurantManager.Models.ContactInfo
+@{
+    ViewData["Title"] = "Kontakt";
+    var openingHours = ViewBag.OpeningHours as List<RestaurantManager.Models.OpeningHour>;
+
+    var polishDays = new Dictionary<DayOfWeek, string>
+    {
+        { DayOfWeek.Monday, "Poniedziałek" },
+        { DayOfWeek.Tuesday, "Wtorek" },
+        { DayOfWeek.Wednesday, "Środa" },
+        { DayOfWeek.Thursday, "Czwartek" },
+        { DayOfWeek.Friday, "Piątek" },
+        { DayOfWeek.Saturday, "Sobota" },
+        { DayOfWeek.Sunday, "Niedziela" }
+    };
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <h1 class="display-4 mb-4">@Model.RestaurantName</h1>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-3"><i class="bi bi-geo-alt-fill text-primary"></i> Adres</h4>
+                    <p class="card-text fs-5">
+                        @Model.AddressStreet<br />
+                        @Model.AddressZipCode @Model.AddressCity
+                    </p>
+
+                    <hr />
+
+                    <h4 class="card-title mb-3"><i class="bi bi-telephone-fill text-primary"></i> Kontakt</h4>
+                    <p class="card-text fs-5">
+                        <strong>Tel:</strong> <a href="tel:@Model.PhoneNumber" class="text-decoration-none">@Model.PhoneNumber</a><br />
+                        <strong>Email:</strong> <a href="mailto:@Model.ContactEmail" class="text-decoration-none">@Model.ContactEmail</a>
+                    </p>
+
+                    @if (!string.IsNullOrEmpty(Model.GoogleMapsLink))
+                    {
+                        <div class="mt-4">
+                            <a href="@Model.GoogleMapsLink" target="_blank" class="btn btn-outline-primary">
+                                <i class="bi bi-map"></i> Zobacz na mapie
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body p-4">
+                    <h3 class="mb-4"><i class="bi bi-clock text-primary"></i> Godziny Otwarcia</h3>
+                    @if (openingHours != null && openingHours.Any())
+                    {
+                        <ul class="list-group list-group-flush bg-transparent">
+                            @foreach (var day in openingHours)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent ps-0 pe-0">
+                                    <span class="fw-bold">@polishDays[day.DayOfWeek]</span>
+                                    <span>
+                                        @if (day.IsClosed)
+                                        {
+                                            <span class="badge bg-danger">Zamknięte</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-dark">@day.OpenTime.ToString(@"hh\:mm") - @day.CloseTime.ToString(@"hh\:mm")</span>
+                                        }
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Godziny otwarcia nie zostały jeszcze ustalone.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Przycisk edycji widoczny tylko dla Managera (sprawdzamy przez User.IsInRole lub Session, ale tu prościej link w Layoucie) *@
+</div>

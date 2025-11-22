@@ -24,9 +24,8 @@ namespace RestaurantManager.Data
         public DbSet<TemplateShiftSlot> TemplateShiftSlots { get; set; }
         public DbSet<GalleryImage> GalleryImages { get; set; }
         public DbSet<LossLog> LossLogs { get; set; }
-
-        // --- NOWOŚĆ: Tabela godzin otwarcia ---
         public DbSet<OpeningHour> OpeningHours { get; set; }
+        public DbSet<ContactInfo> ContactInfos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

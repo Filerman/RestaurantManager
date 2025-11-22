@@ -1,0 +1,137 @@
+﻿@model RestaurantManager.ViewModels.ContactInfoEditViewModel
+
+@{
+    ViewData["Title"] = "Edytuj Dane i Godziny";
+    var polishDays = new Dictionary<DayOfWeek, string>
+    {
+        { DayOfWeek.Monday, "Poniedziałek" },
+        { DayOfWeek.Tuesday, "Wtorek" },
+        { DayOfWeek.Wednesday, "Środa" },
+        { DayOfWeek.Thursday, "Czwartek" },
+        { DayOfWeek.Friday, "Piątek" },
+        { DayOfWeek.Saturday, "Sobota" },
+        { DayOfWeek.Sunday, "Niedziela" }
+    };
+}
+
+<div class="container mt-4">
+    <h2>Zarządzanie Danymi Restauracji</h2>
+    <hr />
+
+    <form asp-action="Edit" method="post">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Dane Teleadresowe</h5>
+                    </div>
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Contact.Id" />
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Contact.RestaurantName" class="control-label fw-bold"></label>
+                            <input asp-for="Contact.RestaurantName" class="form-control" />
+                            <span asp-validation-for="Contact.RestaurantName" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="Contact.AddressStreet" class="control-label"></label>
+                                <input asp-for="Contact.AddressStreet" class="form-control" placeholder="Ulica i numer" />
+                                <span asp-validation-for="Contact.AddressStreet" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Contact.AddressZipCode" class="control-label"></label>
+                                <input asp-for="Contact.AddressZipCode" class="form-control" placeholder="00-000" />
+                                <span asp-validation-for="Contact.AddressZipCode" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Contact.AddressCity" class="control-label"></label>
+                                <input asp-for="Contact.AddressCity" class="form-control" />
+                                <span asp-validation-for="Contact.AddressCity" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Contact.PhoneNumber" class="control-label"></label>
+                                <input asp-for="Contact.PhoneNumber" class="form-control" />
+                                <span asp-validation-for="Contact.PhoneNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Contact.ContactEmail" class="control-label"></label>
+                                <input asp-for="Contact.ContactEmail" class="form-control" />
+                                <span asp-validation-for="Contact.ContactEmail" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Contact.GoogleMapsLink" class="control-label"></label>
+                            <input asp-for="Contact.GoogleMapsLink" class="form-control" placeholder="https://..." />
+                            <span asp-validation-for="Contact.GoogleMapsLink" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="bi bi-clock"></i> Godziny Otwarcia</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Dzień</th>
+                                    <th>Od</th>
+                                    <th>Do</th>
+                                    <th class="text-center">Zamknięte</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.OpeningHours.Count; i++)
+                                {
+                                    <tr>
+                                        <td class="align-middle">
+                                            <input type="hidden" asp-for="OpeningHours[i].Id" />
+                                            <input type="hidden" asp-for="OpeningHours[i].DayOfWeek" />
+                                            <strong>@polishDays[Model.OpeningHours[i].DayOfWeek]</strong>
+                                        </td>
+                                        <td>
+                                            <input type="time" class="form-control form-control-sm" asp-for="OpeningHours[i].OpenTime" />
+                                        </td>
+                                        <td>
+                                            <input type="time" class="form-control form-control-sm" asp-for="OpeningHours[i].CloseTime" />
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <div class="form-check d-flex justify-content-center">
+                                                <input class="form-check-input" type="checkbox" asp-for="OpeningHours[i].IsClosed" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed-bottom bg-white border-top p-3 text-center shadow-lg" style="z-index: 100;">
+            <div class="container">
+                <input type="submit" value="Zapisz Wszystkie Zmiany" class="btn btn-success btn-lg px-5" />
+                <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Anuluj</a>
+            </div>
+        </div>
+        @* Dodajemy odstęp na dole strony, żeby pasek przycisków nie zasłaniał treści *@
+        <div style="height: 80px;"></div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
