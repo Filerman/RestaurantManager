@@ -88,6 +88,27 @@ namespace RestaurantManager.Data
                 }
             }
 
+            if (!context.Announcements.Any())
+            {
+                context.Announcements.AddRange(
+                    new Announcement
+                    {
+                        Title = "Wielkie Otwarcie!",
+                        Content = "Zapraszamy na uroczyste otwarcie naszej restauracji już w ten weekend! Darmowy deser dla każdego.",
+                        ValidFrom = DateTime.Now.AddDays(-2), // ZMIANA: DatePosted -> ValidFrom
+                        ValidUntil = DateTime.Now.AddDays(5),
+                        DateCreated = DateTime.Now.AddDays(-2) // Opcjonalnie uzupełniamy datę utworzenia
+                    },
+                    new Announcement
+                    {
+                        Title = "Zmiana godzin w Święta",
+                        Content = "W dni świąteczne restauracja będzie czynna od 14:00 do 20:00.",
+                        ValidFrom = DateTime.Now.AddDays(-1), // ZMIANA: DatePosted -> ValidFrom
+                        ValidUntil = DateTime.Now.AddDays(30),
+                        DateCreated = DateTime.Now.AddDays(-1)
+                    }
+                );
+            }
 
             context.SaveChanges();
         }

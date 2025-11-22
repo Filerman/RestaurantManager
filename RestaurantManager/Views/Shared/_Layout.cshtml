@@ -53,9 +53,13 @@
                             <a class="nav-link text-dark" asp-controller="Gallery" asp-action="Index">Galeria</a>
                         </li>
 
-                        @* --- NOWY LINK PUBLICZNY --- *@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="ContactInfo" asp-action="Index">Kontakt</a>
+                        </li>
+
+                        @* --- NOWOŚĆ: Link do Aktualności --- *@
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Announcements" asp-action="Index">Aktualności</a>
                         </li>
 
                         @if (logged)
@@ -109,10 +113,15 @@
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header">Restauracja</h6></li>
 
+                                    @* --- NOWOŚĆ: Zarządzanie Aktualnościami --- *@
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Announcements" asp-action="Manage">Zarządzaj Aktualnościami</a>
+                                    </li>
+
                                     <li>
                                         <a class="dropdown-item" asp-controller="OpeningHours" asp-action="Index">Godziny Otwarcia</a>
                                     </li>
-                                    @* --- NOWY LINK MANAGERSKI --- *@
+
                                     <li>
                                         <a class="dropdown-item" asp-controller="ContactInfo" asp-action="Edit">Dane Kontaktowe</a>
                                     </li>

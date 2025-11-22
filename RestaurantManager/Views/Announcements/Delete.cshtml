@@ -1,0 +1,37 @@
+﻿@model RestaurantManager.Models.Announcement
+
+@{
+    ViewData["Title"] = "Usuń Ogłoszenie";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Potwierdź usunięcie</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Czy na pewno chcesz usunąć to ogłoszenie?</p>
+                    <hr />
+                    <dl class="row">
+                        <dt class="col-sm-4">Tytuł</dt>
+                        <dd class="col-sm-8">@Model.Title</dd>
+
+                        <dt class="col-sm-4">Widoczne od</dt>
+                        @* ZMIANA: DatePosted -> ValidFrom *@
+                        <dd class="col-sm-8">@Model.ValidFrom.ToString("dd.MM.yyyy HH:mm")</dd>
+                    </dl>
+
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex justify-content-end">
+                            <a asp-action="Manage" class="btn btn-secondary me-2">Anuluj</a>
+                            <input type="submit" value="Usuń" class="btn btn-danger" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

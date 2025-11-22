@@ -1,0 +1,63 @@
+﻿@model IEnumerable<RestaurantManager.Models.Announcement>
+
+@{
+    ViewData["Title"] = "Zarządzaj Aktualnościami";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Zarządzanie Aktualnościami</h2>
+        <a asp-action="Create" class="btn btn-success"><i class="bi bi-plus-circle"></i> Dodaj Ogłoszenie</a>
+    </div>
+
+    <table class="table table-striped table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Tytuł</th>
+                <th>Widoczne Od</th> @* Zmieniony nagłówek *@
+                <th>Ważne Do</th>
+                <th>Status</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                var now = DateTime.Now;
+                // Używamy ValidFrom do logiki
+                var isFuture = item.ValidFrom > now;
+                var isExpired = item.ValidUntil.HasValue && item.ValidUntil < now;
+                var isActive = !isFuture && !isExpired;
+
+                <tr class="@(isActive ? "table-success" : (isFuture ? "table-warning" : "table-secondary text-muted"))">
+                    <td>
+                        <strong>@item.Title</strong>
+                    </td>
+                    @* ZMIANA: DatePosted -> ValidFrom *@
+                    <td>@item.ValidFrom.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>
+                        @(item.ValidUntil.HasValue? item.ValidUntil.Value.ToString("yyyy-MM-dd HH:mm") : "Bezterminowo")
+                    </td>
+                    <td>
+                        @if (isFuture)
+                        {
+                            <span class="badge bg-warning text-dark">Zaplanowane</span>
+                        }
+                        else if (isExpired)
+                        {
+                            <span class="badge bg-secondary">Wygasło</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">Aktywne</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edytuj</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Usuń</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

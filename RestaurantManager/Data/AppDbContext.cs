@@ -26,6 +26,7 @@ namespace RestaurantManager.Data
         public DbSet<LossLog> LossLogs { get; set; }
         public DbSet<OpeningHour> OpeningHours { get; set; }
         public DbSet<ContactInfo> ContactInfos { get; set; }
+        public DbSet<Announcement> Announcements { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -86,9 +87,6 @@ namespace RestaurantManager.Data
                .WithMany()
                .HasForeignKey(sh => sh.PositionTagId)
                .OnDelete(DeleteBehavior.SetNull);
-
-
-            // --- DODATKOWA KONFIGURACJA DLA NOWYCH FUNKCJI ---
 
             // Relacja User -> Reservation (Klient) - potrzebne do filtrowania rezerwacji gościa
             modelBuilder.Entity<Reservation>()
