@@ -72,6 +72,22 @@ namespace RestaurantManager.Data
                 );
             }
 
+            // --- 5. GODZINY OTWARCIA (Nowość - wymagane do walidacji rezerwacji) ---
+            if (!context.OpeningHours.Any())
+            {
+                var days = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>();
+                foreach (var day in days)
+                {
+                    context.OpeningHours.Add(new OpeningHour
+                    {
+                        DayOfWeek = day,
+                        OpenTime = new TimeSpan(12, 0, 0), // Domyślnie 12:00
+                        CloseTime = new TimeSpan(22, 0, 0), // Domyślnie 22:00
+                        IsClosed = false
+                    });
+                }
+            }
+
 
             context.SaveChanges();
         }

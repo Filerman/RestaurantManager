@@ -4,8 +4,10 @@ using RestaurantManager.Data;
 using RestaurantManager.Models;
 using RestaurantManager.Filters;
 using System.Linq;
-using Microsoft.EntityFrameworkCore; // DODAJ TO
-using Microsoft.AspNetCore.Mvc.Rendering; // DODAJ TO
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Collections.Generic;
+using System; // Potrzebne dla DateTime
 
 namespace RestaurantManager.Controllers
 {
@@ -17,80 +19,180 @@ namespace RestaurantManager.Controllers
         // GET: /Reservations
         public IActionResult Index()
         {
-            // tylko zalogowani mogą zobaczyć listę
-            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var userRole = HttpContext.Session.GetString("UserRole");
+
+            // tylko zalogowani
+            if (!userId.HasValue)
                 return RedirectToAction("Login", "Auth");
 
-            var list = _ctx.Reservations
-                           .Include(r => r.Table) // DODAJ TO
-                           .OrderBy(r => r.DateTime)
-                           .ToList();
+            IQueryable<Reservation> query = _ctx.Reservations
+                .Include(r => r.Table)
+                .Include(r => r.User);
+
+            // FILTRACJA: Jeśli rola to Guest, pokaż tylko JEGO rezerwacje
+            if (userRole == "Guest")
+            {
+                query = query.Where(r => r.UserId == userId.Value);
+            }
+            // Pracownicy widzą wszystko
+
+            var list = query.OrderByDescending(r => r.DateTime).ToList();
             return View(list);
         }
 
         // GET: /Reservations/Create
         public IActionResult Create()
         {
-            // tylko zalogowani mogą tworzyć
-            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
                 return RedirectToAction("Login", "Auth");
 
-            PopulateTablesDropDownList(); // DODAJ TO
-            return View();
+            PopulateTablesDropDownList();
+
+            var user = _ctx.Users.Find(userId.Value);
+
+            var model = new Reservation();
+            if (user != null)
+            {
+                model.CustomerEmail = user.Email;
+            }
+
+            return View(model);
         }
 
         // POST: /Reservations/Create
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Create(Reservation r)
         {
-            if (!HttpContext.Session.GetInt32("UserId").HasValue)
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
                 return RedirectToAction("Login", "Auth");
+
+            r.UserId = userId.Value;
+            r.Status = ReservationStatus.Pending;
+
+            ModelState.Remove(nameof(r.User));
+            ModelState.Remove(nameof(r.Table));
+
+            // --- WALIDACJA LOGICZNA ---
+
+            // 1. Sprawdzenie czy data nie jest w przeszłości
+            if (r.DateTime < DateTime.Now)
+            {
+                ModelState.AddModelError("DateTime", "Nie można dokonać rezerwacji w przeszłości.");
+            }
+
+            // 2. Sprawdzenie godzin otwarcia
+            // Pobieramy konfigurację dla dnia tygodnia wybranego w rezerwacji
+            var dayOfWeek = r.DateTime.DayOfWeek;
+            var openingHour = _ctx.OpeningHours.FirstOrDefault(oh => oh.DayOfWeek == dayOfWeek);
+
+            if (openingHour != null)
+            {
+                if (openingHour.IsClosed)
+                {
+                    ModelState.AddModelError("DateTime", "W tym dniu restauracja jest nieczynna.");
+                }
+                else
+                {
+                    var time = r.DateTime.TimeOfDay;
+                    // Sprawdzamy czy godzina rezerwacji mieści się w zakresie
+                    if (time < openingHour.OpenTime || time > openingHour.CloseTime)
+                    {
+                        ModelState.AddModelError("DateTime", $"Restauracja jest czynna w godzinach {openingHour.OpenTime:hh\\:mm} - {openingHour.CloseTime:hh\\:mm}.");
+                    }
+                }
+            }
+
+            // 3. Sprawdzenie konfliktu rezerwacji (Czy stolik jest wolny?)
+            if (ModelState.IsValid) // Sprawdzamy to tylko jeśli data jest poprawna
+            {
+                // Zakładamy, że każda rezerwacja trwa domyślnie 2 godziny
+                var reservationDuration = TimeSpan.FromHours(2);
+                var newReservationStart = r.DateTime;
+                var newReservationEnd = r.DateTime.Add(reservationDuration);
+
+                // *** POPRAWKA BŁĘDU "InvalidOperationException" ***
+                // Obliczamy graniczną datę w C# (zamiast w LINQ), aby baza danych nie musiała robić odejmowania dat.
+                // Logika: Jeśli istniejąca rezerwacja ma się skończyć PO naszym starcie (overlap),
+                // to jej Start musi być WIĘKSZY niż (NaszStart - CzasTrwania).
+                var conflictThreshold = newReservationStart.Subtract(reservationDuration);
+
+                bool overlap = _ctx.Reservations
+                    .Any(existing =>
+                        existing.TableId == r.TableId && // Ten sam stolik
+                        existing.Status != ReservationStatus.Rejected && // Ignorujemy odrzucone
+                                                                         // Warunek 1: Istniejąca zaczyna się przed końcem nowej
+                        existing.DateTime < newReservationEnd &&
+                        // Warunek 2: Istniejąca kończy się po starcie nowej
+                        // (co matematycznie oznacza: StartIstniejącej > NaszStart - 2h)
+                        existing.DateTime > conflictThreshold
+                    );
+
+                if (overlap)
+                {
+                    ModelState.AddModelError("TableId", "Ten stolik jest już zarezerwowany w wybranym terminie (zakładając 2h wizyty). Wybierz inną godzinę lub stolik.");
+                }
+            }
+
+            // --- KONIEC WALIDACJI ---
 
             if (!ModelState.IsValid)
             {
-                PopulateTablesDropDownList(r.TableId); // DODAJ TO
+                PopulateTablesDropDownList(r.TableId);
                 return View(r);
             }
 
             _ctx.Reservations.Add(r);
             _ctx.SaveChanges();
+
+            TempData["SuccessMessage"] = "Rezerwacja złożona. Oczekuj na potwierdzenie przez obsługę.";
             return RedirectToAction(nameof(Index));
         }
 
         // GET: /Reservations/Edit/5
-        // tylko Employee, Manager i Admin mogą edytować
         [RoleAuthorize("Employee", "Manager", "Admin")]
         public IActionResult Edit(int id)
         {
             var r = _ctx.Reservations.Find(id);
             if (r == null) return NotFound();
 
-            PopulateTablesDropDownList(r.TableId); // DODAJ TO
+            PopulateTablesDropDownList(r.TableId);
             return View(r);
         }
 
         // POST: /Reservations/Edit
         [HttpPost]
         [RoleAuthorize("Employee", "Manager", "Admin")]
+        [ValidateAntiForgeryToken]
         public IActionResult Edit(Reservation r)
         {
+            var original = _ctx.Reservations.AsNoTracking().FirstOrDefault(x => x.Id == r.Id);
+            if (original == null) return NotFound();
+
+            r.UserId = original.UserId;
+
+            ModelState.Remove(nameof(r.User));
+            ModelState.Remove(nameof(r.Table));
+
             if (!ModelState.IsValid)
             {
-                PopulateTablesDropDownList(r.TableId); // DODAJ TO
+                PopulateTablesDropDownList(r.TableId);
                 return View(r);
             }
 
             _ctx.Reservations.Update(r);
             _ctx.SaveChanges();
+            TempData["SuccessMessage"] = "Zaktualizowano rezerwację.";
             return RedirectToAction(nameof(Index));
         }
 
         // GET: /Reservations/Delete/5
-        // tylko Employee, Manager i Admin mogą usuwać
         [RoleAuthorize("Employee", "Manager", "Admin")]
         public IActionResult Delete(int id)
         {
-            // ZMIANA: Użyj Include, aby pobrać nazwę stolika dla widoku
             var r = _ctx.Reservations
                         .Include(r => r.Table)
                         .FirstOrDefault(r => r.Id == id);
@@ -102,6 +204,7 @@ namespace RestaurantManager.Controllers
         // POST: /Reservations/Delete
         [HttpPost, ActionName("Delete")]
         [RoleAuthorize("Employee", "Manager", "Admin")]
+        [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
             var r = _ctx.Reservations.Find(id);
@@ -109,20 +212,18 @@ namespace RestaurantManager.Controllers
             {
                 _ctx.Reservations.Remove(r);
                 _ctx.SaveChanges();
+                TempData["SuccessMessage"] = "Usunięto rezerwację.";
             }
             return RedirectToAction(nameof(Index));
         }
 
-        // --- NOWA METODA POMOCNICZA ---
         private void PopulateTablesDropDownList(object selectedTable = null)
         {
-            // Pobieramy tylko dostępne stoliki
             var tablesQuery = from t in _ctx.Tables
                               where t.IsAvailable == true
                               orderby t.Name
                               select t;
 
-            // Tworzymy listę SelectList. Dodajemy pole Name i Capacity dla lepszej czytelności w dropdown
             var tableListItems = tablesQuery.AsNoTracking().Select(t => new
             {
                 t.Id,

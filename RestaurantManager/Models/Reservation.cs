@@ -1,49 +1,50 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema; // DODAJ TO
 
 namespace RestaurantManager.Models
 {
-    public class Reservation : IValidatableObject
+    public enum ReservationStatus
+    {
+        [Display(Name = "Oczekująca")]
+        Pending,
+        [Display(Name = "Zatwierdzona")]
+        Confirmed,
+        [Display(Name = "Odrzucona")]
+        Rejected
+    }
+
+    public class Reservation
     {
         public int Id { get; set; }
 
-        [Required, StringLength(60)]
-        public string CustomerName { get; set; }
-
-        // 9 cyfr – tylko cyfry
         [Required]
-        [RegularExpression(@"^\d{9}$", ErrorMessage = "Phone number must be exactly 9 digits.")]
-        public string Phone { get; set; }
-
-        [Required]
-        [Display(Name = "Date & time")]
+        [Display(Name = "Data i godzina")]
         public DateTime DateTime { get; set; }
 
-        [Range(1, 20)]
-        [Display(Name = "Party size")]
-        public int PartySize { get; set; }
+        // Dane kontaktowe (mogą być pobrane z Usera, ale warto mieć je też przy rezerwacji w razie zmian)
+        [Required]
+        [Display(Name = "Imię i nazwisko")]
+        public string CustomerName { get; set; }
 
-        public string? Notes { get; set; }
+        [Required]
+        [Phone]
+        [Display(Name = "Telefon")]
+        public string CustomerPhone { get; set; }
 
-        // --- NOWO DODANE POLA ---
+        [Required]
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string CustomerEmail { get; set; }
 
-        [Display(Name = "Table")]
-        public int? TableId { get; set; } // Klucz obcy (nullable)
+        [Display(Name = "Status")]
+        public ReservationStatus Status { get; set; } = ReservationStatus.Pending; // Domyślnie oczekująca
 
-        [ForeignKey("TableId")]
-        public virtual Table? Table { get; set; } // Właściwość nawigacyjna
+        // Relacja do Stolika
+        public int TableId { get; set; }
+        public virtual Table? Table { get; set; }
 
-        // data nie może  być w przeszłości
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (DateTime < DateTime.Now)
-            {
-                yield return new ValidationResult(
-                    "Reservation date must be in the future.",
-                    new[] { nameof(DateTime) });
-            }
-        }
+        // *** NOWOŚĆ: Relacja do Użytkownika (kto złożył rezerwację) ***
+        public int? UserId { get; set; }
+        public virtual User? User { get; set; }
     }
 }

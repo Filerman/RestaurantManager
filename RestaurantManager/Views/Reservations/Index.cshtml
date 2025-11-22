@@ -1,36 +1,81 @@
 ﻿@model IEnumerable<RestaurantManager.Models.Reservation>
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
 @{
-    ViewData["Title"] = "Reservations";
+    ViewData["Title"] = "Rezerwacje";
+    var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
 }
 
-<h2>Reservations</h2>
-<a asp-action="Create" class="btn btn-primary mb-3">New reservation</a>
+<div class="container mt-4">
+    <h2>Rezerwacje</h2>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Date&nbsp;/&nbsp;time</th>
-            <th>Guest</th>
-            <th>Party</th>
-            <th>Table</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach
-                (var r in Model)
-        {
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Złóż nową rezerwację</a>
+    </p>
+
+    <table class="table table-striped table-hover">
+        <thead class="thead-dark">
             <tr>
-                <td>@r.DateTime.ToString("g")</td>
-                <td>@r.CustomerName (@r.Phone)</td>
-                <td>@r.PartySize</td>
-                <td>@(r.Table?.Name ?? "Brak")</td>
-                <td>
-
-                    <a asp-action="Edit" asp-route-id="@r.Id" class="btn btn-sm btn-warning">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@r.Id" class="btn btn-sm btn-danger">Delete</a>
-                </td>
+                <th>Data</th>
+                <th>Klient</th>
+                <th>Telefon</th>
+                <th>Email</th>
+                <th>Stolik</th>
+                <th>Status</th>
+                <th>Akcje</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.DateTime.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@item.CustomerName</td>
+                    <td>@item.CustomerPhone</td>
+                    <td>@item.CustomerEmail</td>
+                    <td>
+                        @if (item.Table != null)
+                        {
+                            <span>@item.Table.Name (@item.Table.Capacity os.)</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Brak</span>
+                        }
+                    </td>
+                    <td>
+                        @switch (item.Status)
+                        {
+                            case RestaurantManager.Models.ReservationStatus.Pending:
+                                <span class="badge bg-warning text-dark">Oczekująca</span>
+                                break;
+                            case RestaurantManager.Models.ReservationStatus.Confirmed:
+                                <span class="badge bg-success">Zatwierdzona</span>
+                                break;
+                            case RestaurantManager.Models.ReservationStatus.Rejected:
+                                <span class="badge bg-danger">Odrzucona</span>
+                                break;
+                        }
+                    </td>
+                    <td>
+                        @if (userRole == "Admin" || userRole == "Manager" || userRole == "Employee")
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-info">Zarządzaj</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Usuń</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted small">Brak akcji</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
