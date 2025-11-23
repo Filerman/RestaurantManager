@@ -1,18 +1,22 @@
 ﻿@model RestaurantManager.Models.SupportTicket
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
 @{
-    ViewData["Title"] = "Zgłoś Problem";
+    var role = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
+    var title = (role == "Guest") ? "Zadaj Pytanie" : "Zgłoś Problem";
+    ViewData["Title"] = title;
 }
 
 <div class="container mt-4">
-    <h2>Zgłoś Problem</h2>
+    <h2>@title</h2>
     <form asp-action="Create">
         <div class="form-group mb-3">
-            <label asp-for="Subject" class="fw-bold"></label>
-            <input asp-for="Subject" class="form-control" placeholder="np. Awaria ekspresu" />
+            <label asp-for="Subject" class="fw-bold">Temat</label>
+            <input asp-for="Subject" class="form-control" placeholder="@(role == "Guest" ? "Np. Rezerwacja na 20 osób" : "Np. Awaria sprzętu")" />
             <span asp-validation-for="Subject" class="text-danger"></span>
         </div>
         <div class="form-group mb-3">
-            <label asp-for="Description" class="fw-bold"></label>
+            <label asp-for="Description" class="fw-bold">Treść</label>
             <textarea asp-for="Description" class="form-control" rows="5"></textarea>
             <span asp-validation-for="Description" class="text-danger"></span>
         </div>

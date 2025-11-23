@@ -18,16 +18,44 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // GET: /Faq (Dla wszystkich)
-        public async Task<IActionResult> Index()
+        // GET: /Faq
+        public async Task<IActionResult> Index(string filter = "all")
         {
             var role = HttpContext.Session.GetString("UserRole");
             bool isStaff = (role == "Admin" || role == "Manager" || role == "Employee");
 
-            // Jeśli pracownik/admin - pokaż wszystko. Jeśli klient - tylko publiczne.
-            var faqs = isStaff
-                ? await _context.FaqItems.ToListAsync()
-                : await _context.FaqItems.Where(f => f.IsPublic).ToListAsync();
+            var query = _context.FaqItems.AsQueryable();
+
+            if (!isStaff)
+            {
+                // Goście ZAWSZE widzą tylko publiczne, niezależnie od filtra
+                query = query.Where(f => f.IsPublic);
+            }
+            else
+            {
+                // Logika filtrowania dla personelu
+                switch (filter)
+                {
+                    case "internal":
+                        // Tylko wewnętrzne (niepubliczne)
+                        query = query.Where(f => !f.IsPublic);
+                        break;
+                    case "public":
+                        // Tylko publiczne
+                        query = query.Where(f => f.IsPublic);
+                        break;
+                    case "all":
+                    default:
+                        // Wszystkie (bez where)
+                        break;
+                }
+            }
+
+            var faqs = await query.ToListAsync();
+
+            // Przekazujemy info do widoku, żeby ustawić dropdown i pokazać opcje
+            ViewBag.IsStaff = isStaff;
+            ViewBag.CurrentFilter = filter;
 
             return View(faqs);
         }

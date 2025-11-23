@@ -1,15 +1,21 @@
 ﻿@model IEnumerable<RestaurantManager.Models.SupportTicket>
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
 @{
-    ViewData["Title"] = "Moje Zgłoszenia";
+    var role = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
+    var title = (role == "Guest") ? "Moje Pytania" : "Moje Zgłoszenia";
+    ViewData["Title"] = title;
 }
 
 <div class="container mt-4">
-    <h2>Moje Zgłoszenia</h2>
-    <a asp-action="Create" class="btn btn-primary mb-3">Nowe Zgłoszenie</a>
+    <h2>@title</h2>
+    <a asp-action="Create" class="btn btn-primary mb-3">
+        @(role == "Guest" ? "Zadaj nowe pytanie" : "Nowe zgłoszenie")
+    </a>
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info">Nie masz jeszcze żadnych zgłoszeń.</div>
+        <div class="alert alert-info">Brak wpisów.</div>
     }
     else
     {
@@ -30,12 +36,11 @@
                             <div class="fw-bold">@item.Subject</div>
                             <small class="text-muted">@item.Description</small>
 
-                            @* WYŚWIETLANIE ODPOWIEDZI *@
                             @if (!string.IsNullOrEmpty(item.ManagerResponse))
                             {
                                 <div class="mt-2 p-2 bg-light border border-start-0 border-end-0 border-bottom-0 border-primary rounded">
                                     <i class="bi bi-arrow-return-right text-primary me-1"></i>
-                                    <strong>Odpowiedź:</strong> <span class="text-dark">@item.ManagerResponse</span>
+                                    <strong>Odpowiedź Managera:</strong> <span class="text-dark">@item.ManagerResponse</span>
                                 </div>
                             }
                         </td>
