@@ -1,0 +1,52 @@
+﻿@model IEnumerable<RestaurantManager.Models.SupportTicket>
+@{
+    ViewData["Title"] = "Moje Zgłoszenia";
+}
+
+<div class="container mt-4">
+    <h2>Moje Zgłoszenia</h2>
+    <a asp-action="Create" class="btn btn-primary mb-3">Nowe Zgłoszenie</a>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">Nie masz jeszcze żadnych zgłoszeń.</div>
+    }
+    else
+    {
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Data</th>
+                    <th>Temat / Odpowiedź</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td style="white-space:nowrap;">@item.DateCreated.ToString("dd.MM.yyyy")</td>
+                        <td>
+                            <div class="fw-bold">@item.Subject</div>
+                            <small class="text-muted">@item.Description</small>
+
+                            @* WYŚWIETLANIE ODPOWIEDZI *@
+                            @if (!string.IsNullOrEmpty(item.ManagerResponse))
+                            {
+                                <div class="mt-2 p-2 bg-light border border-start-0 border-end-0 border-bottom-0 border-primary rounded">
+                                    <i class="bi bi-arrow-return-right text-primary me-1"></i>
+                                    <strong>Odpowiedź:</strong> <span class="text-dark">@item.ManagerResponse</span>
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge @(item.Status == RestaurantManager.Models.TicketStatus.New ? "bg-primary" : (item.Status == RestaurantManager.Models.TicketStatus.Resolved ? "bg-success" : "bg-secondary"))">
+                                @Html.DisplayFor(modelItem => item.Status)
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

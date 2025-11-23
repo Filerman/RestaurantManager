@@ -1,0 +1,52 @@
+﻿@model RestaurantManager.Models.SupportTicket
+@{
+    ViewData["Title"] = "Szczegóły Zgłoszenia";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>@Model.Subject <small class="text-muted">(@Model.Status)</small></h3>
+        <a asp-action="Manage" class="btn btn-outline-secondary">Powrót do listy</a>
+    </div>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <strong>Zgłosił:</strong> @Model.CreatedByUser?.Username <span class="text-muted">(@Model.DateCreated.ToString("dd.MM.yyyy HH:mm"))</span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Opis problemu:</h5>
+                    <p class="card-text">@Model.Description</p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Rozwiązanie / Odpowiedź</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="ResolveTicket" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+
+                        <div class="form-group mb-3">
+                            <label class="form-label fw-bold">Treść odpowiedzi:</label>
+                            <textarea name="managerResponse" class="form-control" rows="4" placeholder="Wpisz rozwiązanie lub komentarz dla pracownika...">@Model.ManagerResponse</textarea>
+                        </div>
+
+                        <div class="row align-items-end">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Zmień status:</label>
+                                <select name="status" class="form-select" asp-items="Html.GetEnumSelectList<RestaurantManager.Models.TicketStatus>()" asp-for="Status"></select>
+                            </div>
+                            <div class="col-md-6 mb-3 text-end">
+                                <button type="submit" class="btn btn-success w-100">Zapisz i Zaktualizuj</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -108,6 +108,17 @@ namespace RestaurantManager.Data
                         DateCreated = DateTime.Now.AddDays(-1)
                     }
                 );
+
+            }
+
+            // 8. *** FAQ ***
+            if (!context.FaqItems.Any())
+            {
+                context.FaqItems.AddRange(
+                    new FaqItem { Question = "Czy macie opcje wegańskie?", Answer = "Tak, w naszym menu znajdziesz sekcję z daniami roślinnymi.", IsPublic = true },
+                    new FaqItem { Question = "Czy można płacić kartą?", Answer = "Tak, akceptujemy karty płatnicze i BLIK.", IsPublic = true },
+                    new FaqItem { Question = "Procedura zgłaszania urlopu (Dla Pracowników)", Answer = "Urlop należy zgłaszać w systemie z 2-tygodniowym wyprzedzeniem.", IsPublic = false }
+                );
             }
 
             context.SaveChanges();

@@ -57,9 +57,13 @@
                             <a class="nav-link text-dark" asp-controller="ContactInfo" asp-action="Index">Kontakt</a>
                         </li>
 
-                        @* --- NOWOŚĆ: Link do Aktualności --- *@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Announcements" asp-action="Index">Aktualności</a>
+                        </li>
+
+                        @* --- NOWOŚĆ: Link do FAQ --- *@
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Faq" asp-action="Index">FAQ</a>
                         </li>
 
                         @if (logged)
@@ -82,6 +86,13 @@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Availability" asp-action="Index">Moja Dostępność</a>
                                     </li>
+                                    <li><hr class="dropdown-divider"></li>
+
+                                    @* --- NOWOŚĆ: Zgłoszenia pracownicze --- *@
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Support" asp-action="MyTickets">Wsparcie / Zgłoszenia</a>
+                                    </li>
+
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" asp-controller="LossLogs" asp-action="Report">Zgłoś Stratę</a>
@@ -107,13 +118,24 @@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Users" asp-action="Index">Użytkownicy</a>
                                     </li>
+
+                                    @* --- NOWOŚĆ: Zarządzanie Zgłoszeniami --- *@
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Support" asp-action="Manage">HelpDesk (Zgłoszenia)</a>
+                                    </li>
+
                                     <li>
                                         <a class="dropdown-item" asp-controller="PositionTags" asp-action="Index">Tagi Stanowisk</a>
                                     </li>
+
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header">Restauracja</h6></li>
 
-                                    @* --- NOWOŚĆ: Zarządzanie Aktualnościami --- *@
+                                    @* --- NOWOŚĆ: Zarządzanie FAQ --- *@
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Faq" asp-action="Manage">Zarządzaj FAQ</a>
+                                    </li>
+
                                     <li>
                                         <a class="dropdown-item" asp-controller="Announcements" asp-action="Manage">Zarządzaj Aktualnościami</a>
                                     </li>

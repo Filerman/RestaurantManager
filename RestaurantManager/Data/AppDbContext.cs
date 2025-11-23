@@ -27,6 +27,8 @@ namespace RestaurantManager.Data
         public DbSet<OpeningHour> OpeningHours { get; set; }
         public DbSet<ContactInfo> ContactInfos { get; set; }
         public DbSet<Announcement> Announcements { get; set; }
+        public DbSet<FaqItem> FaqItems { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -94,6 +96,13 @@ namespace RestaurantManager.Data
                .WithMany(u => u.Reservations)
                .HasForeignKey(r => r.UserId)
                .OnDelete(DeleteBehavior.Cascade);
+
+            // Relacja SupportTicket -> User (Zgłaszający)
+            modelBuilder.Entity<SupportTicket>()
+                .HasOne(t => t.CreatedByUser)
+                .WithMany() // User nie musi mieć kolekcji zgłoszeń w swoim modelu, chyba że chcesz
+                .HasForeignKey(t => t.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

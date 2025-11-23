@@ -1,0 +1,29 @@
+﻿@model IEnumerable<RestaurantManager.Models.FaqItem>
+@{
+    ViewData["Title"] = "Zarządzaj FAQ";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Zarządzanie FAQ</h2>
+        <a asp-action="Create" class="btn btn-success">Dodaj Pytanie</a>
+    </div>
+    <table class="table table-striped">
+        <thead><tr><th>Pytanie</th><th>Publiczne?</th><th>Akcje</th></tr></thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Question</td>
+                    <td>@(item.IsPublic ? "Tak" : "Nie")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edytuj</a>
+                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Usunąć?')">Usuń</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

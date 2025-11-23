@@ -1,0 +1,23 @@
+﻿@model IEnumerable<RestaurantManager.Models.SupportTicket>
+@{
+    ViewData["Title"] = "HelpDesk";
+}
+
+<div class="container mt-4">
+    <h2>Zgłoszenia Pracowników</h2>
+    <table class="table table-hover">
+        <thead><tr><th>Data</th><th>Kto</th><th>Temat</th><th>Status</th><th>Akcja</th></tr></thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.DateCreated.ToString("dd.MM HH:mm")</td>
+                    <td>@item.CreatedByUser?.Username</td>
+                    <td>@item.Subject</td>
+                    <td>@item.Status</td>
+                    <td><a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Szczegóły</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,27 @@
+﻿@model RestaurantManager.Models.FaqItem
+@{
+    ViewData["Title"] = "Dodaj FAQ";
+}
+
+<div class="container mt-4">
+    <h2>Dodaj Pytanie</h2>
+    <form asp-action="Create">
+        <div class="form-group mb-3">
+            <label asp-for="Question" class="control-label fw-bold"></label>
+            <input asp-for="Question" class="form-control" />
+            <span asp-validation-for="Question" class="text-danger"></span>
+        </div>
+        <div class="form-group mb-3">
+            <label asp-for="Answer" class="control-label fw-bold"></label>
+            <textarea asp-for="Answer" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Answer" class="text-danger"></span>
+        </div>
+        <div class="form-group form-check mb-3">
+            <label class="form-check-label">
+                <input class="form-check-input" asp-for="IsPublic" /> @Html.DisplayNameFor(model => model.IsPublic)
+            </label>
+        </div>
+        <button type="submit" class="btn btn-success">Zapisz</button>
+        <a asp-action="Manage" class="btn btn-secondary">Anuluj</a>
+    </form>
+</div>
