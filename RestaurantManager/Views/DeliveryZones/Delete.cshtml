@@ -1,0 +1,44 @@
+﻿@model RestaurantManager.Models.DeliveryZone
+
+@{
+    ViewData["Title"] = "Usuń Strefę Dostaw";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Potwierdź usunięcie</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Czy na pewno chcesz usunąć tę strefę dostaw?</p>
+                    <hr />
+                    <dl class="row">
+                        <dt class="col-sm-4">
+                            @Html.DisplayNameFor(model => model.CityName)
+                        </dt>
+                        <dd class="col-sm-8 fw-bold">
+                            @Html.DisplayFor(model => model.CityName)
+                        </dd>
+
+                        <dt class="col-sm-4">
+                            @Html.DisplayNameFor(model => model.DeliveryFee)
+                        </dt>
+                        <dd class="col-sm-8">
+                            @Model.DeliveryFee.ToString("C")
+                        </dd>
+                    </dl>
+
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex justify-content-end">
+                            <a asp-action="Index" class="btn btn-secondary me-2">Anuluj</a>
+                            <input type="submit" value="Usuń" class="btn btn-danger" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

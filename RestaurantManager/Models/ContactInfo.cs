@@ -10,6 +10,7 @@ namespace RestaurantManager.Models
         [Display(Name = "Nazwa Restauracji")]
         public string RestaurantName { get; set; }
 
+        // ... (Twoje dotychczasowe pola: AddressStreet, City, ZipCode, Phone, Email, Maps) ...
         [Required(ErrorMessage = "Adres jest wymagany.")]
         [Display(Name = "Ulica i numer")]
         public string AddressStreet { get; set; }
@@ -34,5 +35,9 @@ namespace RestaurantManager.Models
 
         [Display(Name = "Link do Map Google (opcjonalnie)")]
         public string? GoogleMapsLink { get; set; }
+
+        [Display(Name = "Średni czas realizacji (minuty)")]
+        [Range(15, 240, ErrorMessage = "Czas musi wynosić od 15 do 240 minut")]
+        public int EstimatedDeliveryTimeMinutes { get; set; } = 45; // Domyślnie 45 min
     }
 }

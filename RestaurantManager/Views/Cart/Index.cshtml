@@ -1,0 +1,72 @@
+﻿@model List<RestaurantManager.ViewModels.CartItemViewModel>
+
+@{
+    ViewData["Title"] = "Twój Koszyk";
+    decimal total = Model.Sum(x => x.TotalPrice);
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-cart3"></i> Twój Koszyk</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            Twój koszyk jest pusty. <a asp-controller="Menu" asp-action="Index">Przejdź do menu i zamów coś pysznego!</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Danie</th>
+                        <th>Cena</th>
+                        <th style="width: 150px;">Ilość</th>
+                        <th>Razem</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><strong>@item.MenuItemName</strong></td>
+                            <td>@item.Price.ToString("C")</td>
+                            <td>
+                                <form asp-action="UpdateQuantity" class="d-flex">
+                                    <input type="hidden" name="id" value="@item.MenuItemId" />
+                                    <input type="number" name="quantity" value="@item.Quantity" min="1" max="50" class="form-control form-control-sm me-2" onchange="this.form.submit()" />
+                                </form>
+                            </td>
+                            <td>@item.TotalPrice.ToString("C")</td>
+                            <td>
+                                <form asp-action="Remove" method="post">
+                                    <input type="hidden" name="id" value="@item.MenuItemId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <td colspan="3" class="text-end fw-bold fs-5">Suma:</td>
+                        <td colspan="2" class="fw-bold fs-5 text-primary">@total.ToString("C")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-controller="Menu" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Wróć do Menu
+            </a>
+
+            @* Przycisk "Dalej" przekieruje nas do formularza zamówienia (Krok 3) *@
+            <a asp-controller="Orders" asp-action="Checkout" class="btn btn-success btn-lg">
+                Dalej - Dostawa i Płatność <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    }
+</div>

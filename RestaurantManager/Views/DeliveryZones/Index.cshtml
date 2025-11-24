@@ -1,0 +1,49 @@
+﻿@model IEnumerable<RestaurantManager.Models.DeliveryZone>
+@{
+    ViewData["Title"] = "Strefy Dostaw";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Strefy Dostaw</h2>
+        <a asp-action="Create" class="btn btn-success"><i class="bi bi-plus-circle"></i> Dodaj Strefę</a>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Tutaj zdefiniuj <strong>wszystkie</strong> miasta, do których dowozi restauracja (włącznie z miastem, w którym się znajduje). Jeśli miasta nie ma na liście, klient nie będzie mógł zamówić dostawy.
+    </div>
+
+    <table class="table table-striped align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Miejscowość</th>
+                <th>Opłata za dowóz</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td><strong>@item.CityName</strong></td>
+                    <td>
+                        @if (item.DeliveryFee == 0)
+                        {
+                            <span class="badge bg-success">Darmowa</span>
+                        }
+                        else
+                        {
+                            @item.DeliveryFee.ToString("C")
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary me-1">Edytuj</a>
+                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Czy na pewno usunąć strefę @item.CityName?')">Usuń</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

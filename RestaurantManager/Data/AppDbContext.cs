@@ -9,8 +9,6 @@ namespace RestaurantManager.Data
             : base(options)
         {
         }
-
-        // --- Twoje istniejące tabele ---
         public DbSet<User> Users { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
@@ -29,12 +27,12 @@ namespace RestaurantManager.Data
         public DbSet<Announcement> Announcements { get; set; }
         public DbSet<FaqItem> FaqItems { get; set; }
         public DbSet<SupportTicket> SupportTickets { get; set; }
-
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<DeliveryZone> DeliveryZones { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // --- Twoje istniejące konfiguracje ---
 
             // Relacja 1:1 User -> Employee
             modelBuilder.Entity<User>()
@@ -102,6 +100,22 @@ namespace RestaurantManager.Data
                 .HasOne(t => t.CreatedByUser)
                 .WithMany() // User nie musi mieć kolekcji zgłoszeń w swoim modelu, chyba że chcesz
                 .HasForeignKey(t => t.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Precyzja dla cen w zamówieniach
+            modelBuilder.Entity<Order>()
+                .Property(o => o.TotalAmount)
+                .HasColumnType("decimal(18, 2)");
+
+            modelBuilder.Entity<OrderItem>()
+                .Property(oi => oi.UnitPrice)
+                .HasColumnType("decimal(18, 2)");
+
+            // Relacja Order -> OrderItems
+            modelBuilder.Entity<Order>()
+                .HasMany(o => o.OrderItems)
+                .WithOne(oi => oi.Order)
+                .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

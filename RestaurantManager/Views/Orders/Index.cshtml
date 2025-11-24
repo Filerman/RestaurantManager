@@ -1,0 +1,73 @@
+﻿@model IEnumerable<RestaurantManager.Models.Order>
+@{
+    ViewData["Title"] = "System POS - Zamówienia";
+}
+
+<div class="container-fluid mt-3">
+    <h2 class="mb-4">Aktywne Zamówienia (POS)</h2>
+
+    <div class="row">
+        @foreach (var order in Model)
+        {
+            // Kolorowanie w zależności od czasu
+            var timeLeft = order.ScheduledDate - DateTime.Now;
+            var cardClass = timeLeft.TotalMinutes < 15 ? "border-danger" : (timeLeft.TotalMinutes < 60 ? "border-warning" : "border-info");
+            if (order.Status == RestaurantManager.Models.OrderStatus.Ready) { cardClass = "border-success"; }
+
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card @cardClass shadow h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                        <strong>#@order.Id</strong>
+                        <span class="badge bg-secondary">@order.Type</span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">@order.ScheduledDate.ToString("HH:mm") <small class="text-muted">(@order.ScheduledDate.ToString("dd.MM"))</small></h5>
+                        <p class="card-text mb-1"><strong>@order.CustomerName</strong></p>
+                        <p class="card-text mb-2"><small>@order.CustomerPhone</small></p>
+
+                        @if (!string.IsNullOrEmpty(order.DeliveryAddress))
+                        {
+                            <div class="alert alert-light p-1 border mb-2 small"><i class="bi bi-truck"></i> @order.DeliveryAddress</div>
+                        }
+
+                        <hr class="my-2" />
+                        <ul class="list-unstyled small mb-3">
+                            @foreach (var item in order.OrderItems)
+                            {
+                                <li><strong>@item.Quantity x</strong> @item.MenuItem.Name</li>
+                            }
+                        </ul>
+                        @if (!string.IsNullOrEmpty(order.Notes))
+                        {
+                            <p class="text-danger small"><strong>Uwagi:</strong> @order.Notes</p>
+                        }
+                    </div>
+                    <div class="card-footer bg-white text-center">
+                        <p class="fw-bold">Status: <span class="text-primary">@order.Status</span></p>
+
+                        <form asp-action="UpdateStatus" method="post">
+                            <input type="hidden" name="id" value="@order.Id" />
+
+                            @if (order.Status == RestaurantManager.Models.OrderStatus.Created)
+                            {
+                                <button type="submit" name="status" value="@RestaurantManager.Models.OrderStatus.Accepted" class="btn btn-warning btn-sm w-100">Zatwierdź</button>
+                            }
+                            else if (order.Status == RestaurantManager.Models.OrderStatus.Accepted)
+                            {
+                                <button type="submit" name="status" value="@RestaurantManager.Models.OrderStatus.InKitchen" class="btn btn-info btn-sm w-100">Na Kuchnię</button>
+                            }
+                            else if (order.Status == RestaurantManager.Models.OrderStatus.InKitchen)
+                            {
+                                <button type="submit" name="status" value="@RestaurantManager.Models.OrderStatus.Ready" class="btn btn-success btn-sm w-100">Gotowe</button>
+                            }
+                            else if (order.Status == RestaurantManager.Models.OrderStatus.Ready)
+                            {
+                                <button type="submit" name="status" value="@RestaurantManager.Models.OrderStatus.Completed" class="btn btn-outline-dark btn-sm w-100">Zakończ</button>
+                            }
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

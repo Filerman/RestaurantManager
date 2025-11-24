@@ -24,10 +24,8 @@
             <th>Description</th>
             <th>Price</th>
             <th>Category</th>
-            <th>Status</th> @if (canManageMenu)
-            {
-                <th></th>
-            }
+            <th>Status</th>
+            <th>Akcje</th>
         </tr>
 
     </thead>
@@ -50,13 +48,25 @@
                         <span class="text-danger">Niedostępne</span>
                     }
                 </td>
-                @if (canManageMenu)
-                {
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
-                    </td>
-                }
+                <td>
+                    <div class="d-flex gap-2">
+                        @if (item.IsAvailable)
+                        {
+                            <form asp-controller="Cart" asp-action="Add" method="post">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-cart-plus"></i> Dodaj do koszyka
+                                </button>
+                            </form>
+                        }
+
+                        @if (canManageMenu)
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                        }
+                    </div>
+                </td>
             </tr>
 
         }

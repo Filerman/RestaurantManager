@@ -1,0 +1,93 @@
+﻿@model IEnumerable<RestaurantManager.Models.Order>
+@{
+    ViewData["Title"] = "Moja Historia Zamówień";
+}
+
+<div class="container mt-4">
+    <h2><i class="bi bi-clock-history"></i> Moja Historia Zamówień</h2>
+    <hr />
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center py-4">
+            <h4>Nie złożyłeś jeszcze żadnych zamówień.</h4>
+            <p>Zgłodniałeś?</p>
+            <a asp-controller="Menu" asp-action="Index" class="btn btn-primary mt-2">Przejdź do menu</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var order in Model)
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">Zamówienie #@order.Id</span>
+                            <span class="badge bg-secondary">@order.Type</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Data złożenia:</span>
+                                <span class="text-muted">@order.OrderDate.ToString("dd.MM.yyyy")</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Planowane na:</span>
+                                <strong class="text-primary">@order.ScheduledDate.ToString("dd.MM HH:mm")</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span>Kwota:</span>
+                                <strong class="fs-5">@order.TotalAmount.ToString("C")</strong>
+                            </div>
+
+                            <hr class="my-2" />
+                            <p class="mb-1 small text-muted">Pozycje:</p>
+                            <ul class="list-unstyled small mb-0">
+                                @foreach (var item in order.OrderItems.Take(3))
+                                {
+                                    <li>@item.Quantity x @(item.MenuItem?.Name ?? "Produkt usunięty")</li>
+                                }
+                                @if (order.OrderItems.Count > 3)
+                                {
+                                    <li><em>...i więcej</em></li>
+                                }
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                            <div>
+                                Status:
+                                @switch (order.Status)
+                                {
+                                    case RestaurantManager.Models.OrderStatus.Created:
+                                        <span class="badge bg-warning text-dark">Oczekuje</span>
+                                        ; break;
+                                    case RestaurantManager.Models.OrderStatus.Accepted:
+
+                                        <span class="badge bg-info text-dark">Przyjęte</span>
+                                        ; break;
+                                    case RestaurantManager.Models.OrderStatus.InKitchen:
+
+                                        <span class="badge bg-primary">W kuchni</span>
+                                        ; break;
+                                    case RestaurantManager.Models.OrderStatus.Ready:
+
+                                        <span class="badge bg-success">Gotowe</span>
+                                        ; break;
+                                    case RestaurantManager.Models.OrderStatus.Completed:
+
+                                        <span class="badge bg-dark">Zakończone</span>
+                                        ; break;
+                                    default:
+
+                                        <span class="badge bg-secondary">@order.Status</span>
+                                        ; break;
+                                }
+                            </div>
+                            <a asp-action="Confirmation" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">Szczegóły</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

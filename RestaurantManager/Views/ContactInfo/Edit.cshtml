@@ -29,6 +29,20 @@
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <input type="hidden" asp-for="Contact.Id" />
 
+                        @* --- TUTAJ DODANO BRAKUJĄCĄ SEKCJĘ CZASU DOSTAWY --- *@
+                        <div class="alert alert-warning mb-4 border-warning">
+                            <label asp-for="Contact.EstimatedDeliveryTimeMinutes" class="control-label fw-bold text-dark mb-2"></label>
+                            <div class="input-group">
+                                <input asp-for="Contact.EstimatedDeliveryTimeMinutes" class="form-control form-control-lg fw-bold text-center" type="number" step="5" min="15" />
+                                <span class="input-group-text">minut</span>
+                            </div>
+                            <div class="form-text text-dark mt-1">
+                                <i class="bi bi-lightning-charge-fill"></i> Zmień ten czas w razie dużego ruchu. System automatycznie wydłuży termin dla nowych zamówień.
+                            </div>
+                            <span asp-validation-for="Contact.EstimatedDeliveryTimeMinutes" class="text-danger"></span>
+                        </div>
+                        @* --------------------------------------------------- *@
+
                         <div class="form-group mb-3">
                             <label asp-for="Contact.RestaurantName" class="control-label fw-bold"></label>
                             <input asp-for="Contact.RestaurantName" class="form-control" />

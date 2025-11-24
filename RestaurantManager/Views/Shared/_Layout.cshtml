@@ -11,7 +11,7 @@
         picturePath = "/images/profiles/default.png";
     }
 
-    // Zmienne pomocnicze do określania ról
+    // Helper variables for determining roles
     bool isEmployee = (role == "Employee" || role == "Manager" || role == "Admin");
     bool isManager = (role == "Manager" || role == "Admin");
 }
@@ -61,9 +61,16 @@
                             <a class="nav-link text-dark" asp-controller="Announcements" asp-action="Index">Aktualności</a>
                         </li>
 
-                        @* --- NOWOŚĆ: Link do FAQ --- *@
+                        @* --- NEW: Link to FAQ --- *@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Faq" asp-action="Index">FAQ</a>
+                        </li>
+
+                        @* --- NEW: Link to Cart --- *@
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">
+                                <i class="bi bi-cart-fill text-primary"></i> Koszyk
+                            </a>
                         </li>
 
                         @if (logged)
@@ -88,7 +95,7 @@
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
 
-                                    @* --- NOWOŚĆ: Zgłoszenia pracownicze --- *@
+                                    @* --- NEW: Employee Support Tickets --- *@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Support" asp-action="MyTickets">Wsparcie / Zgłoszenia</a>
                                     </li>
@@ -96,6 +103,14 @@
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" asp-controller="LossLogs" asp-action="Report">Zgłoś Stratę</a>
+                                    </li>
+
+                                    @* --- NEW: POS Link for Employee --- *@
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item fw-bold text-primary" asp-controller="Orders" asp-action="Index">
+                                            <i class="bi bi-receipt"></i> System POS (Zamówienia)
+                                        </a>
                                     </li>
                                 </ul>
                             </li>
@@ -119,7 +134,7 @@
                                         <a class="dropdown-item" asp-controller="Users" asp-action="Index">Użytkownicy</a>
                                     </li>
 
-                                    @* --- NOWOŚĆ: Zarządzanie Zgłoszeniami --- *@
+                                    @* --- NEW: Ticket Management --- *@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Support" asp-action="Manage">HelpDesk (Zgłoszenia)</a>
                                     </li>
@@ -131,7 +146,14 @@
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header">Restauracja</h6></li>
 
-                                    @* --- NOWOŚĆ: Zarządzanie FAQ --- *@
+                                    @* --- NEW: POS Link for Manager --- *@
+                                    <li>
+                                        <a class="dropdown-item fw-bold text-primary" asp-controller="Orders" asp-action="Index">
+                                            <i class="bi bi-receipt"></i> System POS (Zamówienia)
+                                        </a>
+                                    </li>
+
+                                    @* --- NEW: FAQ Management --- *@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Faq" asp-action="Manage">Zarządzaj FAQ</a>
                                     </li>
@@ -142,6 +164,9 @@
 
                                     <li>
                                         <a class="dropdown-item" asp-controller="OpeningHours" asp-action="Index">Godziny Otwarcia</a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="DeliveryZones" asp-action="Index">Strefy Dostaw</a>
                                     </li>
 
                                     <li>
@@ -191,6 +216,15 @@
                                             <i class="bi bi-person-circle me-2"></i>Mój Profil
                                         </a>
                                     </li>
+
+                                    @* --- NEW: Order History Link --- *@
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Orders" asp-action="History">
+                                            <i class="bi bi-clock-history me-2"></i>Historia Zamówień
+                                        </a>
+                                    </li>
+                                    @* ---------------- *@
+
                                     <li>
                                         <a class="dropdown-item" asp-controller="Auth" asp-action="EditProfile">
                                             <i class="bi bi-pencil-square me-2"></i>Edytuj Profil
