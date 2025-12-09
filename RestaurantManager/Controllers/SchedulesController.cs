@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using System.Globalization; // Dodano dla CultureInfo
+using System.Globalization;
 
 namespace RestaurantManager.Controllers
 {
@@ -31,8 +31,8 @@ namespace RestaurantManager.Controllers
         public async Task<IActionResult> Index()
         {
             var schedules = await _context.Schedules
-                                        .OrderByDescending(s => s.StartDate)
-                                        .ToListAsync();
+                .OrderByDescending(s => s.StartDate)
+                .ToListAsync();
             return View(schedules);
         }
 
@@ -100,6 +100,7 @@ namespace RestaurantManager.Controllers
             if (id == null) return NotFound();
             Console.WriteLine($"--->>> GET Edit: Attempting to load Schedule with ID: {id}");
 
+            // 1. Pobieramy grafik WRAZ ze zmianami, aby policzyć godziny
             var schedule = await _context.Schedules
                 .Include(s => s.Shifts)
                     .ThenInclude(sh => sh.EmployeeUser)
@@ -114,6 +115,42 @@ namespace RestaurantManager.Controllers
                 return NotFound();
             }
             Console.WriteLine($"--->>> GET Edit: Schedule found: ID={schedule.Id}");
+
+            // --- NOWA FUNKCJONALNOŚĆ: Formatowanie listy pracowników ---
+
+            // a) Pobieramy wszystkich pracowników
+            var employees = await _context.Employees.ToListAsync();
+
+            // b) Przygotowujemy listę z formatowanym tekstem (Imię + Staż + Godziny w tym grafiku)
+            var employeesWithInfo = employees.Select(e =>
+            {
+                // Policz godziny tego pracownika w TYM grafiku
+                double hoursInSchedule = 0;
+                if (schedule.Shifts != null)
+                {
+                    hoursInSchedule = schedule.Shifts
+                        .Where(s => s.UserId == e.UserId)
+                        .Sum(s => (s.EndTime - s.StartTime).TotalHours);
+                }
+
+                // Oblicz staż
+                string seniority = GetSeniorityString(e.HireDate);
+
+                return new
+                {
+                    UserId = e.UserId,
+                    // Format: "Jan Kowalski (Staż: 2 lata | Graf: 40h)"
+                    DisplayText = $"{e.FullName} (Staż: {seniority} | Graf: {hoursInSchedule:F1}h)"
+                };
+            }).OrderBy(x => x.DisplayText).ToList();
+
+            // c) Przekazujemy sformatowaną listę do ViewBag (Widok jej użyje w dropdownie)
+            ViewData["Employees"] = new SelectList(employeesWithInfo, "UserId", "DisplayText");
+
+            // Tagów też potrzebujemy
+            ViewData["PositionTags"] = new SelectList(await _context.PositionTags.OrderBy(t => t.Name).ToListAsync(), "Id", "Name");
+
+            // -----------------------------------------------------------
 
             var viewModel = new ScheduleEditViewModel
             {
@@ -240,15 +277,49 @@ namespace RestaurantManager.Controllers
                 var availableUserIds = await _context.Availabilities
                     .Where(a => a.Date.Date == date.Date && a.StartTime <= startTime && a.EndTime >= endTime)
                     .Select(a => a.UserId).Distinct().ToListAsync();
+
+                // Jeśli nikt nie zgłosił dostępności, to nikt nie jest dostępny
                 if (!availableUserIds.Any()) return Json(new List<object>());
+
                 var availableUsers = await _context.Users
                     .Where(u => availableUserIds.Contains(u.Id))
                     .Include(u => u.Employee).ThenInclude(e => e.PositionTags)
                     .ToListAsync();
+
+                // Pobieramy aktualny grafik, żeby policzyć godziny dla dynamicznego dropdowna w AJAX
+                // Zakładamy, że data zmiany mieści się w grafiku, więc szukamy grafiku dla tej daty
+                var schedule = await _context.Schedules
+                    .Include(s => s.Shifts)
+                    .FirstOrDefaultAsync(s => date >= s.StartDate && date <= s.EndDate);
+
                 var filteredEmployees = availableUsers
                      .Where(u => u.Role == "Admin" || u.Role == "Manager" || (u.Employee != null && u.Employee.PositionTags.Any(pt => pt.Id == positionTagId)))
-                     .Select(u => new { u.Id, DisplayName = u.Employee?.FullName ?? u.Username })
+                     .Select(u => {
+                         // Obliczanie info do wyświetlenia (Staż + Godziny)
+                         double hours = 0;
+                         string seniority = "-";
+
+                         if (u.Employee != null)
+                         {
+                             seniority = GetSeniorityString(u.Employee.HireDate);
+                             if (schedule != null && schedule.Shifts != null)
+                             {
+                                 hours = schedule.Shifts
+                                    .Where(s => s.UserId == u.Id)
+                                    .Sum(s => (s.EndTime - s.StartTime).TotalHours);
+                             }
+                         }
+
+                         return new
+                         {
+                             u.Id,
+                             DisplayName = u.Employee != null
+                                ? $"{u.Employee.FullName} (Staż: {seniority} | Graf: {hours:F1}h)"
+                                : u.Username
+                         };
+                     })
                      .OrderBy(u => u.DisplayName).ToList();
+
                 return Json(filteredEmployees);
             }
             catch (Exception ex) { Console.WriteLine($"--->>> Error in GetAvailableEmployees: {ex.ToString()}"); return Json(new List<object>()); }
@@ -261,82 +332,60 @@ namespace RestaurantManager.Controllers
         {
             if (shiftId <= 0) return Json(new { error = "Nieprawidłowe ID zmiany." });
             var shift = await _context.Shifts.Where(sh => sh.Id == shiftId)
-                                  .Select(sh => new {
-                                      sh.Id,
-                                      sh.ScheduleId,
-                                      Date = sh.Date.ToString("yyyy-MM-dd"),
-                                      StartTime = sh.StartTime.ToString(@"hh\:mm"),
-                                      EndTime = sh.EndTime.ToString(@"hh\:mm"),
-                                      sh.PositionTagId,
-                                      UserId = sh.UserId
-                                  }).FirstOrDefaultAsync();
+                .Select(sh => new {
+                    sh.Id,
+                    sh.ScheduleId,
+                    Date = sh.Date.ToString("yyyy-MM-dd"),
+                    StartTime = sh.StartTime.ToString(@"hh\:mm"),
+                    EndTime = sh.EndTime.ToString(@"hh\:mm"),
+                    sh.PositionTagId,
+                    UserId = sh.UserId
+                }).FirstOrDefaultAsync();
             if (shift == null) return Json(new { error = "Nie znaleziono zmiany." });
             return Json(shift);
         }
 
-        // POST: /Schedules/SaveShift (Wersja z ViewModel, BEZ AntiForgeryToken dla testu)
+        // POST: /Schedules/SaveShift
         [HttpPost]
-        // [ValidateAntiForgeryToken] // <-- TYMCZASOWO ZAKOMENTOWANE
         [RoleAuthorize("Admin", "Manager")]
-        public async Task<JsonResult> SaveShift(ShiftViewModel model) // <-- WRACAMY DO VIEWMODELU
+        public async Task<JsonResult> SaveShift(ShiftViewModel model)
         {
             Console.WriteLine($"--->>> POST SaveShift received model: {JsonSerializer.Serialize(model)}");
 
-            // --- Walidacja danych wejściowych z ViewModelu ---
             if (model.ScheduleId <= 0 || model.PositionTagId == null || model.PositionTagId <= 0)
             {
-                Console.WriteLine("--->>> SaveShift validation failed: Invalid ScheduleId or PositionTagId.");
                 return Json(new { success = false, message = "Nieprawidłowe dane wejściowe (ID grafiku lub tag)." });
             }
-            // Użyj IValidatableObject z modelu Shift (jeśli tam jest) lub waliduj ręcznie
             if (model.EndTime <= model.StartTime)
             {
-                Console.WriteLine("--->>> SaveShift validation failed: EndTime <= StartTime.");
                 return Json(new { success = false, message = "Godzina zakończenia musi być późniejsza niż godzina rozpoczęcia." });
             }
-            // Można dodać walidację ModelState.IsValid, jeśli ViewModel ma atrybuty
-            // if (!ModelState.IsValid) { ... }
-
 
             var schedule = await _context.Schedules.FindAsync(model.ScheduleId);
             if (schedule == null)
             {
-                Console.WriteLine($"--->>> SaveShift validation failed: Schedule not found (ID: {model.ScheduleId}).");
                 return Json(new { success = false, message = "Nie znaleziono grafiku." });
             }
-            // Sprawdź datę z modelu (zakładając, że JS wysyła poprawny obiekt DateTime)
             if (model.Date.Date < schedule.StartDate.Date || model.Date.Date > schedule.EndDate.Date)
             {
-                // Jeśli JS wysyła datę jako string, trzeba by ją sparsować najpierw
-                Console.WriteLine($"--->>> SaveShift validation failed: Date ({model.Date.Date}) out of schedule range ({schedule.StartDate.Date} - {schedule.EndDate.Date}).");
                 return Json(new { success = false, message = "Data zmiany wykracza poza zakres grafiku." });
             }
 
             int? assignedUserId = model.AssignedUserId.HasValue && model.AssignedUserId > 0 ? model.AssignedUserId : null;
 
-            // Sprawdzenie konfliktu
             if (assignedUserId.HasValue)
             {
-                Console.WriteLine($"--->>> SaveShift checking conflict for User ID: {assignedUserId.Value}");
                 bool hasConflict = await _context.Shifts
                     .AnyAsync(s => s.Id != model.Id && s.UserId == assignedUserId.Value && s.Date.Date == model.Date.Date && s.StartTime < model.EndTime && s.EndTime > model.StartTime);
-                if (hasConflict) { Console.WriteLine("--->>> SaveShift validation failed: Conflict detected."); return Json(new { success = false, message = "Wybrany pracownik ma już inną zmianę kolidującą z tymi godzinami." }); }
+                if (hasConflict) { return Json(new { success = false, message = "Wybrany pracownik ma już inną zmianę kolidującą z tymi godzinami." }); }
 
-                // Walidacja dostępności i tagu
-                Console.WriteLine("--->>> SaveShift checking availability...");
                 bool isAvailable = await _context.Availabilities.AnyAsync(a => a.UserId == assignedUserId.Value && a.Date.Date == model.Date.Date && a.StartTime <= model.StartTime && a.EndTime >= model.EndTime);
-                if (!isAvailable) { Console.WriteLine("--->>> SaveShift validation failed: Employee not available."); return Json(new { success = false, message = "Wybrany pracownik nie jest dostępny w tych godzinach." }); }
+                if (!isAvailable) { return Json(new { success = false, message = "Wybrany pracownik nie jest dostępny w tych godzinach." }); }
 
-                Console.WriteLine("--->>> SaveShift checking tag...");
                 bool hasTag = await _context.Users
-                   .Where(u => u.Id == assignedUserId.Value && (u.Role == "Admin" || u.Role == "Manager" || (u.Employee != null && u.Employee.PositionTags.Any(pt => pt.Id == model.PositionTagId))))
-                   .AnyAsync();
-                if (!hasTag) { Console.WriteLine("--->>> SaveShift validation failed: Employee does not have the required tag."); return Json(new { success = false, message = "Wybrany pracownik nie posiada wymaganego tagu stanowiska." }); }
-                Console.WriteLine("--->>> SaveShift availability and tag check passed.");
-            }
-            else
-            {
-                Console.WriteLine("--->>> SaveShift: No employee assigned.");
+                    .Where(u => u.Id == assignedUserId.Value && (u.Role == "Admin" || u.Role == "Manager" || (u.Employee != null && u.Employee.PositionTags.Any(pt => pt.Id == model.PositionTagId))))
+                    .AnyAsync();
+                if (!hasTag) { return Json(new { success = false, message = "Wybrany pracownik nie posiada wymaganego tagu stanowiska." }); }
             }
 
             Shift shiftEntity;
@@ -344,15 +393,13 @@ namespace RestaurantManager.Controllers
 
             if (isNew)
             {
-                Console.WriteLine("--->>> SaveShift: Creating new Shift entity.");
                 shiftEntity = new Shift { ScheduleId = model.ScheduleId, Date = model.Date.Date, StartTime = model.StartTime, EndTime = model.EndTime, PositionTagId = model.PositionTagId, UserId = assignedUserId };
                 _context.Shifts.Add(shiftEntity);
             }
             else
-            { // Aktualizacja
-                Console.WriteLine($"--->>> SaveShift: Updating existing Shift entity with ID: {model.Id}");
+            {
                 shiftEntity = await _context.Shifts.FindAsync(model.Id);
-                if (shiftEntity == null || shiftEntity.ScheduleId != model.ScheduleId) { Console.WriteLine($"--->>> SaveShift error: Shift not found for update (ID: {model.Id}) or wrong ScheduleId."); return Json(new { success = false, message = "Nie znaleziono zmiany do aktualizacji." }); }
+                if (shiftEntity == null || shiftEntity.ScheduleId != model.ScheduleId) { return Json(new { success = false, message = "Nie znaleziono zmiany do aktualizacji." }); }
                 shiftEntity.StartTime = model.StartTime; shiftEntity.EndTime = model.EndTime;
                 shiftEntity.PositionTagId = model.PositionTagId; shiftEntity.UserId = assignedUserId;
                 _context.Entry(shiftEntity).State = EntityState.Modified;
@@ -360,33 +407,45 @@ namespace RestaurantManager.Controllers
 
             try
             {
-                Console.WriteLine("--->>> SaveShift: Attempting to SaveChangesAsync...");
                 await _context.SaveChangesAsync();
-                Console.WriteLine($"--->>> SaveShift: SaveChangesAsync successful! Shift ID: {shiftEntity.Id}");
                 string assignedUserName = "Nieprzypisany";
                 if (shiftEntity.UserId.HasValue) { assignedUserName = (await _context.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.UserId == shiftEntity.UserId.Value))?.FullName ?? (await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == shiftEntity.UserId.Value))?.Username ?? "Błąd"; }
                 string positionTagName = (await _context.PositionTags.AsNoTracking().FirstOrDefaultAsync(t => t.Id == shiftEntity.PositionTagId))?.Name ?? "Brak tagu";
                 return Json(new { success = true, shift = new { id = shiftEntity.Id, date = shiftEntity.Date.ToString("yyyy-MM-dd"), startTime = shiftEntity.StartTime.ToString(@"hh\:mm"), endTime = shiftEntity.EndTime.ToString(@"hh\:mm"), positionTagId = shiftEntity.PositionTagId, positionTagName = positionTagName, assignedUserId = shiftEntity.UserId, assignedUserName = assignedUserName } });
             }
-            catch (DbUpdateException dbEx) { Console.WriteLine($"--->>> !!! DbUpdateException saving shift: {dbEx.InnerException?.Message ?? dbEx.Message}\n{dbEx.ToString()}"); return Json(new { success = false, message = $"Błąd bazy danych: {dbEx.InnerException?.Message ?? dbEx.Message}. Sprawdź logi." }); }
-            catch (Exception ex) { Console.WriteLine($"--->>> !!! Exception saving shift: {ex.ToString()}"); return Json(new { success = false, message = "Nieoczekiwany błąd serwera. Sprawdź logi." }); }
+            catch (Exception ex) { Console.WriteLine($"--->>> !!! Exception saving shift: {ex.ToString()}"); return Json(new { success = false, message = "Nieoczekiwany błąd serwera." }); }
         }
 
         // POST: /Schedules/DeleteShift
         [HttpPost]
-        // [ValidateAntiForgeryToken] // <-- TYMCZASOWO ZAKOMENTOWANE
         [RoleAuthorize("Admin", "Manager")]
         public async Task<JsonResult> DeleteShift(int shiftId)
         {
-            Console.WriteLine($"--->>> POST DeleteShift received ID: {shiftId}");
             if (shiftId <= 0) return Json(new { success = false, message = "Nieprawidłowe ID zmiany." });
             var shift = await _context.Shifts.FindAsync(shiftId);
-            if (shift == null) return Json(new { success = true }); // Już usunięto
-            try { _context.Shifts.Remove(shift); await _context.SaveChangesAsync(); Console.WriteLine($"--->>> DeleteShift successful for ID: {shiftId}"); return Json(new { success = true }); }
-            catch (Exception ex) { Console.WriteLine($"--->>> !!! Error deleting shift: {ex.ToString()}"); return Json(new { success = false, message = "Wystąpił błąd serwera podczas usuwania zmiany." }); }
+            if (shift == null) return Json(new { success = true });
+            try { _context.Shifts.Remove(shift); await _context.SaveChangesAsync(); return Json(new { success = true }); }
+            catch (Exception ex) { Console.WriteLine($"--->>> !!! Error deleting shift: {ex.ToString()}"); return Json(new { success = false, message = "Wystąpił błąd serwera." }); }
         }
 
         // --- METODY POMOCNICZE ---
         private int? GetUserIdFromSession() { return HttpContext.Session.GetInt32("UserId"); }
+
+        private string GetSeniorityString(DateTime hireDate)
+        {
+            if (hireDate == DateTime.MinValue) return "-";
+            var today = DateTime.Now;
+            int months = ((today.Year - hireDate.Year) * 12) + today.Month - hireDate.Month;
+            if (today.Day < hireDate.Day) months--;
+
+            if (months < 0) return "0 dni";
+            if (months < 1) return $"{(today - hireDate).Days} dni";
+
+            int years = months / 12;
+            int remainingMonths = months % 12;
+
+            if (years > 0) return $"{years} lat, {remainingMonths} mies.";
+            return $"{months} mies.";
+        }
     }
 }
