@@ -84,6 +84,14 @@ namespace RestaurantManager.Controllers
             int deliveryMinutes = contactInfo?.EstimatedDeliveryTimeMinutes ?? 45;
             if (deliveryMinutes < 15) deliveryMinutes = 15;
 
+            // *** NOWOŚĆ: Przekazujemy czas dostawy do widoku ***
+            ViewBag.EstimatedTime = deliveryMinutes;
+
+            // *** NOWOŚĆ: Pobieramy dzisiejsze godziny otwarcia dla informacji ***
+            var today = DateTime.Now.DayOfWeek;
+            var todayHours = await _context.OpeningHours.FirstOrDefaultAsync(h => h.DayOfWeek == today);
+            ViewBag.TodayOpeningHours = todayHours;
+
             // Ustawiamy domyślną datę w kalendarzu na "Teraz + Czas"
             vm.ScheduledDate = DateTime.Now.AddMinutes(deliveryMinutes);
 
@@ -107,30 +115,28 @@ namespace RestaurantManager.Controllers
             if (minMinutes < 15) minMinutes = 15;
 
             // 2. Obliczamy minimalną datę (Teraz + minuty)
-            var targetTime = DateTime.Now.AddMinutes(minMinutes);
+            var minDeliveryTime = DateTime.Now.AddMinutes(minMinutes);
 
-            // *** POPRAWKA LOGIKI CZASU (To, czego brakowało) ***
+            // LOGIKA ASAP vs PLANOWANE
             if (model.IsAsap)
             {
                 // Jeśli ASAP -> ignorujemy datę z formularza i ustawiamy najwcześniejszą możliwą
-                model.ScheduledDate = targetTime;
-
-                // Usuwamy błąd walidacji daty, bo właśnie ustawiliśmy poprawną
+                model.ScheduledDate = minDeliveryTime;
                 ModelState.Remove(nameof(model.ScheduledDate));
             }
             else
             {
                 // Jeśli PLANOWANE -> sprawdzamy, czy klient nie wybrał za wcześnie
-                // Dajemy 2 minuty tolerancji
-                if (model.ScheduledDate < targetTime.AddMinutes(-2))
+                if (model.ScheduledDate < minDeliveryTime.AddMinutes(-1))
                 {
                     ModelState.AddModelError("ScheduledDate", $"Aktualny minimalny czas oczekiwania to {minMinutes} minut. Wybierz późniejszą godzinę.");
                 }
             }
 
-            // 3. Walidacja godzin otwarcia
+            // 3. WALIDACJA GODZIN OTWARCIA (To jest odpowiedź na Twoje pytanie o blokadę)
             var dayOfWeek = model.ScheduledDate.DayOfWeek;
             var openingHour = await _context.OpeningHours.FirstOrDefaultAsync(oh => oh.DayOfWeek == dayOfWeek);
+
             if (openingHour != null)
             {
                 if (openingHour.IsClosed)
@@ -140,9 +146,10 @@ namespace RestaurantManager.Controllers
                 else
                 {
                     var time = model.ScheduledDate.TimeOfDay;
+                    // Sprawdzamy czy wybrana godzina mieści się w zakresie otwarcia
                     if (time < openingHour.OpenTime || time > openingHour.CloseTime)
                     {
-                        ModelState.AddModelError("ScheduledDate", $"Godziny otwarcia: {openingHour.OpenTime:hh\\:mm} - {openingHour.CloseTime:hh\\:mm}.");
+                        ModelState.AddModelError("ScheduledDate", $"Restauracja jest nieczynna o tej godzinie. Zapraszamy w godzinach: {openingHour.OpenTime:hh\\:mm} - {openingHour.CloseTime:hh\\:mm}.");
                     }
                 }
             }
@@ -168,7 +175,6 @@ namespace RestaurantManager.Controllers
                 }
             }
 
-            // *** NAPRAWA 2: Czyszczenie błędów adresu przy odbiorze osobistym ***
             if (model.OrderType != OrderType.Delivery)
             {
                 ModelState.Remove(nameof(model.DeliveryStreet));
@@ -218,7 +224,15 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction(nameof(Confirmation), new { id = order.Id });
             }
 
+            // Jeśli walidacja nie przeszła, przywracamy dane do widoku
             PrepareCitiesList();
+
+            // Ponowne pobranie danych do ViewBag, aby wyświetliły się po błędzie
+            var contactInfoForView = await _context.ContactInfos.FirstOrDefaultAsync();
+            ViewBag.EstimatedTime = contactInfoForView?.EstimatedDeliveryTimeMinutes ?? 45;
+            var todayForView = DateTime.Now.DayOfWeek;
+            ViewBag.TodayOpeningHours = await _context.OpeningHours.FirstOrDefaultAsync(h => h.DayOfWeek == todayForView);
+
             model.TotalAmount = cart.Sum(x => x.TotalPrice);
             return View(model);
         }

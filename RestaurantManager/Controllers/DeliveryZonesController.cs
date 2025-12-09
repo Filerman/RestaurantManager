@@ -21,22 +21,25 @@ namespace RestaurantManager.Controllers
         // GET: DeliveryZones
         public async Task<IActionResult> Index()
         {
-            // 1. AUTOMATYZACJA: Sprawdź, czy miasto restauracji jest na liście
+            // 1. Pobierz dane kontaktowe, aby wyświetlić aktualny czas dostawy
             var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
+
+            // Przekazujemy czas do widoku (domyślnie 45 min jeśli brak danych)
+            ViewBag.EstimatedDeliveryTime = contactInfo?.EstimatedDeliveryTimeMinutes ?? 45;
+
+            // 2. AUTOMATYZACJA: Sprawdź, czy miasto restauracji jest na liście
             if (contactInfo != null && !string.IsNullOrEmpty(contactInfo.AddressCity))
             {
                 var baseCityName = contactInfo.AddressCity.Trim();
-                // Szukamy (ignorując wielkość liter)
                 var exists = await _context.DeliveryZones
                     .AnyAsync(z => z.CityName.ToLower() == baseCityName.ToLower());
 
                 if (!exists)
                 {
-                    // Jeśli nie ma, dodajemy automatycznie
                     _context.DeliveryZones.Add(new DeliveryZone
                     {
                         CityName = baseCityName,
-                        DeliveryFee = 0 // Domyślnie 0, ale Manager może edytować
+                        DeliveryFee = 0
                     });
                     await _context.SaveChangesAsync();
                     TempData["InfoMessage"] = $"Dodano automatycznie miasto restauracji ({baseCityName}) do stref dostaw. Ustal dla niego opłatę.";
@@ -44,6 +47,28 @@ namespace RestaurantManager.Controllers
             }
 
             return View(await _context.DeliveryZones.OrderBy(z => z.DeliveryFee).ToListAsync());
+        }
+
+        // NOWA AKCJA: Aktualizacja czasu dostawy bezpośrednio z widoku Stref
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateDeliveryTime(int minutes)
+        {
+            var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
+            if (contactInfo == null)
+            {
+                contactInfo = new ContactInfo();
+                _context.ContactInfos.Add(contactInfo);
+            }
+
+            // Walidacja minimum 15 minut
+            if (minutes < 15) minutes = 15;
+
+            contactInfo.EstimatedDeliveryTimeMinutes = minutes;
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Zaktualizowano średni czas dostawy.";
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: DeliveryZones/Create
@@ -59,7 +84,6 @@ namespace RestaurantManager.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Sprawdzenie duplikatów
                 if (await _context.DeliveryZones.AnyAsync(z => z.CityName == deliveryZone.CityName))
                 {
                     ModelState.AddModelError("CityName", "Ta miejscowość jest już na liście.");

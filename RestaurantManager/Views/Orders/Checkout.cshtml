@@ -2,6 +2,10 @@
 @{
     ViewData["Title"] = "Finalizacja Zamówienia";
     decimal cartTotal = Model.TotalAmount;
+
+    // Pobieramy godziny z ViewBag
+    var todayHours = ViewBag.TodayOpeningHours as RestaurantManager.Models.OpeningHour;
+    int estimatedTime = ViewBag.EstimatedTime != null ? (int)ViewBag.EstimatedTime : 45;
 }
 
 <div class="container mt-4">
@@ -13,9 +17,27 @@
             @* DODANO method="post" dla pewności *@
             <form asp-action="Checkout" method="post">
 
-                @* ZMIANA: Wyświetlamy WSZYSTKIE błędy na górze *@
+                @* Wyświetlamy WSZYSTKIE błędy na górze *@
                 <div asp-validation-summary="All" class="alert alert-danger" role="alert">
                     <strong>Wystąpiły błędy w formularzu:</strong>
+                </div>
+
+                @* INFO O GODZINACH OTWARCIA *@
+                <div class="alert alert-info d-flex align-items-center">
+                    <i class="bi bi-clock-history fs-4 me-3"></i>
+                    <div>
+                        @if (todayHours != null && !todayHours.IsClosed)
+                        {
+                            <span>
+                                Dzisiaj jesteśmy otwarci: <strong>@todayHours.OpenTime.ToString(@"hh\:mm") - @todayHours.CloseTime.ToString(@"hh\:mm")</strong>.<br />
+                                Średni czas oczekiwania na dostawę: <strong>ok. @estimatedTime min</strong>.
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-danger fw-bold">Dzisiaj restauracja jest nieczynna.</span>
+                        }
+                    </div>
                 </div>
 
                 <div class="card mb-3 shadow-sm">
@@ -23,7 +45,6 @@
                     <div class="card-body">
                         <div class="form-group mb-3">
                             <label asp-for="CustomerName" class="form-label"></label>
-                            @* Upewnij się, że to pole jest wypełnione! *@
                             <input asp-for="CustomerName" class="form-control" placeholder="Wpisz imię i nazwisko" />
                             <span asp-validation-for="CustomerName" class="text-danger"></span>
                         </div>
@@ -52,7 +73,7 @@
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" asp-for="IsAsap" value="true" id="timeAsap" onchange="toggleTimeInput()">
                                 <label class="form-check-label" for="timeAsap">
-                                    <i class="bi bi-lightning-fill text-warning"></i> Jak najszybciej
+                                    <i class="bi bi-lightning-fill text-warning"></i> Jak najszybciej (ok. @estimatedTime min)
                                 </label>
                             </div>
                             <div class="form-check form-check-inline">
@@ -65,9 +86,11 @@
 
                         <div class="form-group mb-4" id="scheduledTimeGroup" style="display:none;">
                             <label asp-for="ScheduledDate" class="form-label fw-bold text-primary">Wybierz godzinę:</label>
+                            @* Atrybut min blokuje daty przeszłe w kalendarzu *@
                             <input asp-for="ScheduledDate" class="form-control" type="datetime-local"
-                                   value="@Model.ScheduledDate.ToString("yyyy-MM-ddTHH:mm")" />
-                            <div class="form-text">Minimalny czas realizacji jest zależny od obłożenia kuchni.</div>
+                                   value="@Model.ScheduledDate.ToString("yyyy-MM-ddTHH:mm")"
+                                   min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                            <div class="form-text">System nie pozwoli złożyć zamówienia poza godzinami otwarcia.</div>
                             <span asp-validation-for="ScheduledDate" class="text-danger"></span>
                         </div>
 

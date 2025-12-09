@@ -1,17 +1,47 @@
 ﻿@model IEnumerable<RestaurantManager.Models.DeliveryZone>
 @{
-    ViewData["Title"] = "Strefy Dostaw";
+    ViewData["Title"] = "Strefy Dostaw i Czas";
 }
 
 <div class="container mt-4">
+    <h2>Zarządzanie Dostawami</h2>
+    <hr />
+
+    <div class="card mb-4 shadow-sm border-warning">
+        <div class="card-header bg-warning text-dark fw-bold">
+            <i class="bi bi-clock-history"></i> Średni Czas Dostawy
+        </div>
+        <div class="card-body bg-light">
+            <form asp-action="UpdateDeliveryTime" method="post" class="row align-items-center g-3">
+                <div class="col-md-8">
+                    <label class="form-label mb-0">
+                        Podaj orientacyjny czas oczekiwania (w minutach), który zobaczy klient przy składaniu zamówienia:
+                    </label>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="minutes" value="@ViewBag.EstimatedDeliveryTime" class="form-control fw-bold text-center" min="15" step="5" />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-dark w-100">Zapisz</button>
+                </div>
+            </form>
+            <div class="form-text mt-2 ms-1">
+                <i class="bi bi-info-circle"></i> Ten czas jest doliczany do momentu złożenia zamówienia "Jak najszybciej".
+            </div>
+        </div>
+    </div>
+
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Strefy Dostaw</h2>
+        <h3>Obsługiwane Miejscowości</h3>
         <a asp-action="Create" class="btn btn-success"><i class="bi bi-plus-circle"></i> Dodaj Strefę</a>
     </div>
 
-    <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> Tutaj zdefiniuj <strong>wszystkie</strong> miasta, do których dowozi restauracja (włącznie z miastem, w którym się znajduje). Jeśli miasta nie ma na liście, klient nie będzie mógł zamówić dostawy.
-    </div>
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> @TempData["InfoMessage"]
+        </div>
+    }
 
     <table class="table table-striped align-middle">
         <thead class="table-light">
