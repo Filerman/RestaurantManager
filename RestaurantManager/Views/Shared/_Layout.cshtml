@@ -61,12 +61,10 @@
                             <a class="nav-link text-dark" asp-controller="Announcements" asp-action="Index">Aktualności</a>
                         </li>
 
-                        @* --- NEW: Link to FAQ --- *@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Faq" asp-action="Index">FAQ</a>
                         </li>
 
-                        @* --- NEW: Link to Cart --- *@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">
                                 <i class="bi bi-cart-fill text-primary"></i> Koszyk
@@ -93,9 +91,17 @@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Availability" asp-action="Index">Moja Dostępność</a>
                                     </li>
+
+                                    @* --- NOWY LINK: KATALOG KONTAKTÓW --- *@
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Users" asp-action="Directory">
+                                            <i class="bi bi-person-lines-fill me-2"></i>Katalog Kontaktów
+                                        </a>
+                                    </li>
+                                    @* ------------------------------------ *@
+
                                     <li><hr class="dropdown-divider"></li>
 
-                                    @* --- NEW: Employee Support Tickets --- *@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Support" asp-action="MyTickets">Wsparcie / Zgłoszenia</a>
                                     </li>
@@ -105,7 +111,6 @@
                                         <a class="dropdown-item" asp-controller="LossLogs" asp-action="Report">Zgłoś Stratę</a>
                                     </li>
 
-                                    @* --- NEW: POS Link for Employee --- *@
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item fw-bold text-primary" asp-controller="Orders" asp-action="Index">
@@ -131,19 +136,16 @@
                                         <a class="dropdown-item" asp-controller="Employees" asp-action="Index">Pracownicy</a>
                                     </li>
 
-                                    @* --- TUTAJ DODANO LINK DO WYPŁAT --- *@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Employees" asp-action="Payroll">
                                             <i class="bi bi-cash-coin"></i> Wypłaty
                                         </a>
                                     </li>
-                                    @* ---------------------------------- *@
 
                                     <li>
                                         <a class="dropdown-item" asp-controller="Users" asp-action="Index">Użytkownicy</a>
                                     </li>
 
-                                    @* --- NEW: Ticket Management --- *@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Support" asp-action="Manage">HelpDesk (Zgłoszenia)</a>
                                     </li>
@@ -155,14 +157,12 @@
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header">Restauracja</h6></li>
 
-                                    @* --- NEW: POS Link for Manager --- *@
                                     <li>
                                         <a class="dropdown-item fw-bold text-primary" asp-controller="Orders" asp-action="Index">
                                             <i class="bi bi-receipt"></i> System POS (Zamówienia)
                                         </a>
                                     </li>
 
-                                    @* --- NEW: FAQ Management --- *@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Faq" asp-action="Manage">Zarządzaj FAQ</a>
                                     </li>
@@ -226,13 +226,11 @@
                                         </a>
                                     </li>
 
-                                    @* --- NEW: Order History Link --- *@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Orders" asp-action="History">
                                             <i class="bi bi-clock-history me-2"></i>Historia Zamówień
                                         </a>
                                     </li>
-                                    @* ---------------- *@
 
                                     <li>
                                         <a class="dropdown-item" asp-controller="Auth" asp-action="EditProfile">

@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using RestaurantManager.Data;
 using RestaurantManager.Models;
 using RestaurantManager.Filters;
-using System.Collections.Generic; // Dodano dla List<string>
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http; // Potrzebne do odczytu roli z sesji
+using Microsoft.AspNetCore.Http;
 
 namespace RestaurantManager.Controllers
 {
-    [RoleAuthorize("Admin", "Manager")] // Tylko Admin i Manager
+    // USUNIĘTO atrybut z poziomu klasy, aby móc różnicować uprawnienia dla metod
     public class UsersController : Controller
     {
         private readonly AppDbContext _context;
@@ -24,28 +24,60 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
+        // --- NOWA METODA: Katalog Kontaktów (Dostępna dla Pracowników) ---
+        [RoleAuthorize("Admin", "Manager", "Employee")]
+        public async Task<IActionResult> Directory(string searchString)
+        {
+            var usersQuery = _context.Users
+                .Include(u => u.Employee) // Dołączamy dane pracownika (telefon, imię)
+                .AsNoTracking();
+
+            // Wyszukiwanie
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                searchString = searchString.ToLower();
+                usersQuery = usersQuery.Where(u =>
+                    u.Username.ToLower().Contains(searchString) ||
+                    u.Email.ToLower().Contains(searchString) ||
+                    (u.Employee != null && u.Employee.FullName.ToLower().Contains(searchString)));
+            }
+
+            var users = await usersQuery
+                .OrderByDescending(u => u.Role)
+                .ThenBy(u => u.Username)
+                .ToListAsync();
+
+            ViewData["CurrentFilter"] = searchString;
+            return View(users);
+        }
+        // ---------------------------------------------------------------
+
         // GET: Users
+        [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Index()
         {
-            // Pobieramy wszystkich użytkowników i sortujemy
             var users = await _context.Users.OrderBy(u => u.Username).ToListAsync();
             return View(users);
         }
 
         // GET: Users/Details/5
+        [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
             var user = await _context.Users
+                .Include(u => u.Employee) // Warto dołączyć employee też tutaj
+                .ThenInclude(e => e.PositionTags)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (user == null) return NotFound();
 
             return View(user);
         }
 
-
-        // GET: Users/Edit/5 (ZMIENIONY - przekazuje informację do widoku)
+        // GET: Users/Edit/5
+        [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -53,37 +85,32 @@ namespace RestaurantManager.Controllers
             var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound();
 
-            // Pobierz rolę zalogowanego użytkownika
             var editorRole = HttpContext.Session.GetString("UserRole");
 
-            // *** ZMIANA: Zamiast przekierowywać, przekaż informację do widoku ***
             bool canEdit = true;
             if (user.Role == "Admin" && editorRole == "Manager")
             {
                 canEdit = false;
                 ViewBag.CannotEditMessage = "Manager nie może edytować konta Administratora.";
             }
-            ViewBag.CanEdit = canEdit; // Przekaż informację do widoku
-            // *** KONIEC ZMIANY ***
+            ViewBag.CanEdit = canEdit;
 
-            // Przygotowujemy listę ról dla dropdown
             ViewBag.Roles = new SelectList(_roles, user.Role);
 
             return View(user);
         }
 
-        // POST: Users/Edit/5 (ZMIENIONY - dodano ModelState.Remove i poprawki)
+        // POST: Users/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Username,Email,Role")] User userForm)
         {
             if (id != userForm.Id) return NotFound();
 
-            // Pobieramy ORYGINALNEGO użytkownika z bazy, aby zachować hasło i inne pola
             var userToUpdate = await _context.Users.FindAsync(id);
             if (userToUpdate == null) return NotFound();
 
-            // Zabezpieczenie: Manager nie może edytować Admina
             var editorRole = HttpContext.Session.GetString("UserRole");
             if (userToUpdate.Role == "Admin" && editorRole == "Manager")
             {
@@ -91,13 +118,12 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // POPRAWKA ZAPISU: Usuwamy powiązane encje z walidacji
-            ModelState.Remove("Password"); // Hasła nie edytujemy tutaj
+            ModelState.Remove("Password");
             ModelState.Remove("Employee");
             ModelState.Remove("Reservations");
             ModelState.Remove("Availabilities");
+            ModelState.Remove("Shifts"); // Dodano na wszelki wypadek
 
-            // Walidacja unikalności i roli
             if (await _context.Users.AnyAsync(u => u.Id != id && u.Username == userForm.Username))
             {
                 ModelState.AddModelError("Username", "Ta nazwa użytkownika jest już zajęta.");
@@ -110,7 +136,6 @@ namespace RestaurantManager.Controllers
             {
                 ModelState.AddModelError("Role", "Wybrano nieprawidłową rolę.");
             }
-            // Jeśli manager próbuje nadać komuś rolę Admina - zabroń
             if (userForm.Role == "Admin" && editorRole == "Manager")
             {
                 ModelState.AddModelError("Role", "Manager nie może nadać roli Administratora.");
@@ -118,15 +143,12 @@ namespace RestaurantManager.Controllers
 
             if (ModelState.IsValid)
             {
-                // Aktualizujemy tylko te pola, które chcemy zmienić
                 userToUpdate.Username = userForm.Username;
                 userToUpdate.Email = userForm.Email;
                 userToUpdate.Role = userForm.Role;
-                // Hasło i inne pola (np. ProfilePicturePath) pozostają bez zmian
 
                 try
                 {
-                    // _context.Update(userToUpdate); // Niepotrzebne, EF Core śledzi zmiany
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -134,28 +156,24 @@ namespace RestaurantManager.Controllers
                     if (!_context.Users.Any(e => e.Id == userToUpdate.Id)) return NotFound();
                     else throw;
                 }
-                catch (DbUpdateException ex) // Lepsze łapanie błędów zapisu
+                catch (DbUpdateException)
                 {
-                    // Można dodać logowanie błędu ex
                     ModelState.AddModelError("", "Wystąpił błąd podczas zapisywania danych.");
-                    // Jeśli błąd, musimy ponownie przygotować widok
                     ViewBag.Roles = new SelectList(_roles, userForm.Role);
-                    ViewBag.CanEdit = true; // Bo doszło do błędu zapisu, a nie braku uprawnień
+                    ViewBag.CanEdit = true;
                     return View(userForm);
                 }
                 TempData["SuccessMessage"] = "Dane użytkownika zostały zaktualizowane.";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Jeśli model jest niepoprawny, ponownie załaduj role i zwróć widok
             ViewBag.Roles = new SelectList(_roles, userForm.Role);
-            // Przekaż informację o możliwości edycji ponownie
             ViewBag.CanEdit = !(userToUpdate.Role == "Admin" && editorRole == "Manager");
-            return View(userForm); // Zwracamy model z błędami, aby użytkownik widział co poprawić
+            return View(userForm);
         }
 
-
-        // GET: Users/Delete/5 (ZMIENIONY - dodano zabezpieczenie)
+        // GET: Users/Delete/5
+        [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -164,7 +182,6 @@ namespace RestaurantManager.Controllers
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (user == null) return NotFound();
 
-            // ZABEZPIECZENIE (Widok): Manager nie może nawet wejść na stronę usuwania Admina
             var editorRole = HttpContext.Session.GetString("UserRole");
             if (user.Role == "Admin" && editorRole == "Manager")
             {
@@ -175,15 +192,15 @@ namespace RestaurantManager.Controllers
             return View(user);
         }
 
-        // POST: Users/Delete/5 (ZMIENIONY - dodano zabezpieczenie)
+        // POST: Users/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = await _context.Users.FindAsync(id);
             if (user != null)
             {
-                // ZABEZPIECZENIE: Manager nie może usunąć Admina
                 var editorRole = HttpContext.Session.GetString("UserRole");
                 if (user.Role == "Admin" && editorRole == "Manager")
                 {
@@ -191,7 +208,6 @@ namespace RestaurantManager.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                // Sprawdź czy to nie jest ostatni Admin/Manager
                 if ((user.Role == "Admin" || user.Role == "Manager") &&
                     await _context.Users.CountAsync(u => u.Role == "Admin" || u.Role == "Manager") <= 1)
                 {

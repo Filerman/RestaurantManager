@@ -2,91 +2,102 @@
 
 @{
     ViewData["Title"] = "Mój Profil";
+    bool hasEmployeeData = Model.FullName != null;
 }
 
 <div class="container mt-5">
-    <div class="card shadow-lg border-0">
+    <div class="card shadow border-0 overflow-hidden">
         <div class="row g-0">
             <div class="col-md-4 bg-light text-center py-5 d-flex flex-column align-items-center justify-content-center border-end">
-                <div class="mb-4 position-relative">
+                <div class="mb-3">
                     @if (!string.IsNullOrEmpty(Model.ProfilePicturePath))
                     {
-                        <img src="@Model.ProfilePicturePath" alt="Avatar" class="rounded-circle shadow" style="width: 180px; height: 180px; object-fit: cover; border: 5px solid white;">
+                        <img src="@Model.ProfilePicturePath" alt="Avatar" class="rounded-circle shadow-sm border border-3 border-white" style="width: 160px; height: 160px; object-fit: cover;">
                     }
                     else
                     {
-                        <img src="/images/profiles/default.png" alt="Default Avatar" class="rounded-circle shadow" style="width: 180px; height: 180px; object-fit: cover; border: 5px solid white;">
+                        <img src="/images/profiles/default.png" alt="Default Avatar" class="rounded-circle shadow-sm border border-3 border-white" style="width: 160px; height: 160px; object-fit: cover;">
                     }
                 </div>
-                <h3 class="fw-bold text-primary mb-1">@Model.Username</h3>
-                <span class="badge bg-secondary px-3 py-2 text-uppercase mb-3">@Model.Role</span>
+                <h3 class="fw-bold text-dark mb-1">@Model.Username</h3>
+                <span class="badge bg-primary px-3 py-2 text-uppercase mb-3">@Model.Role</span>
 
-                <a asp-action="EditProfile" class="btn btn-outline-primary btn-sm px-4 rounded-pill">
-                    <i class="bi bi-pencil-square"></i> Edytuj Profil
+                <a asp-action="EditProfile" class="btn btn-outline-dark btn-sm px-4 rounded-pill mt-2">
+                    <i class="bi bi-gear-fill me-1"></i> Ustawienia konta
                 </a>
             </div>
 
             <div class="col-md-8">
-                <div class="card-body p-5">
-                    <h4 class="card-title mb-4 border-bottom pb-2">Informacje o koncie</h4>
+                <div class="card-body p-4 p-lg-5">
+                    <h5 class="text-uppercase text-muted fw-bold mb-4 ls-1">Informacje podstawowe</h5>
 
                     <div class="row mb-3">
-                        <div class="col-sm-4 text-muted fw-bold">Email:</div>
-                        <div class="col-sm-8">@Model.Email</div>
+                        <div class="col-sm-4 text-muted fw-semibold">Adres Email:</div>
+                        <div class="col-sm-8 text-dark">@Model.Email</div>
                     </div>
 
-                    @if (Model.FullName != null) // Jeśli jest pracownikiem
+                    <hr class="my-4" />
+
+                    @if (hasEmployeeData)
                     {
-                        <h4 class="card-title mt-5 mb-4 border-bottom pb-2 text-success">
-                            <i class="bi bi-person-badge"></i> Dane Pracownika
-                        </h4>
+                        <h5 class="text-uppercase text-success fw-bold mb-4 ls-1">
+                            <i class="bi bi-person-badge me-2"></i>Karta Pracownika
+                        </h5>
 
                         <div class="row mb-3">
-                            <div class="col-sm-4 text-muted fw-bold">Imię i nazwisko:</div>
+                            <div class="col-sm-4 text-muted fw-semibold">Imię i nazwisko:</div>
                             <div class="col-sm-8">@Model.FullName</div>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-sm-4 text-muted fw-bold">Telefon:</div>
+                            <div class="col-sm-4 text-muted fw-semibold">Telefon służbowy:</div>
                             <div class="col-sm-8">@Model.Phone</div>
                         </div>
 
-                        <div class="row mb-3 align-items-center">
-                            <div class="col-sm-4 text-muted fw-bold">Staż pracy:</div>
-                            <div class="col-sm-8">
-                                <span class="fw-bold text-dark fs-5">@Model.SeniorityString</span>
-                                <small class="text-muted d-block">(zatrudniono: @(Model.HireDate?.ToShortDateString()))</small>
+                        @if (Model.HireDate.HasValue && Model.HireDate != DateTime.MinValue)
+                        {
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted fw-semibold">Staż pracy:</div>
+                                <div class="col-sm-8">
+                                    <span class="fw-bold text-primary">@Model.SeniorityString</span>
+                                    <div class="small text-muted mt-1">Zatrudniono: @Model.HireDate.Value.ToShortDateString()</div>
+                                </div>
                             </div>
-                        </div>
+                        }
 
                         <div class="row mb-3">
-                            <div class="col-sm-4 text-muted fw-bold pt-2">Moje Stanowiska:</div>
+                            <div class="col-sm-4 text-muted fw-semibold pt-2">Stanowiska:</div>
                             <div class="col-sm-8">
                                 @if (Model.PositionTags != null && Model.PositionTags.Any())
                                 {
                                     <div class="d-flex flex-wrap gap-2">
                                         @foreach (var tag in Model.PositionTags)
                                         {
-                                            <div class="border rounded p-2 d-flex align-items-center shadow-sm bg-white">
-                                                <span class="fw-bold me-2">@tag.Name</span>
-                                                <span class="badge bg-success">@tag.HourlyRate.ToString("C")/h</span>
+                                            <div class="badge bg-light text-dark border p-2 fw-normal">
+                                                @tag.Name <span class="fw-bold ms-1 text-success">@tag.HourlyRate.ToString("F2") zł/h</span>
                                             </div>
                                         }
                                     </div>
                                 }
                                 else
                                 {
-                                    <span class="text-muted fst-italic">Brak przypisanych stanowisk.</span>
+                                    <span class="text-muted small">Brak przypisanych stanowisk.</span>
                                 }
                             </div>
                         </div>
                     }
                     else
                     {
-                        @if (Model.Role == "Employee")
+                        // Sekcja dla Managera/Admina bez profilu pracownika lub Gościa
+                        if (Model.Role == "Manager" || Model.Role == "Admin")
                         {
-                            <div class="alert alert-warning mt-4">
-                                <i class="bi bi-exclamation-triangle"></i> Twój profil pracownika nie jest jeszcze uzupełniony przez Managera.
+                            <div class="alert alert-light border-start border-4 border-info">
+                                <h6 class="text-info fw-bold"><i class="bi bi-info-circle me-2"></i>Profil Zarządczy</h6>
+                                <p class="mb-0 small">Jesteś zalogowany jako członek zarządu. Jeśli chcesz uzupełnić swoje dane kadrowe (np. telefon, staż), poproś innego Administratora o edycję Twojego konta w zakładce Pracownicy.</p>
                             </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted fst-italic">Konto gościa.</p>
                         }
                     }
                 </div>
