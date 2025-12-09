@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System; // Ważne dla DateTime
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,6 +10,7 @@ namespace RestaurantManager.Models
         public Employee()
         {
             PositionTags = new HashSet<PositionTag>();
+            HireDate = DateTime.Now; // Domyślnie dzisiaj
         }
 
         [Key]
@@ -25,8 +27,11 @@ namespace RestaurantManager.Models
         [Display(Name = "Telefon")]
         public string Phone { get; set; }
 
-        // USUNIĘTO: public decimal? HourlyRate { get; set; } 
-        // Stawka jest teraz pobierana ze zmiany (Shift -> PositionTag -> HourlyRate)
+        // *** NOWOŚĆ: Data zatrudnienia ***
+        [Required]
+        [DataType(DataType.Date)]
+        [Display(Name = "Data zatrudnienia")]
+        public DateTime HireDate { get; set; }
 
         public virtual ICollection<PositionTag> PositionTags { get; set; }
     }

@@ -1,58 +1,75 @@
-﻿@model RestaurantManager.Models.ProfileViewModel
+﻿@model RestaurantManager.ViewModels.ProfileViewModel
+
 @{
-    ViewData["Title"] = "Edit Profile";
+    ViewData["Title"] = "Edytuj Profil";
 }
 
-<div class="card mx-auto" style="max-width:500px">
+<div class="card mx-auto shadow-sm" style="max-width:600px">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Edytuj Profil</h4>
+    </div>
     <div class="card-body">
-        <h3 class="card-title mb-4">Edit Profile</h3>
 
+        @* WAŻNE: enctype="multipart/form-data" jest konieczny do przesyłania plików *@
         <form asp-action="EditProfile" asp-controller="Auth" method="post" enctype="multipart/form-data">
-            @* Dzięki temu nie dostaniesz błędu „Username is required”: *@
+
             <input asp-for="Username" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
 
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-            <div class="text-center mb-3">
-                @if (Model.ExistingPicturePath != null)
-                {
-                    <img src="@Model.ExistingPicturePath"
-                         class="rounded-circle"
-                         style="width:100px;height:100px;object-fit:cover" />
-                }
+            <div class="row mb-4 align-items-center">
+                <div class="col-md-4 text-center">
+                    <div class="mb-2">
+                        @* ZMIANA: Używamy ProfilePicturePath zamiast ExistingPicturePath *@
+                        @if (!string.IsNullOrEmpty(Model.ProfilePicturePath))
+                        {
+                            <img src="@Model.ProfilePicturePath" class="img-thumbnail rounded-circle shadow-sm" style="width:120px; height:120px; object-fit:cover;" />
+                        }
+                        else
+                        {
+                            <img src="/images/profiles/default.png" class="img-thumbnail rounded-circle shadow-sm" style="width:120px; height:120px; object-fit:cover;" />
+                        }
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <label asp-for="ProfileImage" class="form-label fw-bold"></label>
+                    <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" />
+                    <span asp-validation-for="ProfileImage" class="text-danger small"></span>
+                    <div class="form-text text-muted">Obsługiwane formaty: JPG, PNG.</div>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="ProfileImage" class="form-label"></label>
-                <input asp-for="ProfileImage" class="form-control" type="file" />
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
+            <div class="form-group mb-3">
+                <label asp-for="Email" class="form-label fw-bold"></label>
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
-            <hr />
+            <hr class="my-4" />
+            <h5 class="text-muted mb-3"><i class="bi bi-lock"></i> Zmiana hasła (opcjonalne)</h5>
 
-            <div class="mb-3">
+            <div class="form-group mb-3">
                 <label asp-for="OldPassword" class="form-label"></label>
-                <input asp-for="OldPassword" class="form-control" type="password" />
+                <input asp-for="OldPassword" class="form-control" placeholder="Wpisz obecne hasło, aby zmienić na nowe" />
                 <span asp-validation-for="OldPassword" class="text-danger"></span>
             </div>
-            <div class="mb-3">
-                <label asp-for="NewPassword" class="form-label"></label>
-                <input asp-for="NewPassword" class="form-control" type="password" />
-                <span asp-validation-for="NewPassword" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="ConfirmPassword" class="form-label"></label>
-                <input asp-for="ConfirmPassword" class="form-control" type="password" />
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+
+            <div class="row">
+                <div class="col-md-6 form-group mb-3">
+                    <label asp-for="NewPassword" class="form-label"></label>
+                    <input asp-for="NewPassword" class="form-control" />
+                    <span asp-validation-for="NewPassword" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 form-group mb-3">
+                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                    <input asp-for="ConfirmPassword" class="form-control" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
             </div>
 
-            <button type="submit" class="btn btn-success w-100">Save changes</button>
-            <a asp-action="Profile" asp-controller="Auth" class="btn btn-secondary w-100 mt-2">Cancel</a>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                <a asp-action="Profile" class="btn btn-secondary me-md-2">Anuluj</a>
+                <button type="submit" class="btn btn-success px-4">Zapisz zmiany</button>
+            </div>
         </form>
     </div>
 </div>

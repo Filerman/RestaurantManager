@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.Cookies; // Dodaj ten using
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using RestaurantManager.Data;
 
@@ -10,28 +10,36 @@ namespace RestaurantManager
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Po³¹czenie do bazy danych
+            // Baza danych
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Dodaj kontrolery + widoki
+            // Kontrolery
             builder.Services.AddControllersWithViews();
 
-            // Dodaj sesjê
-            builder.Services.AddSession();
+            // *** POPRAWKA 1: Konfiguracja Sesji (NAPRAWIA B£¥D Z CIASTECZKAMI) ***
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(60);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+                // To naprawia b³¹d w Chrome/Edge na localhost:
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            });
 
-            // *** POPRAWKA 1: Rejestracja HttpContextAccessor ***
-            // (Wymagane przez _Layout.cshtml do czytania Context.Session)
             builder.Services.AddHttpContextAccessor();
 
-            // *** POPRAWKA 2: Dodanie serwisów Autentykacji ***
+            // Autentykacja Cookie (dodatkowa)
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
-                    options.LoginPath = "/Auth/Login"; // Strona logowania
-                    options.AccessDeniedPath = "/Auth/AccessDenied"; // Strona braku dostêpu
+                    options.LoginPath = "/Auth/Login";
+                    options.AccessDeniedPath = "/Auth/AccessDenied";
+                    // To te¿ ustawiamy na Lax dla pewnoœci
+                    options.Cookie.SameSite = SameSiteMode.Lax;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 });
-
 
             var app = builder.Build();
 
@@ -44,21 +52,23 @@ namespace RestaurantManager
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+            // *** POPRAWKA 2: Wymuszenie polityki ciasteczek ***
+            app.UseCookiePolicy(new CookiePolicyOptions
+            {
+                MinimumSameSitePolicy = SameSiteMode.Lax,
+                Secure = CookieSecurePolicy.SameAsRequest
+            });
+
             app.UseRouting();
-            app.UseSession(); // Musi byæ przed UseAuthentication i UseAuthorization
 
-            // *** POPRAWKA 3: Dodanie middleware Autentykacji ***
-            // Musi byæ wywo³ane PRZED UseAuthorization
-            app.UseAuthentication();
-            app.UseAuthorization(); // To ju¿ mia³eœ
+            app.UseSession();        // 1. Sesja
+            app.UseAuthentication(); // 2. Auth
+            app.UseAuthorization();  // 3. Autoryzacja
 
-
-            // Domyœlna trasa
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
-            // Seed bazy przy starcie
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;

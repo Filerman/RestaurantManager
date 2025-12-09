@@ -120,7 +120,8 @@ namespace RestaurantManager.Controllers
                 employee = new Employee
                 {
                     UserId = user.Id,
-                    FullName = user.Username
+                    FullName = user.Username,
+                    HireDate = DateTime.Now // Domyślna data dla nowego rekordu
                 };
             }
 
@@ -147,11 +148,11 @@ namespace RestaurantManager.Controllers
                 employeeToUpdate = new Employee { UserId = id };
             }
 
-            // USUNIĘTO HourlyRate z listy pól do aktualizacji
+            // *** POPRAWKA: Dodano e.HireDate do listy aktualizowanych pól ***
             if (await TryUpdateModelAsync<Employee>(
                 employeeToUpdate,
                 "",
-                e => e.FullName, e => e.Phone))
+                e => e.FullName, e => e.Phone, e => e.HireDate))
             {
                 UpdateEmployeeTags(selectedTagIds, employeeToUpdate);
 
