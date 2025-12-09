@@ -21,9 +21,7 @@
             <th>
                 Telefon
             </th>
-            <th>
-                Stawka godzinowa
-            </th>
+            @* USUNIĘTO KOLUMNĘ STAWKI *@
             <th></th>
         </tr>
     </thead>
@@ -57,9 +55,7 @@
                 <td>
                     @Html.DisplayFor(modelItem => user.Employee.Phone)
                 </td>
-                <td>
-                    @Html.DisplayFor(modelItem => user.Employee.HourlyRate)
-                </td>
+                @* USUNIĘTO KOMÓRKĘ STAWKI *@
                 <td>
                     <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-primary">
                         @(user.Employee == null ? "Uzupełnij profil" : "Edytuj")

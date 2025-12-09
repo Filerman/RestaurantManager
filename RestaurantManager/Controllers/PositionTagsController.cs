@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RestaurantManager.Data;
 using RestaurantManager.Models;
-using RestaurantManager.Filters; // Upewnij się, że ta przestrzeń nazw jest poprawna
+using RestaurantManager.Filters;
 
 namespace RestaurantManager.Controllers
 {
@@ -27,17 +27,10 @@ namespace RestaurantManager.Controllers
         // GET: PositionTags/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var positionTag = await _context.PositionTags
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (positionTag == null)
-            {
-                return NotFound();
-            }
+            var positionTag = await _context.PositionTags.FirstOrDefaultAsync(m => m.Id == id);
+            if (positionTag == null) return NotFound();
 
             return View(positionTag);
         }
@@ -51,7 +44,8 @@ namespace RestaurantManager.Controllers
         // POST: PositionTags/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name")] PositionTag positionTag)
+        // ZMIANA: Dodano HourlyRate do Bind
+        public async Task<IActionResult> Create([Bind("Id,Name,HourlyRate")] PositionTag positionTag)
         {
             if (ModelState.IsValid)
             {
@@ -65,28 +59,21 @@ namespace RestaurantManager.Controllers
         // GET: PositionTags/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var positionTag = await _context.PositionTags.FindAsync(id);
-            if (positionTag == null)
-            {
-                return NotFound();
-            }
+            if (positionTag == null) return NotFound();
+
             return View(positionTag);
         }
 
         // POST: PositionTags/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] PositionTag positionTag)
+        // ZMIANA: Dodano HourlyRate do Bind
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,HourlyRate")] PositionTag positionTag)
         {
-            if (id != positionTag.Id)
-            {
-                return NotFound();
-            }
+            if (id != positionTag.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -97,14 +84,8 @@ namespace RestaurantManager.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!_context.PositionTags.Any(e => e.Id == positionTag.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!_context.PositionTags.Any(e => e.Id == positionTag.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -114,17 +95,10 @@ namespace RestaurantManager.Controllers
         // GET: PositionTags/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var positionTag = await _context.PositionTags
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (positionTag == null)
-            {
-                return NotFound();
-            }
+            var positionTag = await _context.PositionTags.FirstOrDefaultAsync(m => m.Id == id);
+            if (positionTag == null) return NotFound();
 
             return View(positionTag);
         }

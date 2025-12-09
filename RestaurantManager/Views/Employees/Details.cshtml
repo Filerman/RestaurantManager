@@ -49,19 +49,21 @@
             <dd class="col-sm-10">
                 @Html.DisplayFor(model => model.Employee.Phone)
             </dd>
-            <dt class="col-sm-2">
-                @Html.DisplayNameFor(model => model.Employee.HourlyRate)
-            </dt>
-            <dd class="col-sm-10">
-                @Html.DisplayFor(model => model.Employee.HourlyRate)
-            </dd>
+
+            @* USUNIĘTO WYŚWIETLANIE HOURLY RATE *@
+
             <dt class="col-sm-2">
                 Tagi / Stanowiska
             </dt>
             <dd class="col-sm-10">
                 @if (Model.Employee.PositionTags.Any())
                 {
-                    @string.Join(", ", Model.Employee.PositionTags.Select(t => t.Name))
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var tag in Model.Employee.PositionTags)
+                        {
+                            <li>@tag.Name <small class="text-muted">(@tag.HourlyRate.ToString("C")/h)</small></li>
+                        }
+                    </ul>
                 }
                 else
                 {
@@ -77,7 +79,6 @@ else
         Ten użytkownik nie ma jeszcze uzupełnionego profilu pracownika.
     </div>
 }
-
 
 <div class="mt-3">
     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edytuj profil</a>

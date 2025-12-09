@@ -18,10 +18,17 @@
             @Html.DisplayFor(model => model.Username)
         </dd>
         <dt class="col-sm-2">
-            Imię i nazwisko (z profilu)
+            Imię i nazwisko
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Employee.FullName)
+            @if (Model.Employee != null)
+            {
+                @Html.DisplayFor(model => model.Employee.FullName)
+            }
+            else
+            {
+                <span>-</span>
+            }
         </dd>
     </dl>
 

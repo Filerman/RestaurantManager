@@ -20,33 +20,35 @@
 
             <input type="hidden" asp-for="UserId" />
 
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="FullName" class="control-label"></label>
                 <input asp-for="FullName" class="form-control" />
                 <span asp-validation-for="FullName" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="Phone" class="control-label"></label>
                 <input asp-for="Phone" class="form-control" />
                 <span asp-validation-for="Phone" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="HourlyRate" class="control-label"></label>
-                <input asp-for="HourlyRate" class="form-control" />
-                <span asp-validation-for="HourlyRate" class="text-danger"></span>
-            </div>
 
-            <div class.form-group mt-3">
-                <label class="control-label">Tagi / Stanowiska</label>
+            @* USUNIĘTO CAŁY FORM-GROUP DLA HOURLY RATE *@
+
+            <div class="form-group mt-3">
+                <label class="control-label fw-bold mb-2">Tagi / Stanowiska</label>
                 <div class="list-group">
                     @foreach (var tag in allTags)
                     {
-                        <label class="list-group-item">
-                            <input type="checkbox"
-                                   name="selectedTagIds"
-                                   value="@tag.Id"
-                                   @(selectedTagIds.Contains(tag.Id) ? "checked" : "") />
-                            @tag.Name
+                        <label class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <input type="checkbox"
+                                       class="form-check-input me-2"
+                                       name="selectedTagIds"
+                                       value="@tag.Id"
+                                       @(selectedTagIds.Contains(tag.Id) ? "checked" : "") />
+                                @tag.Name
+                            </span>
+                            @* Wyświetlamy stawkę przypisaną do stanowiska dla informacji *@
+                            <span class="badge bg-secondary rounded-pill">@tag.HourlyRate.ToString("F2") zł/h</span>
                         </label>
                     }
                 </div>

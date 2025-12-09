@@ -46,9 +46,6 @@ namespace RestaurantManager.Data
                 .WithMany(t => t.Employees);
 
             // Precyzja dla decimal
-            modelBuilder.Entity<Employee>()
-                .Property(e => e.HourlyRate)
-                .HasColumnType("decimal(18, 2)");
             modelBuilder.Entity<MenuItem>()
                 .Property(m => m.Price)
                 .HasColumnType("decimal(18, 2)");

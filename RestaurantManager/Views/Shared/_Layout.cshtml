@@ -130,6 +130,15 @@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Employees" asp-action="Index">Pracownicy</a>
                                     </li>
+
+                                    @* --- TUTAJ DODANO LINK DO WYPŁAT --- *@
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Employees" asp-action="Payroll">
+                                            <i class="bi bi-cash-coin"></i> Wypłaty
+                                        </a>
+                                    </li>
+                                    @* ---------------------------------- *@
+
                                     <li>
                                         <a class="dropdown-item" asp-controller="Users" asp-action="Index">Użytkownicy</a>
                                     </li>

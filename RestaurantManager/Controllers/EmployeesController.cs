@@ -1,12 +1,14 @@
-﻿using System.Linq;
+﻿using System; // Ważne dla DateTime
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using RestaurantManager.Data;
 using RestaurantManager.Models;
+using RestaurantManager.ViewModels; // Dodaj ten using dla PayrollViewModel
 using RestaurantManager.Filters;
-using System.Collections.Generic; // Dodaj ten using
+using System.Collections.Generic;
 
 namespace RestaurantManager.Controllers
 {
@@ -19,6 +21,60 @@ namespace RestaurantManager.Controllers
         {
             _context = context;
         }
+
+        // --- NOWA FUNKCJONALNOŚĆ: WYPŁATY ---
+
+        [HttpGet]
+        public async Task<IActionResult> Payroll(int? month, int? year)
+        {
+            // Domyślnie obecny miesiąc i rok
+            int selectedMonth = month ?? DateTime.Now.Month;
+            int selectedYear = year ?? DateTime.Now.Year;
+
+            // 1. Pobierz wszystkie zmiany z danego miesiąca, które mają przypisanego pracownika i tag stanowiska
+            var shifts = await _context.Shifts
+                .Where(s => s.Date.Month == selectedMonth && s.Date.Year == selectedYear && s.UserId != null && s.PositionTagId != null)
+                .Include(s => s.EmployeeUser).ThenInclude(u => u.Employee)
+                .Include(s => s.ShiftPositionTag) // Ważne: pobieramy stawkę z tagu
+                .ToListAsync();
+
+            // 2. Grupuj zmiany po pracowniku i oblicz wypłatę
+            var payrollList = shifts
+                .GroupBy(s => s.UserId)
+                .Select(g => {
+                    var employee = g.First().EmployeeUser?.Employee;
+                    var user = g.First().EmployeeUser;
+
+                    double totalHours = g.Sum(s => (s.EndTime - s.StartTime).TotalHours);
+
+                    // Obliczenie pensji: Suma (Godziny zmiany * Stawka tagu tej zmiany)
+                    decimal totalSalary = g.Sum(s =>
+                        (decimal)(s.EndTime - s.StartTime).TotalHours * (s.ShiftPositionTag?.HourlyRate ?? 0)
+                    );
+
+                    return new PayrollViewModel
+                    {
+                        EmployeeName = employee?.FullName ?? "Nieznany",
+                        EmployeeEmail = user?.Email ?? "-",
+                        ShiftsCount = g.Count(),
+                        TotalHours = Math.Round(totalHours, 2),
+                        TotalSalary = totalSalary
+                    };
+                })
+                .OrderBy(p => p.EmployeeName)
+                .ToList();
+
+            var vm = new PayrollIndexViewModel
+            {
+                Month = selectedMonth,
+                Year = selectedYear,
+                Payrolls = payrollList
+            };
+
+            return View(vm);
+        }
+
+        // -------------------------------------
 
         // GET: Employees
         public async Task<IActionResult> Index()
@@ -68,13 +124,8 @@ namespace RestaurantManager.Controllers
                 };
             }
 
-            // *** ZMIANA NA POTRZEBY CHECKBOXÓW ***
-            // Przekazujemy pełną listę wszystkich tagów
             ViewData["AllTags"] = await _context.PositionTags.ToListAsync();
-
-            // Przekazujemy zbiór ID tagów, które pracownik już ma
             ViewData["SelectedTagIds"] = employee.PositionTags.Select(t => t.Id).ToHashSet();
-
             ViewData["EmployeeEmail"] = user.Email;
 
             return View(employee);
@@ -83,7 +134,6 @@ namespace RestaurantManager.Controllers
         // POST: Employees/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        // Akcja akceptuje `id` (z trasy) i `selectedTagIds` (z checkboxów)
         public async Task<IActionResult> Edit(int id, int[] selectedTagIds)
         {
             var employeeToUpdate = await _context.Employees
@@ -97,13 +147,12 @@ namespace RestaurantManager.Controllers
                 employeeToUpdate = new Employee { UserId = id };
             }
 
-            // Mapujemy dane z formularza do modelu
+            // USUNIĘTO HourlyRate z listy pól do aktualizacji
             if (await TryUpdateModelAsync<Employee>(
                 employeeToUpdate,
-                "", // Pusty prefiks
-                e => e.FullName, e => e.Phone, e => e.HourlyRate))
+                "",
+                e => e.FullName, e => e.Phone))
             {
-                // Aktualizujemy tagi na podstawie zaznaczonych checkboxów
                 UpdateEmployeeTags(selectedTagIds, employeeToUpdate);
 
                 if (isNew)
@@ -117,10 +166,9 @@ namespace RestaurantManager.Controllers
                 }
                 catch (DbUpdateException)
                 {
-                    ModelState.AddModelError("", "Nie można zapisać zmian. Sprawdź poprawność danych (np. format telefonu).");
-                    // Jeśli zapis się nie powiedzie, musimy ponownie załadować dane dla widoku
+                    ModelState.AddModelError("", "Nie można zapisać zmian.");
                     ViewData["AllTags"] = await _context.PositionTags.ToListAsync();
-                    ViewData["SelectedTagIds"] = new HashSet<int>(selectedTagIds); // Użyj tagów, które użytkownik próbował zapisać
+                    ViewData["SelectedTagIds"] = new HashSet<int>(selectedTagIds);
                     var user = await _context.Users.FindAsync(id);
                     ViewData["EmployeeEmail"] = user.Email;
                     return View(employeeToUpdate);
@@ -128,7 +176,6 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Jeśli model jest niepoprawny (np. błąd walidacji)
             ViewData["AllTags"] = await _context.PositionTags.ToListAsync();
             ViewData["SelectedTagIds"] = new HashSet<int>(selectedTagIds);
             var userFailed = await _context.Users.FindAsync(id);
@@ -136,10 +183,8 @@ namespace RestaurantManager.Controllers
             return View(employeeToUpdate);
         }
 
-        // Metoda pomocnicza - działa poprawnie z listą ID z checkboxów
         private void UpdateEmployeeTags(int[] selectedTagIds, Employee employeeToUpdate)
         {
-            // Jeśli nie przyszły żadne ID, wyczyść tagi
             if (selectedTagIds == null || !selectedTagIds.Any())
             {
                 employeeToUpdate.PositionTags = new HashSet<PositionTag>();
@@ -149,12 +194,10 @@ namespace RestaurantManager.Controllers
             var selectedTagsHS = new HashSet<int>(selectedTagIds);
             var employeeTags = new HashSet<int>(employeeToUpdate.PositionTags.Select(t => t.Id));
 
-            // Przejdź po wszystkich tagach w systemie
             foreach (var tag in _context.PositionTags)
             {
                 if (selectedTagsHS.Contains(tag.Id))
                 {
-                    // Jeśli tag jest wybrany i pracownik go nie ma, dodaj
                     if (!employeeTags.Contains(tag.Id))
                     {
                         employeeToUpdate.PositionTags.Add(tag);
@@ -162,7 +205,6 @@ namespace RestaurantManager.Controllers
                 }
                 else
                 {
-                    // Jeśli tag nie jest wybrany, a pracownik go ma, usuń
                     if (employeeTags.Contains(tag.Id))
                     {
                         var tagToRemove = employeeToUpdate.PositionTags.FirstOrDefault(t => t.Id == tag.Id);
@@ -174,7 +216,6 @@ namespace RestaurantManager.Controllers
                 }
             }
         }
-
 
         // GET: Employees/Delete/5
         public async Task<IActionResult> Delete(int? id)
@@ -196,19 +237,10 @@ namespace RestaurantManager.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            var employee = await _context.Employees.FindAsync(id);
+            var employee = await _context.Employees.FindAsync(id); // Może być null
 
-            if (employee != null)
-            {
-                _context.Employees.Remove(employee);
-            }
-            if (user != null)
-            {
-                // Usunięcie użytkownika automatycznie usunie pracownika
-                // (dzięki onDelete: ReferentialAction.Cascade w migracji),
-                // ale jawne usunięcie obu jest bezpieczniejsze.
-                _context.Users.Remove(user);
-            }
+            if (employee != null) _context.Employees.Remove(employee);
+            if (user != null) _context.Users.Remove(user);
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));

@@ -1,0 +1,82 @@
+﻿@model RestaurantManager.ViewModels.PayrollIndexViewModel
+
+@{
+    ViewData["Title"] = "Raport Wynagrodzeń";
+    var months = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames;
+}
+
+<div class="container mt-4">
+    <h2><i class="bi bi-cash-stack text-success"></i> Raport Wynagrodzeń</h2>
+    <hr />
+
+    <form asp-action="Payroll" method="get" class="row g-3 align-items-center mb-4 bg-light p-3 rounded shadow-sm">
+        <div class="col-auto">
+            <label class="col-form-label fw-bold">Wybierz okres:</label>
+        </div>
+        <div class="col-auto">
+            <select name="month" class="form-select">
+                @for (int i = 1; i <= 12; i++)
+                {
+                    if (i == Model.Month)
+                    {
+                        <option value="@i" selected>@months[i - 1]</option>
+                    }
+                    else
+                    {
+                        <option value="@i">@months[i - 1]</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <input type="number" name="year" class="form-control" value="@Model.Year" min="2020" max="2030" />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Pokaż raport</button>
+        </div>
+    </form>
+
+    @if (!Model.Payrolls.Any())
+    {
+        <div class="alert alert-info">Brak zarejestrowanych zmian (z przypisanymi pracownikami i stanowiskami) w wybranym okresie.</div>
+    }
+    else
+    {
+        <div class="card shadow">
+            <div class="card-body p-0">
+                <table class="table table-striped table-hover mb-0 align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Pracownik</th>
+                            <th>Email</th>
+                            <th class="text-center">Liczba Zmian</th>
+                            <th class="text-center">Przepracowane Godziny</th>
+                            <th class="text-end">Do Wypłaty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Payrolls)
+                        {
+                            <tr>
+                                <td class="fw-bold">@item.EmployeeName</td>
+                                <td class="text-muted small">@item.EmployeeEmail</td>
+                                <td class="text-center"><span class="badge bg-secondary">@item.ShiftsCount</span></td>
+                                <td class="text-center">@item.TotalHours h</td>
+                                <td class="text-end fw-bold text-success fs-5">
+                                    @item.TotalSalary.ToString("C")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end fw-bold">SUMA:</td>
+                            <td class="text-center fw-bold">@Model.Payrolls.Sum(x => x.TotalHours) h</td>
+                            <td class="text-end fw-bold text-success">@Model.Payrolls.Sum(x => x.TotalSalary).ToString("C")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    }
+</div>
