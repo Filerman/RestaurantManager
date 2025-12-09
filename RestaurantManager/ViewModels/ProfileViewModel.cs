@@ -1,37 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http; // To jest potrzebne dla IFormFile
-using RestaurantManager.Models;    // To jest potrzebne dla PositionTag
+using Microsoft.AspNetCore.Http; // Ważne dla IFormFile
+using RestaurantManager.Models;    // Ważne dla PositionTag
 
 namespace RestaurantManager.ViewModels
 {
     public class ProfileViewModel
     {
-        // --- DANE DO WYŚWIETLANIA ---
         public string Username { get; set; }
 
         [EmailAddress]
         public string Email { get; set; }
 
-        public string Role { get; set; }
+        public string? Role { get; set; }
 
         [Display(Name = "Zdjęcie profilowe")]
-        public string? ProfilePicturePath { get; set; }
+        public string? ProfilePicturePath { get; set; } // Ścieżka do wyświetlania
 
-        // Pola pracownicze (do wyświetlania w profilu)
-        public string? FullName { get; set; }
-        public string? Phone { get; set; }
+        [Display(Name = "Zmień zdjęcie")]
+        public IFormFile? ProfileImage { get; set; } // Plik z formularza
 
-        [Display(Name = "Staż pracy")]
-        public string? SeniorityString { get; set; }
-
-        public DateTime? HireDate { get; set; }
-
-        public List<PositionTag> PositionTags { get; set; } = new List<PositionTag>();
-
-        // --- DANE DO EDYCJI (Brakowało tych pól) ---
-
+        // Hasła
         [DataType(DataType.Password)]
         [Display(Name = "Obecne hasło")]
         public string? OldPassword { get; set; }
@@ -45,7 +35,12 @@ namespace RestaurantManager.ViewModels
         [Compare("NewPassword", ErrorMessage = "Hasła nie są identyczne.")]
         public string? ConfirmPassword { get; set; }
 
-        [Display(Name = "Zmień zdjęcie")]
-        public IFormFile? ProfileImage { get; set; }
+        // Dane pracownicze
+        public string? FullName { get; set; }
+        public string? Phone { get; set; }
+        [Display(Name = "Staż pracy")]
+        public string? SeniorityString { get; set; }
+        public DateTime? HireDate { get; set; }
+        public List<PositionTag> PositionTags { get; set; } = new List<PositionTag>();
     }
 }

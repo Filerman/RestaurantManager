@@ -17,26 +17,27 @@ namespace RestaurantManager
             // Kontrolery
             builder.Services.AddControllersWithViews();
 
-            // *** POPRAWKA 1: Konfiguracja Sesji (NAPRAWIA B£¥D Z CIASTECZKAMI) ***
+            // 1. NAPRAWA SESJI (Kluczowe dla dzia³ania na localhost)
             builder.Services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(60);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
-                // To naprawia b³¹d w Chrome/Edge na localhost:
+                options.Cookie.Name = ".RestaurantManager.Session";
+
+                // Te dwie opcje sprawiaj¹, ¿e przegl¹darka nie blokuje ciasteczka
                 options.Cookie.SameSite = SameSiteMode.Lax;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             });
 
             builder.Services.AddHttpContextAccessor();
 
-            // Autentykacja Cookie (dodatkowa)
+            // 2. Auth Cookies
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
                     options.LoginPath = "/Auth/Login";
                     options.AccessDeniedPath = "/Auth/AccessDenied";
-                    // To te¿ ustawiamy na Lax dla pewnoœci
                     options.Cookie.SameSite = SameSiteMode.Lax;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 });
@@ -52,7 +53,7 @@ namespace RestaurantManager
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
-            // *** POPRAWKA 2: Wymuszenie polityki ciasteczek ***
+            // 3. Wymuszenie polityki ciasteczek
             app.UseCookiePolicy(new CookiePolicyOptions
             {
                 MinimumSameSitePolicy = SameSiteMode.Lax,
@@ -61,9 +62,10 @@ namespace RestaurantManager
 
             app.UseRouting();
 
-            app.UseSession();        // 1. Sesja
-            app.UseAuthentication(); // 2. Auth
-            app.UseAuthorization();  // 3. Autoryzacja
+            // 4. Kolejnoœæ: Sesja -> Auth -> Uprawnienia
+            app.UseSession();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllerRoute(
                 name: "default",

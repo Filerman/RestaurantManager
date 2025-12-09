@@ -22,19 +22,15 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // GET: /Auth/Login
+        // --- LOGIN ---
         [HttpGet]
         public IActionResult Login() => View();
 
-        // POST: /Auth/Login
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Login(string login, string password)
         {
-            var user = _context.Users
-                .AsNoTracking()
-                .FirstOrDefault(u =>
-                    (u.Username == login || u.Email == login) &&
-                    u.Password == password);
+            var user = _context.Users.AsNoTracking()
+                .FirstOrDefault(u => (u.Username == login || u.Email == login) && u.Password == password);
 
             if (user == null)
             {
@@ -42,6 +38,7 @@ namespace RestaurantManager.Controllers
                 return View();
             }
 
+            // Ustawienie sesji
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("Username", user.Username);
             HttpContext.Session.SetString("UserRole", user.Role);
@@ -51,11 +48,10 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // GET: /Auth/Register
+        // --- REGISTER ---
         [HttpGet]
         public IActionResult Register() => View();
 
-        // POST: /Auth/Register
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(string username, string email, string password)
         {
@@ -81,7 +77,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Login");
         }
 
-        // GET: /Auth/Logout
+        // --- LOGOUT ---
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
@@ -89,17 +85,15 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Login");
         }
 
-        // GET: /Auth/Profile
+        // --- PROFILE ---
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue) return RedirectToAction("Login");
 
-            var user = await _context.Users
-                .AsNoTracking()
-                .Include(u => u.Employee)
-                    .ThenInclude(e => e.PositionTags)
+            var user = await _context.Users.AsNoTracking()
+                .Include(u => u.Employee).ThenInclude(e => e.PositionTags)
                 .FirstOrDefaultAsync(u => u.Id == userId.Value);
 
             if (user == null) return RedirectToAction("Login");
@@ -109,9 +103,7 @@ namespace RestaurantManager.Controllers
                 Username = user.Username,
                 Email = user.Email,
                 Role = user.Role,
-                ProfilePicturePath = string.IsNullOrEmpty(user.ProfilePicturePath)
-                    ? DefaultAvatar
-                    : user.ProfilePicturePath
+                ProfilePicturePath = string.IsNullOrEmpty(user.ProfilePicturePath) ? DefaultAvatar : user.ProfilePicturePath
             };
 
             if (user.Employee != null)
@@ -121,37 +113,22 @@ namespace RestaurantManager.Controllers
                 vm.HireDate = user.Employee.HireDate;
                 vm.PositionTags = user.Employee.PositionTags.ToList();
 
+                // Obliczanie stażu pracy
                 var today = DateTime.Now;
                 var hired = user.Employee.HireDate;
-
                 if (hired != DateTime.MinValue)
                 {
                     int months = ((today.Year - hired.Year) * 12) + today.Month - hired.Month;
                     if (today.Day < hired.Day) months--;
-
                     int years = months / 12;
                     int remainingMonths = months % 12;
-
-                    if (years > 0)
-                        vm.SeniorityString = $"{years} lat(a), {remainingMonths} mies.";
-                    else
-                        vm.SeniorityString = $"{remainingMonths} mies.";
-
-                    if (years == 0 && remainingMonths == 0)
-                    {
-                        var days = (today - hired).Days;
-                        vm.SeniorityString = $"{days} dni";
-                    }
+                    vm.SeniorityString = years > 0 ? $"{years} lat(a), {remainingMonths} mies." : $"{remainingMonths} mies.";
                 }
             }
-
-            if (TempData["Success"] != null)
-                ViewBag.Success = TempData["Success"];
-
             return View(vm);
         }
 
-        // GET: /Auth/EditProfile
+        // --- EDIT PROFILE ---
         [HttpGet]
         public async Task<IActionResult> EditProfile()
         {
@@ -166,15 +143,11 @@ namespace RestaurantManager.Controllers
                 Username = user.Username,
                 Email = user.Email,
                 Role = user.Role,
-                ProfilePicturePath = string.IsNullOrEmpty(user.ProfilePicturePath)
-                    ? DefaultAvatar
-                    : user.ProfilePicturePath
+                ProfilePicturePath = string.IsNullOrEmpty(user.ProfilePicturePath) ? DefaultAvatar : user.ProfilePicturePath
             };
-
             return View(vm);
         }
 
-        // POST: /Auth/EditProfile
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProfile(ProfileViewModel vm)
         {
@@ -184,77 +157,50 @@ namespace RestaurantManager.Controllers
             var user = await _context.Users.FindAsync(userId.Value);
             if (user == null) return RedirectToAction("Login");
 
-            // 1) Email
+            // Walidacja Email
             if (vm.Email != user.Email)
             {
                 if (await _context.Users.AnyAsync(u => u.Email == vm.Email && u.Id != user.Id))
                     ModelState.AddModelError("Email", "Ten email jest już zajęty.");
-                else
-                    user.Email = vm.Email;
+                else user.Email = vm.Email;
             }
 
-            // 2) Hasło
-            if (!string.IsNullOrWhiteSpace(vm.OldPassword)
-                || !string.IsNullOrWhiteSpace(vm.NewPassword)
-                || !string.IsNullOrWhiteSpace(vm.ConfirmPassword))
+            // Walidacja Hasła
+            if (!string.IsNullOrWhiteSpace(vm.NewPassword))
             {
-                if (vm.OldPassword != user.Password)
-                    ModelState.AddModelError("OldPassword", "Obecne hasło jest nieprawidłowe.");
-                if (vm.NewPassword != vm.ConfirmPassword)
-                    ModelState.AddModelError("ConfirmPassword", "Hasła nie są identyczne.");
-                if (ModelState.IsValid && !string.IsNullOrEmpty(vm.NewPassword))
-                    user.Password = vm.NewPassword;
+                if (vm.OldPassword != user.Password) ModelState.AddModelError("OldPassword", "Obecne hasło jest nieprawidłowe.");
+                else if (vm.NewPassword != vm.ConfirmPassword) ModelState.AddModelError("ConfirmPassword", "Hasła nie są identyczne.");
+                else user.Password = vm.NewPassword;
             }
 
             if (!ModelState.IsValid)
             {
-                vm.ProfilePicturePath = string.IsNullOrEmpty(user.ProfilePicturePath)
-                    ? DefaultAvatar
-                    : user.ProfilePicturePath;
+                vm.ProfilePicturePath = user.ProfilePicturePath ?? DefaultAvatar;
                 return View(vm);
             }
 
-            // 3) ZDJĘCIE - POPRAWIONA LOGIKA BEZPOŚREDNIA
+            // Zapis Zdjęcia
             if (vm.ProfileImage != null && vm.ProfileImage.Length > 0)
             {
-                // Tworzymy ścieżkę do folderu wwwroot/images/profiles
                 var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", _profileFolder);
+                if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
 
-                // Upewnij się, że katalog istnieje
-                if (!Directory.Exists(uploads))
-                    Directory.CreateDirectory(uploads);
-
-                // Generujemy unikalną nazwę pliku
                 var fileName = $"u{user.Id}_{Guid.NewGuid().ToString().Substring(0, 8)}{Path.GetExtension(vm.ProfileImage.FileName)}";
                 var filePath = Path.Combine(uploads, fileName);
 
-                // Zapisujemy plik na dysku
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await vm.ProfileImage.CopyToAsync(stream);
                 }
 
-                // Usuwamy stare zdjęcie, jeśli to nie jest domyślny avatar
+                // Usuń stare zdjęcie
                 if (!string.IsNullOrEmpty(user.ProfilePicturePath) && user.ProfilePicturePath != DefaultAvatar)
                 {
-                    // Usuwamy pierwszy slash z ścieżki (np. "/images/..." -> "images/...")
-                    var relativePath = user.ProfilePicturePath.TrimStart('/');
-                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath);
-
-                    if (System.IO.File.Exists(oldPath))
-                    {
-                        try
-                        {
-                            System.IO.File.Delete(oldPath);
-                        }
-                        catch { /* Ignorujemy błędy usuwania starego pliku */ }
-                    }
+                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.ProfilePicturePath.TrimStart('/'));
+                    if (System.IO.File.Exists(oldPath)) try { System.IO.File.Delete(oldPath); } catch { }
                 }
 
-                // Aktualizujemy ścieżkę w bazie danych
                 user.ProfilePicturePath = "/" + Path.Combine(_profileFolder, fileName).Replace("\\", "/");
-
-                // Aktualizujemy sesję, aby nagłówek strony od razu pokazał nowe zdjęcie
                 HttpContext.Session.SetString("ProfilePicturePath", user.ProfilePicturePath);
             }
 
@@ -263,7 +209,6 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Profile");
         }
 
-        // GET: /Auth/AccessDenied
         [HttpGet]
         public IActionResult AccessDenied()
         {

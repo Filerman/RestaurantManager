@@ -4,13 +4,13 @@
     ViewData["Title"] = "Edytuj Profil";
 }
 
-<div class="card mx-auto shadow-sm" style="max-width:600px">
+<div class="card mx-auto shadow-sm" style="max-width:600px; margin-top: 50px;">
     <div class="card-header bg-primary text-white">
         <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Edytuj Profil</h4>
     </div>
     <div class="card-body">
 
-        @* WAŻNE: enctype="multipart/form-data" jest konieczny do przesyłania plików *@
+        @* enctype="multipart/form-data" jest konieczny do przesyłania plików! *@
         <form asp-action="EditProfile" asp-controller="Auth" method="post" enctype="multipart/form-data">
 
             <input asp-for="Username" type="hidden" />
@@ -19,7 +19,6 @@
             <div class="row mb-4 align-items-center">
                 <div class="col-md-4 text-center">
                     <div class="mb-2">
-                        @* ZMIANA: Używamy ProfilePicturePath zamiast ExistingPicturePath *@
                         @if (!string.IsNullOrEmpty(Model.ProfilePicturePath))
                         {
                             <img src="@Model.ProfilePicturePath" class="img-thumbnail rounded-circle shadow-sm" style="width:120px; height:120px; object-fit:cover;" />
@@ -31,10 +30,9 @@
                     </div>
                 </div>
                 <div class="col-md-8">
-                    <label asp-for="ProfileImage" class="form-label fw-bold"></label>
+                    <label asp-for="ProfileImage" class="form-label fw-bold">Wybierz nowe zdjęcie</label>
                     <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" />
                     <span asp-validation-for="ProfileImage" class="text-danger small"></span>
-                    <div class="form-text text-muted">Obsługiwane formaty: JPG, PNG.</div>
                 </div>
             </div>
 
@@ -49,7 +47,7 @@
 
             <div class="form-group mb-3">
                 <label asp-for="OldPassword" class="form-label"></label>
-                <input asp-for="OldPassword" class="form-control" placeholder="Wpisz obecne hasło, aby zmienić na nowe" />
+                <input asp-for="OldPassword" class="form-control" placeholder="Obecne hasło" />
                 <span asp-validation-for="OldPassword" class="text-danger"></span>
             </div>
 
