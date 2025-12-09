@@ -38,7 +38,6 @@ namespace RestaurantManager.Controllers
                 return View();
             }
 
-            // Ustawienie sesji
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("Username", user.Username);
             HttpContext.Session.SetString("UserRole", user.Role);
@@ -53,7 +52,8 @@ namespace RestaurantManager.Controllers
         public IActionResult Register() => View();
 
         [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(string username, string email, string password)
+        // Dodano parametr 'phone'
+        public async Task<IActionResult> Register(string username, string email, string password, string phone)
         {
             if (await _context.Users.AnyAsync(u => u.Username == username || u.Email == email))
             {
@@ -66,6 +66,7 @@ namespace RestaurantManager.Controllers
                 Username = username,
                 Email = email,
                 Password = password,
+                PhoneNumber = phone, // <-- ZAPIS TELEFONU
                 Role = "Guest",
                 ProfilePicturePath = DefaultAvatar
             };
@@ -102,6 +103,7 @@ namespace RestaurantManager.Controllers
             {
                 Username = user.Username,
                 Email = user.Email,
+                PhoneNumber = user.PhoneNumber, // <-- ODCZYT TELEFONU
                 Role = user.Role,
                 ProfilePicturePath = string.IsNullOrEmpty(user.ProfilePicturePath) ? DefaultAvatar : user.ProfilePicturePath
             };
@@ -109,11 +111,10 @@ namespace RestaurantManager.Controllers
             if (user.Employee != null)
             {
                 vm.FullName = user.Employee.FullName;
-                vm.Phone = user.Employee.Phone;
+                vm.Phone = user.Employee.Phone; // Telefon służbowy
                 vm.HireDate = user.Employee.HireDate;
                 vm.PositionTags = user.Employee.PositionTags.ToList();
 
-                // Obliczanie stażu pracy
                 var today = DateTime.Now;
                 var hired = user.Employee.HireDate;
                 if (hired != DateTime.MinValue)
@@ -123,6 +124,7 @@ namespace RestaurantManager.Controllers
                     int years = months / 12;
                     int remainingMonths = months % 12;
                     vm.SeniorityString = years > 0 ? $"{years} lat(a), {remainingMonths} mies." : $"{remainingMonths} mies.";
+                    if (years == 0 && remainingMonths == 0) vm.SeniorityString = $"{(today - hired).Days} dni";
                 }
             }
             return View(vm);
@@ -142,6 +144,7 @@ namespace RestaurantManager.Controllers
             {
                 Username = user.Username,
                 Email = user.Email,
+                PhoneNumber = user.PhoneNumber, // <-- PRZEKAZANIE DO EDYCJI
                 Role = user.Role,
                 ProfilePicturePath = string.IsNullOrEmpty(user.ProfilePicturePath) ? DefaultAvatar : user.ProfilePicturePath
             };
@@ -157,7 +160,7 @@ namespace RestaurantManager.Controllers
             var user = await _context.Users.FindAsync(userId.Value);
             if (user == null) return RedirectToAction("Login");
 
-            // Walidacja Email
+            // Email check
             if (vm.Email != user.Email)
             {
                 if (await _context.Users.AnyAsync(u => u.Email == vm.Email && u.Id != user.Id))
@@ -165,7 +168,7 @@ namespace RestaurantManager.Controllers
                 else user.Email = vm.Email;
             }
 
-            // Walidacja Hasła
+            // Hasło check
             if (!string.IsNullOrWhiteSpace(vm.NewPassword))
             {
                 if (vm.OldPassword != user.Password) ModelState.AddModelError("OldPassword", "Obecne hasło jest nieprawidłowe.");
@@ -179,27 +182,25 @@ namespace RestaurantManager.Controllers
                 return View(vm);
             }
 
-            // Zapis Zdjęcia
+            // *** AKTUALIZACJA TELEFONU ***
+            user.PhoneNumber = vm.PhoneNumber;
+
+            // Zapis zdjęcia
             if (vm.ProfileImage != null && vm.ProfileImage.Length > 0)
             {
                 var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", _profileFolder);
                 if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
-
                 var fileName = $"u{user.Id}_{Guid.NewGuid().ToString().Substring(0, 8)}{Path.GetExtension(vm.ProfileImage.FileName)}";
                 var filePath = Path.Combine(uploads, fileName);
-
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await vm.ProfileImage.CopyToAsync(stream);
                 }
-
-                // Usuń stare zdjęcie
                 if (!string.IsNullOrEmpty(user.ProfilePicturePath) && user.ProfilePicturePath != DefaultAvatar)
                 {
                     var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.ProfilePicturePath.TrimStart('/'));
                     if (System.IO.File.Exists(oldPath)) try { System.IO.File.Delete(oldPath); } catch { }
                 }
-
                 user.ProfilePicturePath = "/" + Path.Combine(_profileFolder, fileName).Replace("\\", "/");
                 HttpContext.Session.SetString("ProfilePicturePath", user.ProfilePicturePath);
             }
@@ -209,7 +210,6 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Profile");
         }
 
-        [HttpGet]
         public IActionResult AccessDenied()
         {
             Response.StatusCode = 403;

@@ -63,16 +63,29 @@
                                 }
                             </div>
 
-                            <div class="small text-muted text-truncate">
+                            <div class="small text-muted text-truncate mb-1">
                                 <i class="bi bi-envelope"></i> <a href="mailto:@item.Email" class="text-decoration-none text-muted">@item.Email</a>
                             </div>
 
+                            @* LOGIKA TELEFONU *@
                             @if (item.Employee != null)
                             {
                                 <div class="small text-muted">
-                                    <i class="bi bi-telephone"></i> <a href="tel:@item.Employee.Phone" class="text-decoration-none text-muted">@item.Employee.Phone</a>
+                                    <i class="bi bi-telephone-fill text-success"></i> <a href="tel:@item.Employee.Phone" class="text-decoration-none text-muted">@item.Employee.Phone (Sł.)</a>
                                 </div>
                             }
+
+                            @if (!string.IsNullOrEmpty(item.PhoneNumber))
+                            {
+                                <div class="small text-muted">
+                                    <i class="bi bi-telephone"></i> <a href="tel:@item.PhoneNumber" class="text-decoration-none text-muted">@item.PhoneNumber</a>
+                                </div>
+                            }
+                            else if (item.Employee == null)
+                            {
+                                <div class="small text-muted fst-italic">Brak nr telefonu</div>
+                            }
+
                         </div>
                     </div>
                     @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
@@ -82,7 +95,7 @@
                         </div>
                     }
                 </div>
-            </div> @* <--- TUTAJ BRAKOWAŁO ZAMKNIĘCIA DIVA KOLUMNY *@
+            </div> @* Poprawne zamknięcie kolumny *@
         }
     </div>
 </div>

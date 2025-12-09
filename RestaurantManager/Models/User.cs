@@ -1,10 +1,18 @@
-﻿using System.Collections.Generic; // Dodaj ten using
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace RestaurantManager.Models
 {
     public class User
     {
+        public User()
+        {
+            // Inicjalizacja kolekcji, aby uniknąć NullReferenceException
+            Shifts = new HashSet<Shift>();
+            Reservations = new HashSet<Reservation>();
+            Availabilities = new HashSet<Availability>();
+        }
+
         public int Id { get; set; }
 
         [Required]
@@ -13,25 +21,25 @@ namespace RestaurantManager.Models
         [Required, EmailAddress]
         public string Email { get; set; }
 
+        // *** TO JEST TO BRAKUJĄCE POLE ***
+        [StringLength(15)]
+        [Display(Name = "Numer telefonu")]
+        public string? PhoneNumber { get; set; }
+        // **********************************
+
         [Required]
-        public string Password { get; set; } // Pamiętaj, że to czysty tekst
+        public string Password { get; set; }
 
         [Required]
         public string Role { get; set; }
 
         public string? ProfilePicturePath { get; set; }
 
-        // Relacja 1:1 - User może być Employee
+        // Relacje
         public virtual Employee? Employee { get; set; }
 
-        // Relacja 1:N - User może mieć wiele Reservations
-        public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
-
-        // Relacja 1:N - User może mieć wiele Availabilities
-        public virtual ICollection<Availability> Availabilities { get; set; } = new List<Availability>();
-
-        // *** NOWA RELACJA 1:N - User (jako pracownik) może mieć wiele Shifts ***
-        public virtual ICollection<Shift> Shifts { get; set; } = new List<Shift>();
-
+        public virtual ICollection<Reservation> Reservations { get; set; }
+        public virtual ICollection<Availability> Availabilities { get; set; }
+        public virtual ICollection<Shift> Shifts { get; set; }
     }
 }

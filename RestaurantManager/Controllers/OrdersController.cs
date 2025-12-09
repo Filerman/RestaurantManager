@@ -77,6 +77,14 @@ namespace RestaurantManager.Controllers
             if (user != null)
             {
                 vm.CustomerEmail = user.Email;
+                vm.CustomerName = user.Username;
+
+                // *** POPRAWKA: Automatyczne uzupełnianie telefonu z profilu ***
+                // Dzięki temu Gość nie musi wpisywać numeru za każdym razem
+                if (!string.IsNullOrEmpty(user.PhoneNumber))
+                {
+                    vm.CustomerPhone = user.PhoneNumber;
+                }
             }
 
             // Pobieramy minimalny czas z bazy
@@ -84,10 +92,10 @@ namespace RestaurantManager.Controllers
             int deliveryMinutes = contactInfo?.EstimatedDeliveryTimeMinutes ?? 45;
             if (deliveryMinutes < 15) deliveryMinutes = 15;
 
-            // *** NOWOŚĆ: Przekazujemy czas dostawy do widoku ***
+            // Przekazujemy czas dostawy do widoku
             ViewBag.EstimatedTime = deliveryMinutes;
 
-            // *** NOWOŚĆ: Pobieramy dzisiejsze godziny otwarcia dla informacji ***
+            // Pobieramy dzisiejsze godziny otwarcia dla informacji
             var today = DateTime.Now.DayOfWeek;
             var todayHours = await _context.OpeningHours.FirstOrDefaultAsync(h => h.DayOfWeek == today);
             ViewBag.TodayOpeningHours = todayHours;
@@ -133,7 +141,7 @@ namespace RestaurantManager.Controllers
                 }
             }
 
-            // 3. WALIDACJA GODZIN OTWARCIA (To jest odpowiedź na Twoje pytanie o blokadę)
+            // 3. WALIDACJA GODZIN OTWARCIA
             var dayOfWeek = model.ScheduledDate.DayOfWeek;
             var openingHour = await _context.OpeningHours.FirstOrDefaultAsync(oh => oh.DayOfWeek == dayOfWeek);
 

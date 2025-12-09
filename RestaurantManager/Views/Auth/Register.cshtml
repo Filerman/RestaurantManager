@@ -1,31 +1,45 @@
 ﻿@{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Rejestracja";
 }
 
-<h2>@ViewData["Title"]</h2>
+<div class="card mx-auto shadow-sm" style="max-width:500px; margin-top:50px;">
+    <div class="card-header bg-success text-white">
+        <h4 class="mb-0">Zarejestruj się</h4>
+    </div>
+    <div class="card-body">
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
 
-<form method="post" class="w-50">
-    <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
-        <input type="text" name="username" class="form-control" required />
+        <form method="post">
+            <div class="mb-3">
+                <label for="username" class="form-label fw-bold">Nazwa użytkownika</label>
+                <input type="text" name="username" class="form-control" required placeholder="Wybierz unikalny login" />
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label fw-bold">Adres Email</label>
+                <input type="email" name="email" class="form-control" required placeholder="np. jan@example.com" />
+            </div>
+
+            @* NOWE POLE: TELEFON *@
+            <div class="mb-3">
+                <label for="phone" class="form-label fw-bold">Numer telefonu (opcjonalnie)</label>
+                <input type="text" name="phone" class="form-control" placeholder="Ułatwi kontakt przy zamówieniach" />
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label fw-bold">Hasło</label>
+                <input type="password" name="password" class="form-control" required />
+            </div>
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-success">Zarejestruj</button>
+            </div>
+        </form>
     </div>
-    <div class="mb-3">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" name="email" class="form-control" required />
+    <div class="card-footer text-center">
+        Masz już konto? <a asp-action="Login" class="text-decoration-none">Zaloguj się</a>
     </div>
-    <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" name="password" class="form-control" required />
-    </div>
-    <button type="submit" class="btn btn-success">Register</button>
-    <a asp-action="Login" class="btn btn-link">Back to Login</a>
-</form>
+</div>

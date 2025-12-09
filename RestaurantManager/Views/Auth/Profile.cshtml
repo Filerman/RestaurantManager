@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Mój Profil";
+    // Sprawdzamy czy są dane pracownicze (czyli czy user jest powiązany z tabelą Employees)
     bool hasEmployeeData = Model.FullName != null;
 }
 
@@ -36,10 +37,27 @@
                         <div class="col-sm-8 text-dark">@Model.Email</div>
                     </div>
 
+                    @* --- POPRAWKA 1: WYŚWIETLANIE TELEFONU UŻYTKOWNIKA --- *@
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted fw-semibold">Telefon kontaktowy:</div>
+                        <div class="col-sm-8 text-dark">
+                            @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                            {
+                                @Model.PhoneNumber
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic small">Brak (dodaj w edycji profilu)</span>
+                            }
+                        </div>
+                    </div>
+                    @* ----------------------------------------------------- *@
+
                     <hr class="my-4" />
 
                     @if (hasEmployeeData)
                     {
+                        @* --- WIDOK DLA PRACOWNIKA (Z danymi HR) --- *@
                         <h5 class="text-uppercase text-success fw-bold mb-4 ls-1">
                             <i class="bi bi-person-badge me-2"></i>Karta Pracownika
                         </h5>
@@ -87,17 +105,42 @@
                     }
                     else
                     {
-                        // Sekcja dla Managera/Admina bez profilu pracownika lub Gościa
+                        @* --- POPRAWKA 2: SENSOWNY WIDOK DLA MANAGERA/ADMINA --- *@
                         if (Model.Role == "Manager" || Model.Role == "Admin")
                         {
-                            <div class="alert alert-light border-start border-4 border-info">
-                                <h6 class="text-info fw-bold"><i class="bi bi-info-circle me-2"></i>Profil Zarządczy</h6>
-                                <p class="mb-0 small">Jesteś zalogowany jako członek zarządu. Jeśli chcesz uzupełnić swoje dane kadrowe (np. telefon, staż), poproś innego Administratora o edycję Twojego konta w zakładce Pracownicy.</p>
+                            <div class="card bg-light border-0 mt-3">
+                                <div class="card-body">
+                                    <h6 class="text-primary fw-bold mb-3">
+                                        <i class="bi bi-shield-check me-2"></i>Uprawnienia Administracyjne
+                                    </h6>
+                                    <p class="small text-muted mb-3">
+                                        Twoje konto posiada pełne uprawnienia do zarządzania restauracją.
+                                        Poniżej znajdziesz szybkie skróty do najczęściej używanych funkcji.
+                                    </p>
+
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a asp-controller="Orders" asp-action="Index" class="btn btn-sm btn-outline-primary bg-white">
+                                            <i class="bi bi-receipt"></i> Zamówienia
+                                        </a>
+                                        <a asp-controller="Employees" asp-action="Index" class="btn btn-sm btn-outline-primary bg-white">
+                                            <i class="bi bi-people"></i> Pracownicy
+                                        </a>
+                                        <a asp-controller="Schedules" asp-action="Index" class="btn btn-sm btn-outline-primary bg-white">
+                                            <i class="bi bi-calendar3"></i> Grafik
+                                        </a>
+                                        <a asp-controller="Users" asp-action="Directory" class="btn btn-sm btn-outline-secondary bg-white">
+                                            <i class="bi bi-journal-bookmark"></i> Katalog Kontaktów
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         }
                         else
                         {
-                            <p class="text-muted fst-italic">Konto gościa.</p>
+                            <div class="alert alert-light mt-3">
+                                <i class="bi bi-emoji-smile me-2"></i>Witaj! To jest konto gościa. <br />
+                                <small class="text-muted">Historia Twoich zamówień znajduje się w menu głównym.</small>
+                            </div>
                         }
                     }
                 </div>

@@ -10,7 +10,6 @@
     </div>
     <div class="card-body">
 
-        @* enctype="multipart/form-data" jest konieczny do przesyłania plików! *@
         <form asp-action="EditProfile" asp-controller="Auth" method="post" enctype="multipart/form-data">
 
             <input asp-for="Username" type="hidden" />
@@ -40,6 +39,13 @@
                 <label asp-for="Email" class="form-label fw-bold"></label>
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            @* NOWE POLE EDYCJI TELEFONU *@
+            <div class="form-group mb-3">
+                <label asp-for="PhoneNumber" class="form-label fw-bold"></label>
+                <input asp-for="PhoneNumber" class="form-control" placeholder="Numer kontaktowy dla zamówień" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
             </div>
 
             <hr class="my-4" />
