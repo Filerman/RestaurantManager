@@ -92,13 +92,13 @@
                                         <a class="dropdown-item" asp-controller="Availability" asp-action="Index">Moja Dostępność</a>
                                     </li>
 
-                                    @* --- NOWY LINK: KATALOG KONTAKTÓW --- *@
+                                    @* --- LINK DO KATALOGU KONTAKTÓW (Dla każdego pracownika) --- *@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Users" asp-action="Directory">
                                             <i class="bi bi-person-lines-fill me-2"></i>Katalog Kontaktów
                                         </a>
                                     </li>
-                                    @* ------------------------------------ *@
+                                    @* ----------------------------------------------------------- *@
 
                                     <li><hr class="dropdown-divider"></li>
 
@@ -136,9 +136,16 @@
                                         <a class="dropdown-item" asp-controller="Employees" asp-action="Index">Pracownicy</a>
                                     </li>
 
+                                    @* --- LINK DO WYPŁAT --- *@
                                     <li>
                                         <a class="dropdown-item" asp-controller="Employees" asp-action="Payroll">
                                             <i class="bi bi-cash-coin"></i> Wypłaty
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Availability" asp-action="Manage">
+                                            <i class="bi bi-calendar-range"></i> Zarządzaj Dyspozycyjnością
                                         </a>
                                     </li>
 

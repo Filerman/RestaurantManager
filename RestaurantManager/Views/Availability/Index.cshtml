@@ -1,94 +1,154 @@
 ﻿@model RestaurantManager.ViewModels.AvailabilityViewModel
+
 @{
-    ViewData["Title"] = "Moja Dostępność";
+    // Pobieramy flagę z ViewBag
+    bool isViewingOthers = ViewBag.IsViewingOthers ?? false;
+    ViewData["Title"] = ViewBag.TitleHeader ?? "Moja Dostępność";
 }
 
-<h2>@ViewData["Title"]</h2>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="bi bi-calendar-check text-primary"></i> @ViewData["Title"]</h2>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h4>Dodaj Nową Dostępność</h4>
-        <form asp-action="Add" method="post">
-            @Html.AntiForgeryToken() @* Zabezpieczenie *@
-            @* Pokazuje błędy tylko dla pól NewAvailability *@
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+        @if (isViewingOthers)
+        {
+            <a asp-action="Manage" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Powrót do listy
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Schedules" asp-action="MySchedule" class="btn btn-outline-primary">
+                <i class="bi bi-calendar3"></i> Zobacz mój grafik
+            </a>
+        }
+    </div>
 
-            <div class="mb-3">
-                <label asp-for="NewAvailability.Date" class="form-label"></label> @* Nazwa z modelu *@
-                <input asp-for="NewAvailability.Date" type="date" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                <span asp-validation-for="NewAvailability.Date" class="text-danger"></span>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        @* UKRYWAMY formularz dodawania, jeśli podglądamy kogoś innego *@
+        @if (!isViewingOthers)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm border-0 bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-success mb-3"><i class="bi bi-plus-circle"></i> Zgłoś dyspozycyjność</h5>
+                        <form asp-action="Add" method="post">
+                            <input type="hidden" asp-for="NewAvailability.UserId" />
+
+                            <div class="mb-3">
+                                <label asp-for="NewAvailability.Date" class="form-label fw-bold">Data</label>
+                                <input asp-for="NewAvailability.Date" class="form-control" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                <span asp-validation-for="NewAvailability.Date" class="text-danger small"></span>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <label asp-for="NewAvailability.StartTime" class="form-label fw-bold">Od</label>
+                                    <input asp-for="NewAvailability.StartTime" class="form-control" type="time" />
+                                    <span asp-validation-for="NewAvailability.StartTime" class="text-danger small"></span>
+                                </div>
+                                <div class="col">
+                                    <label asp-for="NewAvailability.EndTime" class="form-label fw-bold">Do</label>
+                                    <input asp-for="NewAvailability.EndTime" class="form-control" type="time" />
+                                    <span asp-validation-for="NewAvailability.EndTime" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">Dodaj</button>
+                            </div>
+                            <div class="mt-3 text-center">
+                                <a asp-action="Provide" class="small text-decoration-none">
+                                    <i class="bi bi-calendar-month"></i> Widok kalendarza (miesięczny)
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="mb-3">
-                <label asp-for="NewAvailability.StartTime" class="form-label"></label> @* Nazwa z modelu *@
-                <input asp-for="NewAvailability.StartTime" type="time" class="form-control" value="09:00" />
-                <span asp-validation-for="NewAvailability.StartTime" class="text-danger"></span>
+        }
+
+        @* Jeśli podglądamy, lista zajmuje całą szerokość (col-md-12), w przeciwnym razie obok formularza (col-md-8) *@
+        <div class="@(isViewingOthers ? "col-md-12" : "col-md-8")">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Zgłoszone terminy (Nadchodzące)</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Availabilities.Any())
+                    {
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Godziny</th>
+                                    @* UKRYWAMY kolumnę Akcje w trybie podglądu *@
+                                    @if (!isViewingOthers)
+                                    {
+                                        <th class="text-end">Akcje</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Availabilities)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="fw-bold">@item.Date.ToString("dd.MM.yyyy")</span>
+                                            <small class="text-muted d-block">@item.Date.ToString("dddd", new System.Globalization.CultureInfo("pl-PL"))</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info text-dark">
+                                                @item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")
+                                            </span>
+                                            <small class="text-muted ms-2">
+                                                (@((item.EndTime - item.StartTime).TotalHours.ToString("F1")) h)
+                                            </small>
+                                        </td>
+
+                                        @* UKRYWAMY przyciski w trybie podglądu *@
+                                        @if (!isViewingOthers)
+                                        {
+                                            <td class="text-end">
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning me-1" title="Edytuj">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Usunąć ten termin?');">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Usuń">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                            Brak zgłoszonej dyspozycyjności na nadchodzące dni.
+                        </div>
+                    }
+                </div>
             </div>
-            <div class="mb-3">
-                <label asp-for="NewAvailability.EndTime" class="form-label"></label> @* Nazwa z modelu *@
-                <input asp-for="NewAvailability.EndTime" type="time" class="form-control" value="17:00" />
-                <span asp-validation-for="NewAvailability.EndTime" class="text-danger"></span>
-            </div>
-            <input type="hidden" asp-for="NewAvailability.UserId" />
-            <button type="submit" class="btn btn-primary">Dodaj</button>
-            <a asp-action="Provide" class="btn btn-secondary">Zgłoś Miesięczną</a>
-        </form>
+        </div>
     </div>
 </div>
-
-<h4>Istniejące Dostępności (od dzisiaj)</h4>
-@* Wyświetlanie komunikatów sukcesu/błędu *@
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
-    </div>
-}
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
-    </div>
-}
-
-@if (!Model.Availabilities.Any())
-{
-    <p>Nie masz zgłoszonych żadnych przyszłych dostępności.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Godzina Rozpoczęcia</th>
-                <th>Godzina Zakończenia</th>
-                <th>Akcje</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.Availabilities)
-            {
-                <tr>
-                    <td>@item.Date.ToString("yyyy-MM-dd")</td>
-                    <td>@item.StartTime.ToString(@"hh\:mm")</td> @* Poprawny format dla TimeSpan *@
-                    <td>@item.EndTime.ToString(@"hh\:mm")</td>   @* Poprawny format dla TimeSpan *@
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edytuj</a>
-                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Czy na pewno chcesz usunąć ten wpis?');">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-sm btn-danger">Usuń</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}

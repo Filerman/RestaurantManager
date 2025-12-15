@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using RestaurantManager.Data;
 using RestaurantManager.Models;
 using RestaurantManager.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
 using RestaurantManager.Filters;
-using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace RestaurantManager.Controllers
 {
@@ -23,27 +23,56 @@ namespace RestaurantManager.Controllers
         }
 
         // GET: /Availability
-        public IActionResult Index()
+        // POPRAWKA: Dodano parametr targetUserId do obsługi podglądu
+        public async Task<IActionResult> Index(int? targetUserId)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue) return RedirectToAction("Login", "Auth");
+            var loggedUserId = HttpContext.Session.GetInt32("UserId");
+            var role = HttpContext.Session.GetString("UserRole");
 
-            var availabilities = _context.Availabilities
-                .Where(a => a.UserId == userId.Value && a.Date >= DateTime.Today)
+            if (!loggedUserId.HasValue) return RedirectToAction("Login", "Auth");
+
+            int userIdToDisplay = loggedUserId.Value;
+            bool isViewingOthers = false;
+            string titleHeader = "Moja Dostępność";
+
+            // LOGIKA PODGLĄDU:
+            // Jeśli podano targetUserId I jest on inny niż mój ID I mam uprawnienia Managera/Admina
+            if (targetUserId.HasValue && targetUserId.Value != loggedUserId.Value && (role == "Admin" || role == "Manager"))
+            {
+                userIdToDisplay = targetUserId.Value;
+                isViewingOthers = true;
+
+                var targetUser = await _context.Users
+                    .Include(u => u.Employee)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == userIdToDisplay);
+
+                if (targetUser != null)
+                {
+                    titleHeader = $"Dostępność: {targetUser.Employee?.FullName ?? targetUser.Username}";
+                }
+            }
+
+            var availabilities = await _context.Availabilities
+                .Where(a => a.UserId == userIdToDisplay && a.Date >= DateTime.Today)
                 .OrderBy(a => a.Date)
-                .ToList();
+                .ToListAsync();
 
             var viewModel = new AvailabilityViewModel
             {
                 Availabilities = availabilities,
                 NewAvailability = new Availability
                 {
-                    UserId = userId.Value,
+                    UserId = userIdToDisplay,
                     Date = DateTime.Today,
                     StartTime = new TimeSpan(9, 0, 0),
                     EndTime = new TimeSpan(17, 0, 0)
                 }
             };
+
+            // Przekazujemy flagi do widoku, aby wiedział jak się zachować
+            ViewBag.IsViewingOthers = isViewingOthers;
+            ViewBag.TitleHeader = titleHeader;
 
             return View(viewModel);
         }
@@ -59,10 +88,7 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction("AccessDenied", "Auth");
             }
 
-            // POPRAWKA: Usuwamy obiekt User z walidacji
             ModelState.Remove("NewAvailability.User");
-            // Można też usunąć globalnie dla Availability, ale lepiej precyzyjnie
-            // ModelState.Remove("User");
 
             newAvailability.Date = newAvailability.Date.Date;
 
@@ -94,7 +120,6 @@ namespace RestaurantManager.Controllers
                 TempData["ErrorMessage"] = "Nie udało się dodać dostępności. Sprawdź błędy.";
             }
 
-            // Przygotuj ViewModel i zwróć widok Index z błędami
             var availabilities = _context.Availabilities
                .Where(a => a.UserId == userId.Value && a.Date >= DateTime.Today)
                .OrderBy(a => a.Date)
@@ -138,7 +163,6 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction("Index");
             }
 
-            // POPRAWKA: Usuwamy obiekt User z walidacji
             ModelState.Remove("User");
 
             availability.UserId = userId.Value;
@@ -251,7 +275,7 @@ namespace RestaurantManager.Controllers
                     }
                     else
                     {
-                        entry.Availability = null; // Zostaw null dla przeszłych dni bez wpisu
+                        entry.Availability = null;
                     }
                 }
                 viewModel.Days.Add(entry);
@@ -288,22 +312,17 @@ namespace RestaurantManager.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue) return RedirectToAction("Login", "Auth");
 
-            // POPRAWKA: Ręczne usunięcie błędów dla obiektów User z listy Days.Availability
-            // Walidator IValidatableObject i tak sprawdzi godziny.
             for (int i = 0; i < model.Days.Count; i++)
             {
                 ModelState.Remove($"Days[{i}].Availability.User");
             }
-            // Można też spróbować ogólnie: ModelState.Remove("Availability.User");
 
-
-            if (!ModelState.IsValid) // To sprawdzi teraz głównie walidację z IValidatableObject
+            if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Popraw błędy w formularzu.";
-                return View("Provide", model); // Zwróć widok z błędami
+                return View("Provide", model);
             }
 
-            // --- Logika Zapisywania ---
             try
             {
                 var existingAvailabilities = _context.Availabilities
@@ -312,13 +331,13 @@ namespace RestaurantManager.Controllers
 
                 foreach (var day in model.Days)
                 {
-                    if (day.Date < DateTime.Today) continue; // Ignoruj przeszłe dni
+                    if (day.Date < DateTime.Today) continue;
 
                     var existing = existingAvailabilities.FirstOrDefault(a => a.Date.Date == day.Date.Date);
 
                     if (day.IsSelected)
                     {
-                        if (day.Availability == null) continue; // Pomiń, jeśli brak danych
+                        if (day.Availability == null) continue;
 
                         if (existing != null)
                         {
@@ -353,10 +372,69 @@ namespace RestaurantManager.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Błąd zapisu: {ex.Message}";
-                return View("Provide", model); // Zwróć widok z błędem, zachowując dane
+                return View("Provide", model);
             }
 
             return RedirectToAction("Provide", new { year = model.Year, month = model.Month });
+        }
+
+        // --- ZARZĄDZANIE ---
+
+        // GET: Availability/Manage
+        [RoleAuthorize("Admin", "Manager")]
+        public async Task<IActionResult> Manage()
+        {
+            var today = DateTime.Today;
+            var targetDate = today.AddMonths(1);
+            int targetMonth = targetDate.Month;
+            int targetYear = targetDate.Year;
+
+            int daysInCurrentMonth = DateTime.DaysInMonth(today.Year, today.Month);
+            bool isUrgent = (daysInCurrentMonth - today.Day) <= 7;
+
+            var employees = await _context.Users
+                .Where(u => u.Role == "Employee")
+                .Include(u => u.Employee)
+                .ToListAsync();
+
+            var employeesWithAvailability = await _context.Availabilities
+                .Where(a => a.Date.Month == targetMonth && a.Date.Year == targetYear)
+                .Select(a => a.UserId)
+                .Distinct()
+                .ToListAsync();
+
+            var statusList = employees.Select(u => new EmployeeAvailabilityStatusViewModel
+            {
+                UserId = u.Id,
+                FullName = u.Employee?.FullName ?? u.Username,
+                Email = u.Email,
+                Phone = u.Employee?.Phone ?? u.PhoneNumber ?? "-",
+                HasProvidedAvailability = employeesWithAvailability.Contains(u.Id)
+            }).OrderBy(x => x.HasProvidedAvailability).ThenBy(x => x.FullName).ToList();
+
+            var vm = new AvailabilityManageViewModel
+            {
+                NextMonth = targetMonth,
+                NextMonthYear = targetYear,
+                IsUrgent = isUrgent,
+                EmployeesStatus = statusList
+            };
+
+            return View(vm);
+        }
+
+        // POST: Availability/SendReminder
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RoleAuthorize("Admin", "Manager")]
+        public async Task<IActionResult> SendReminder(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            string message = $"Wysłano przypomnienie do: {user.Username} ({user.Email})";
+            TempData["SuccessMessage"] = message;
+            return RedirectToAction(nameof(Manage));
         }
     }
 }

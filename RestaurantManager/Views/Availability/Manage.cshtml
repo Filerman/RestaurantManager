@@ -1,0 +1,83 @@
+﻿@model RestaurantManager.ViewModels.AvailabilityManageViewModel
+
+@{
+    ViewData["Title"] = "Zarządzanie Dyspozycyjnością";
+    var nextMonthName = new DateTime(Model.NextMonthYear, Model.NextMonth, 1).ToString("MMMM yyyy", new System.Globalization.CultureInfo("pl-PL"));
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="bi bi-calendar-check text-primary"></i> Dyspozycyjność na: @nextMonthName</h2>
+    </div>
+
+    @if (Model.IsUrgent)
+    {
+        <div class="alert alert-warning border-start border-warning border-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Uwaga!</strong> Do końca miesiąca zostało mniej niż tydzień. Pracownicy oznaczeni na czerwono nie uzupełnili jeszcze dyspozycyjności.
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Pracownik</th>
+                        <th>Kontakt</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var emp in Model.EmployeesStatus)
+                    {
+                        string rowClass = "";
+                        if (!emp.HasProvidedAvailability)
+                        {
+                            rowClass = Model.IsUrgent ? "table-danger" : "table-warning";
+                        }
+
+                        <tr class="@rowClass">
+                            <td>
+                                <strong>@emp.FullName</strong>
+                            </td>
+                            <td>
+                                <div class="small"><i class="bi bi-envelope"></i> @emp.Email</div>
+                                <div class="small text-muted"><i class="bi bi-telephone"></i> @emp.Phone</div>
+                            </td>
+                            <td class="text-center">
+                                @if (emp.HasProvidedAvailability)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Uzupełniono</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Brak danych</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (!emp.HasProvidedAvailability)
+                                {
+                                    <form asp-action="SendReminder" method="post" class="d-inline">
+                                        <input type="hidden" name="userId" value="@emp.UserId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-dark">
+                                            <i class="bi bi-bell"></i> Przypomnij
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    @* POPRAWKA: asp-route-targetUserId, aby pasowało do kontrolera *@
+                                    <a asp-action="Index" asp-route-targetUserId="@emp.UserId" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Podgląd
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
