@@ -100,7 +100,7 @@ namespace RestaurantManager.Controllers
             if (id == null) return NotFound();
             Console.WriteLine($"--->>> GET Edit: Attempting to load Schedule with ID: {id}");
 
-            // 1. Pobieramy grafik WRAZ ze zmianami, aby policzyć godziny
+            // 1. Pobieramy grafik WRAZ ze zmianami
             var schedule = await _context.Schedules
                 .Include(s => s.Shifts)
                     .ThenInclude(sh => sh.EmployeeUser)
@@ -116,15 +116,12 @@ namespace RestaurantManager.Controllers
             }
             Console.WriteLine($"--->>> GET Edit: Schedule found: ID={schedule.Id}");
 
-            // --- NOWA FUNKCJONALNOŚĆ: Formatowanie listy pracowników ---
+            // --- Formatowanie listy pracowników (Staż + Godziny) ---
 
-            // a) Pobieramy wszystkich pracowników
             var employees = await _context.Employees.ToListAsync();
 
-            // b) Przygotowujemy listę z formatowanym tekstem (Imię + Staż + Godziny w tym grafiku)
             var employeesWithInfo = employees.Select(e =>
             {
-                // Policz godziny tego pracownika w TYM grafiku
                 double hoursInSchedule = 0;
                 if (schedule.Shifts != null)
                 {
@@ -133,24 +130,17 @@ namespace RestaurantManager.Controllers
                         .Sum(s => (s.EndTime - s.StartTime).TotalHours);
                 }
 
-                // Oblicz staż
                 string seniority = GetSeniorityString(e.HireDate);
 
                 return new
                 {
                     UserId = e.UserId,
-                    // Format: "Jan Kowalski (Staż: 2 lata | Graf: 40h)"
                     DisplayText = $"{e.FullName} (Staż: {seniority} | Graf: {hoursInSchedule:F1}h)"
                 };
             }).OrderBy(x => x.DisplayText).ToList();
 
-            // c) Przekazujemy sformatowaną listę do ViewBag (Widok jej użyje w dropdownie)
             ViewData["Employees"] = new SelectList(employeesWithInfo, "UserId", "DisplayText");
-
-            // Tagów też potrzebujemy
             ViewData["PositionTags"] = new SelectList(await _context.PositionTags.OrderBy(t => t.Name).ToListAsync(), "Id", "Name");
-
-            // -----------------------------------------------------------
 
             var viewModel = new ScheduleEditViewModel
             {
@@ -160,13 +150,11 @@ namespace RestaurantManager.Controllers
                 IsPublished = schedule.IsPublished,
                 AvailableTags = await _context.PositionTags.OrderBy(t => t.Name).ToListAsync()
             };
-            Console.WriteLine($"--->>> GET Edit: ViewModel created.");
 
             var shiftsByDate = schedule.Shifts
                 .OrderBy(sh => sh.StartTime)
                 .GroupBy(sh => sh.Date.Date)
                 .ToDictionary(g => g.Key, g => g.ToList());
-            Console.WriteLine($"--->>> GET Edit: Shifts grouped by date. Found groups: {shiftsByDate.Count}");
 
             for (DateTime date = schedule.StartDate; date <= schedule.EndDate; date = date.AddDays(1))
             {
@@ -188,16 +176,14 @@ namespace RestaurantManager.Controllers
                 }
                 viewModel.Days.Add(dayViewModel);
             }
-            Console.WriteLine($"--->>> GET Edit: Finished processing days. Total days: {viewModel.Days.Count}");
 
             try
             {
-                Console.WriteLine($"--->>> GET Edit: Returning View...");
                 return View(viewModel);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"--->>> !!! EXCEPTION during GET Edit View() call or rendering: {ex.ToString()}");
+                Console.WriteLine($"--->>> !!! EXCEPTION during GET Edit View() call: {ex.ToString()}");
                 return Content($"Error loading schedule editor: {ex.Message}. Check application logs.");
             }
         }
@@ -243,24 +229,43 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Schedules/MySchedule (Widok dla pracownika)
+        // GET: Schedules/MySchedule
         [RoleAuthorize("Employee", "Manager", "Admin")]
-        public async Task<IActionResult> MySchedule()
+        public async Task<IActionResult> MySchedule(int? year, int? month, string viewType = "calendar")
         {
             var userId = GetUserIdFromSession();
             if (!userId.HasValue) return RedirectToAction("Login", "Auth");
-            var today = DateTime.Today;
-            var currentSchedule = await _context.Schedules
-                .Include(s => s.Shifts).ThenInclude(sh => sh.ShiftPositionTag)
-                .Where(s => s.IsPublished && s.EndDate >= today).OrderBy(s => s.StartDate).FirstOrDefaultAsync();
-            List<Shift> myShifts = new List<Shift>();
-            string scheduleDateRange = "Brak aktywnego grafiku";
-            if (currentSchedule != null)
-            {
-                scheduleDateRange = $"{currentSchedule.StartDate:yyyy-MM-dd} - {currentSchedule.EndDate:yyyy-MM-dd}";
-                myShifts = currentSchedule.Shifts.Where(sh => sh.UserId == userId.Value).OrderBy(sh => sh.Date).ThenBy(sh => sh.StartTime).ToList();
-            }
-            ViewBag.ScheduleDateRange = scheduleDateRange;
+
+            // Domyślnie bieżący miesiąc i rok
+            int currentYear = year ?? DateTime.Today.Year;
+            int currentMonth = month ?? DateTime.Today.Month;
+
+            // Obsługa "przekręcania" roku
+            if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+            else if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+
+            var startDate = new DateTime(currentYear, currentMonth, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            // Pobieramy zmiany
+            var myShifts = await _context.Shifts
+                .Include(s => s.Schedule)
+                .Include(s => s.ShiftPositionTag)
+                .Where(s => s.UserId == userId.Value
+                            && s.Date >= startDate
+                            && s.Date <= endDate
+                            && s.Schedule.IsPublished)
+                .OrderBy(s => s.Date)
+                .ThenBy(s => s.StartTime)
+                .ToListAsync();
+
+            ViewBag.CurrentYear = currentYear;
+            ViewBag.CurrentMonth = currentMonth;
+            ViewBag.MonthName = startDate.ToString("MMMM yyyy", new CultureInfo("pl-PL"));
+
+            // Przekazujemy wybrany typ widoku (domyślnie "calendar")
+            ViewBag.ViewType = viewType;
+
             return View(myShifts);
         }
 
@@ -278,7 +283,6 @@ namespace RestaurantManager.Controllers
                     .Where(a => a.Date.Date == date.Date && a.StartTime <= startTime && a.EndTime >= endTime)
                     .Select(a => a.UserId).Distinct().ToListAsync();
 
-                // Jeśli nikt nie zgłosił dostępności, to nikt nie jest dostępny
                 if (!availableUserIds.Any()) return Json(new List<object>());
 
                 var availableUsers = await _context.Users
@@ -286,8 +290,6 @@ namespace RestaurantManager.Controllers
                     .Include(u => u.Employee).ThenInclude(e => e.PositionTags)
                     .ToListAsync();
 
-                // Pobieramy aktualny grafik, żeby policzyć godziny dla dynamicznego dropdowna w AJAX
-                // Zakładamy, że data zmiany mieści się w grafiku, więc szukamy grafiku dla tej daty
                 var schedule = await _context.Schedules
                     .Include(s => s.Shifts)
                     .FirstOrDefaultAsync(s => date >= s.StartDate && date <= s.EndDate);
@@ -295,7 +297,6 @@ namespace RestaurantManager.Controllers
                 var filteredEmployees = availableUsers
                      .Where(u => u.Role == "Admin" || u.Role == "Manager" || (u.Employee != null && u.Employee.PositionTags.Any(pt => pt.Id == positionTagId)))
                      .Select(u => {
-                         // Obliczanie info do wyświetlenia (Staż + Godziny)
                          double hours = 0;
                          string seniority = "-";
 
