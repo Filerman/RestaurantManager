@@ -5,14 +5,10 @@ namespace RestaurantManager.Models
 {
     public enum TicketStatus
     {
-        [Display(Name = "Nowe")]
-        New,
-        [Display(Name = "W toku")]
-        InProgress,
-        [Display(Name = "Rozwiązane")]
-        Resolved,
-        [Display(Name = "Odrzucone")]
-        Rejected
+        [Display(Name = "Nowe")] New,
+        [Display(Name = "W toku")] InProgress,
+        [Display(Name = "Rozwiązane")] Resolved,
+        [Display(Name = "Odrzucone")] Rejected
     }
 
     public class SupportTicket
@@ -33,11 +29,11 @@ namespace RestaurantManager.Models
         [Display(Name = "Data zgłoszenia")]
         public DateTime DateCreated { get; set; } = DateTime.Now;
 
-        // *** NOWOŚĆ: Odpowiedź Managera ***
         [Display(Name = "Odpowiedź Managera")]
         public string? ManagerResponse { get; set; }
 
-        // Kto zgłosił
+        public bool HasUnreadResponse { get; set; } = false;
+
         public int CreatedByUserId { get; set; }
         public virtual User? CreatedByUser { get; set; }
     }
