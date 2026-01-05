@@ -80,7 +80,7 @@
                         <li class="nav-item"><a class="nav-link" asp-controller="Announcements" asp-action="Index">Aktualności</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Faq" asp-action="Index">FAQ</a></li>
 
-                        @* --- ZMODYFIKOWANY LINK DO KOSZYKA --- *@
+                        @* --- LINK DO KOSZYKA Z BADGE'EM --- *@
                         <li class="nav-item">
                             <a class="nav-link position-relative" asp-controller="Cart" asp-action="Index">
                                 <i class="bi bi-cart3"></i> Koszyk
@@ -135,6 +135,10 @@
                                     <li><a class="dropdown-item" asp-controller="Users" asp-action="Index">Użytkownicy</a></li>
                                     <li><a class="dropdown-item" asp-controller="PositionTags" asp-action="Index">Tagi Stanowisk</a></li>
 
+                                    @* --- LINK DO ZGŁOSZEŃ (HELPDESK) DLA MANAGERA --- *@
+                                    <li><a class="dropdown-item" asp-controller="Support" asp-action="Manage">Zgłoszenia (HelpDesk)</a></li>
+                                    @* ----------------------------------------------- *@
+
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header text-uppercase text-muted smaller">Restauracja</h6></li>
                                     <li><a class="dropdown-item" asp-controller="Menu" asp-action="Index">Edycja Menu</a></li>
@@ -167,6 +171,12 @@
                                     <li><span class="dropdown-item-text text-muted small">Rola: <strong>@role</strong></span></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" asp-controller="Auth" asp-action="Profile"><i class="bi bi-person me-2"></i>Mój Profil</a></li>
+
+                                    @* --- LINK DO "MOICH ZGŁOSZEŃ" RÓWNIEŻ DLA MANAGERA --- *@
+                                    @* Manager też może mieć swoje prywatne sprawy, ale głównie zarządza *@
+                                    <li><a class="dropdown-item" asp-controller="Support" asp-action="MyTickets"><i class="bi bi-chat-text me-2"></i>Moje Zgłoszenia</a></li>
+                                    @* ---------------------------------------------------- *@
+
                                     <li><a class="dropdown-item" asp-controller="Orders" asp-action="History"><i class="bi bi-clock-history me-2"></i>Historia</a></li>
                                     <li><a class="dropdown-item" asp-controller="Auth" asp-action="EditProfile"><i class="bi bi-gear me-2"></i>Ustawienia</a></li>
                                     <li><hr class="dropdown-divider"></li>

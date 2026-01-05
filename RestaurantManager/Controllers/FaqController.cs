@@ -18,7 +18,7 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // GET: /Faq
+        // GET: /Faq/Index (Publiczny widok dla klientów i pracowników)
         public async Task<IActionResult> Index(string filter = "all")
         {
             var role = HttpContext.Session.GetString("UserRole");
@@ -28,43 +28,38 @@ namespace RestaurantManager.Controllers
 
             if (!isStaff)
             {
-                // Goście ZAWSZE widzą tylko publiczne, niezależnie od filtra
+                // Goście widzą TYLKO publiczne
                 query = query.Where(f => f.IsPublic);
             }
             else
             {
-                // Logika filtrowania dla personelu
+                // Personel może filtrować
                 switch (filter)
                 {
                     case "internal":
-                        // Tylko wewnętrzne (niepubliczne)
                         query = query.Where(f => !f.IsPublic);
                         break;
                     case "public":
-                        // Tylko publiczne
                         query = query.Where(f => f.IsPublic);
                         break;
-                    case "all":
-                    default:
-                        // Wszystkie (bez where)
-                        break;
+                        // case "all": brać wszystko
                 }
             }
 
             var faqs = await query.ToListAsync();
 
-            // Przekazujemy info do widoku, żeby ustawić dropdown i pokazać opcje
             ViewBag.IsStaff = isStaff;
             ViewBag.CurrentFilter = filter;
 
             return View(faqs);
         }
 
-        // GET: /Faq/Manage (Tylko Manager/Admin)
+        // GET: /Faq/Manage (Panel Zarządzania - Tylko Manager/Admin)
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Manage()
         {
-            return View(await _context.FaqItems.ToListAsync());
+            var allFaqs = await _context.FaqItems.OrderByDescending(f => f.Id).ToListAsync();
+            return View(allFaqs);
         }
 
         // GET: /Faq/Create
@@ -81,7 +76,7 @@ namespace RestaurantManager.Controllers
             {
                 _context.Add(faqItem);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Dodano pytanie do FAQ.";
+                TempData["SuccessMessage"] = "Dodano nowe pytanie do FAQ.";
                 return RedirectToAction(nameof(Manage));
             }
             return View(faqItem);
@@ -107,9 +102,17 @@ namespace RestaurantManager.Controllers
 
             if (ModelState.IsValid)
             {
-                _context.Update(faqItem);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Zaktualizowano FAQ.";
+                try
+                {
+                    _context.Update(faqItem);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Zaktualizowano wpis FAQ.";
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.FaqItems.Any(e => e.Id == faqItem.Id)) return NotFound();
+                    else throw;
+                }
                 return RedirectToAction(nameof(Manage));
             }
             return View(faqItem);
@@ -126,7 +129,7 @@ namespace RestaurantManager.Controllers
             {
                 _context.FaqItems.Remove(faqItem);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Usunięto wpis FAQ.";
+                TempData["SuccessMessage"] = "Usunięto pytanie z FAQ.";
             }
             return RedirectToAction(nameof(Manage));
         }

@@ -7,39 +7,42 @@
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-body">
-                    <h3 class="card-title mb-4">Edycja Pytania</h3>
-
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Edycja Pytania</h4>
+                </div>
+                <div class="card-body p-4">
                     <form asp-action="Edit">
                         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <input type="hidden" asp-for="Id" />
 
                         <div class="form-group mb-3">
-                            <label asp-for="Question" class="control-label fw-bold"></label>
-                            <input asp-for="Question" class="form-control" />
+                            <label asp-for="Question" class="form-label fw-bold"></label>
+                            <input asp-for="Question" class="form-control form-control-lg" placeholder="Wpisz treść pytania..." />
                             <span asp-validation-for="Question" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="Answer" class="control-label fw-bold"></label>
-                            <textarea asp-for="Answer" class="form-control" rows="5"></textarea>
+                            <label asp-for="Answer" class="form-label fw-bold"></label>
+                            <textarea asp-for="Answer" class="form-control" rows="5" placeholder="Wpisz odpowiedź..."></textarea>
                             <span asp-validation-for="Answer" class="text-danger"></span>
                         </div>
 
-                        <div class="form-group form-check mb-4">
-                            <label class="form-check-label">
-                                <input class="form-check-input" asp-for="IsPublic" />
-                                @Html.DisplayNameFor(model => model.IsPublic)
+                        <div class="form-check form-switch mb-4 p-3 bg-light rounded border">
+                            <input class="form-check-input ms-0 me-2" asp-for="IsPublic" style="margin-top: 0.2rem;" />
+                            <label class="form-check-label fw-bold" asp-for="IsPublic">
+                                Widoczne publicznie (dla klientów)
                             </label>
-                            <div class="form-text text-muted">
-                                Jeśli odznaczone, pytanie będzie widoczne tylko dla zalogowanych pracowników.
+                            <div class="form-text mt-1 ms-1">
+                                Jeśli odznaczone, pytanie będzie widoczne TYLKO dla zalogowanych pracowników (baza wiedzy wewnętrznej).
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">Zapisz Zmiany</button>
-                            <a asp-action="Manage" class="btn btn-secondary">Anuluj</a>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Manage" class="btn btn-secondary me-md-2">Anuluj</a>
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-save me-2"></i> Zapisz Zmiany
+                            </button>
                         </div>
                     </form>
                 </div>
