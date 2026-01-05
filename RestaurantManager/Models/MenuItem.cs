@@ -17,8 +17,10 @@ namespace RestaurantManager.Models
 
         public string? Category { get; set; }
 
-        // --- NOWO DODANE POLE ---
         [Display(Name = "Czy dostępne?")]
         public bool IsAvailable { get; set; } = true;
+
+        [Display(Name = "Zdjęcie")]
+        public string? ImagePath { get; set; }
     }
 }

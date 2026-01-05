@@ -1,74 +1,122 @@
 ﻿@model IEnumerable<RestaurantManager.Models.MenuItem>
 @using Microsoft.AspNetCore.Http
+
 @{
-    ViewData["Title"] = "Menu";
-    // Sprawdzamy rolę, aby ukryć przyciski zarządzania
+    ViewData["Title"] = "Menu Restauracji";
+
+    // Grupujemy pozycje po kategorii
+    var categories = Model.OrderBy(m => m.Category)
+                          .GroupBy(m => m.Category)
+                          .ToList();
+
     var role = Context.Session.GetString("UserRole");
-    // POPRAWKA: Zmiana "Cook" na "Employee"
-    var canManageMenu = (role == "Employee" || role == "Manager" || role == "Admin");
+    var canManage = (role == "Employee" || role == "Manager" || role == "Admin");
 }
 
-<h2>Menu</h2>
-
-@if (canManageMenu)
-{
-    <p>
-        <a asp-action="Create" class="btn btn-primary">Add New Dish</a>
-    </p>
-}
-
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Category</th>
-            <th>Status</th>
-            <th>Akcje</th>
-        </tr>
-
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold"><i class="bi bi-journal-richtext me-2"></i>Nasze Menu</h2>
+        @if (canManage)
         {
-            <tr>
-                <td>@item.Name</td>
-                <td>@item.Description</td>
-                <td>@item.Price.ToString("C")</td>
+            <a asp-action="Create" class="btn btn-success rounded-pill">
+                <i class="bi bi-plus-lg"></i> Dodaj pozycję
+            </a>
+        }
+    </div>
 
-                <td>@item.Category</td>
-                <td>
-                    @if (item.IsAvailable)
-                    {
-                        <span class="text-success">Dostępne</span>
-                    }
-                    else
-                    {
-                        <span class="text-danger">Niedostępne</span>
-                    }
-                </td>
-                <td>
-                    <div class="d-flex gap-2">
-                        @if (item.IsAvailable)
-                        {
-                            <form asp-controller="Cart" asp-action="Add" method="post">
-                                <input type="hidden" name="id" value="@item.Id" />
-                                <button type="submit" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-cart-plus"></i> Dodaj do koszyka
-                                </button>
-                            </form>
-                        }
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">Menu jest aktualnie puste. Zapraszamy wkrótce!</div>
+    }
+    else
+    {
+        <ul class="nav nav-pills mb-4 justify-content-center" id="menuTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill px-4" id="all-tab" data-bs-toggle="pill" data-bs-target="#pills-all" type="button" role="tab">
+                    Wszystkie
+                </button>
+            </li>
+            @foreach (var group in categories)
+            {
+                var safeId = group.Key?.Replace(" ", "") ?? "Other";
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-4" id="@safeId-tab" data-bs-toggle="pill" data-bs-target="#pills-@safeId" type="button" role="tab">
+                        @group.Key
+                    </button>
+                </li>
+            }
+        </ul>
 
-                        @if (canManageMenu)
+        <div class="tab-content" id="menuTabsContent">
+
+            <div class="tab-pane fade show active" id="pills-all" role="tabpanel">
+                @foreach (var group in categories)
+                {
+                    <h3 class="mt-4 mb-3 border-bottom pb-2 text-primary">@group.Key</h3>
+                    <div class="row g-4">
+                        @foreach (var item in group)
                         {
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                            <div class="col-md-6 col-lg-4 col-xl-3">
+                                <partial name="_MenuItemCard" model="item" />
+                            </div>
                         }
                     </div>
-                </td>
-            </tr>
+                }
+            </div>
 
+            @foreach (var group in categories)
+            {
+                var safeId = group.Key?.Replace(" ", "") ?? "Other";
+                <div class="tab-pane fade" id="pills-@safeId" role="tabpanel">
+                    <h3 class="mt-4 mb-3 text-primary">@group.Key</h3>
+                    <div class="row g-4">
+                        @foreach (var item in group)
+                        {
+                            <div class="col-md-6 col-lg-4 col-xl-3">
+                                <partial name="_MenuItemCard" model="item" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .nav-pills .nav-link.active {
+        color: #fff !important; 
+        background: var(--main-gradient);
+    }
+
+    .menu-card-img {
+        height: 200px;
+        object-fit: cover;
+        width: 100%;
+        border-bottom: 1px solid #eee;
+    }
+
+    .card-menu {
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+        .card-menu:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
-    </tbody>
-</table>
+
+    .price-tag {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background-color: rgba(255, 255, 255, 0.95);
+        color: #198754;
+        font-weight: bold;
+        padding: 5px 12px;
+        border-radius: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+</style>

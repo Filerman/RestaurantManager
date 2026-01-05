@@ -1,0 +1,48 @@
+﻿@model RestaurantManager.Models.MenuItem
+
+<div class="card card-menu h-100 shadow-sm">
+    <div class="position-relative">
+        @if (!string.IsNullOrEmpty(Model.ImagePath))
+        {
+            <img src="@Model.ImagePath" class="menu-card-img" alt="@Model.Name">
+        }
+        else
+        {
+            <div class="d-flex align-items-center justify-content-center bg-light text-muted menu-card-img">
+                <i class="bi bi-image fs-1"></i>
+            </div>
+        }
+        <span class="price-tag">@Model.Price.ToString("F2") zł</span>
+    </div>
+
+    <div class="card-body d-flex flex-column">
+        <h5 class="card-title fw-bold text-dark text-truncate">@Model.Name</h5>
+        <p class="card-text text-muted small flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+            @Model.Description
+        </p>
+
+        <div class="mt-3 d-flex justify-content-between align-items-center">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary rounded-pill">
+                Szczegóły
+            </a>
+
+            <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+
+                @if (Model.IsAvailable)
+                {
+                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">
+                        <i class="bi bi-cart-plus"></i> Dodaj
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" disabled>
+                        Niedostępne
+                    </button>
+                }
+            </form>
+        </div>
+    </div>
+</div>

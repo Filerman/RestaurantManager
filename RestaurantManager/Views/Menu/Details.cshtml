@@ -1,0 +1,78 @@
+﻿@model RestaurantManager.Models.MenuItem
+
+@{
+    ViewData["Title"] = Model.Name;
+    bool canManage = User.IsInRole("Admin") || User.IsInRole("Manager");
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 overflow-hidden rounded-4">
+        <div class="row g-0">
+            <div class="col-md-6 bg-light d-flex align-items-center justify-content-center" style="min-height: 400px;">
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <img src="@Model.ImagePath" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover;" alt="@Model.Name">
+                }
+                else
+                {
+                    <i class="bi bi-image text-muted" style="font-size: 10rem;"></i>
+                }
+            </div>
+            <div class="col-md-6">
+                <div class="card-body p-5 d-flex flex-column h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="badge bg-secondary text-uppercase mb-2">@Model.Category</span>
+                        @if (Model.IsAvailable)
+                        {
+                            <span class="badge bg-success">Dostępne</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Niedostępne</span>
+                        }
+                    </div>
+
+                    <h1 class="card-title fw-bold display-5 text-dark mb-3">@Model.Name</h1>
+
+                    <h3 class="text-success fw-bold mb-4">@Model.Price.ToString("F2") zł</h3>
+
+                    <p class="card-text text-muted fs-5 mb-4 flex-grow-1">
+                        @(Model.Description ?? "Brak szczegółowego opisu.")
+                    </p>
+
+                    <div class="d-grid gap-2">
+                        @if (Model.IsAvailable)
+                        {
+                            <form asp-controller="Cart" asp-action="Add" method="post">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text">Ilość</span>
+                                    <input type="number" name="quantity" class="form-control text-center" value="1" min="1" max="10">
+                                    <button type="submit" class="btn btn-primary btn-lg px-4 w-50">
+                                        <i class="bi bi-cart-plus me-2"></i> Dodaj do zamówienia
+                                    </button>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary btn-lg disabled">Produkt tymczasowo niedostępny</button>
+                        }
+
+                        <a asp-action="Index" class="btn btn-outline-secondary">Wróć do menu</a>
+
+                        @if (canManage)
+                        {
+                            <hr />
+                            <div class="d-flex justify-content-between">
+                                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning"><i class="bi bi-pencil"></i> Edytuj</a>
+                                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger"><i class="bi bi-trash"></i> Usuń</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
