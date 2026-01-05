@@ -6,11 +6,14 @@ namespace RestaurantManager.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Nazwa restauracji jest wymagana.")]
-        [Display(Name = "Nazwa Restauracji")]
-        public string RestaurantName { get; set; }
+        [Display(Name = "Nazwa Restauracji (Nagłówek)")]
+        public string? RestaurantName { get; set; }
 
-        // ... (Twoje dotychczasowe pola: AddressStreet, City, ZipCode, Phone, Email, Maps) ...
+        [Display(Name = "Logo")]
+        public string? LogoPath { get; set; }
+        [Display(Name = "Pokaż w nagłówku")]
+        public bool ShowLogoInHeader { get; set; } = false;
+
         [Required(ErrorMessage = "Adres jest wymagany.")]
         [Display(Name = "Ulica i numer")]
         public string AddressStreet { get; set; }

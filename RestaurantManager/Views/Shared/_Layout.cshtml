@@ -1,4 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Http
+@using Microsoft.EntityFrameworkCore
+@* Wstrzykujemy kontekst bazy danych, aby pobrać branding (nazwę/logo) *@
+@inject RestaurantManager.Data.AppDbContext _context
 
 @{
     var userId = Context.Session.GetInt32("UserId");
@@ -13,6 +16,20 @@
 
     bool isEmployee = (role == "Employee" || role == "Manager" || role == "Admin");
     bool isManager = (role == "Manager" || role == "Admin");
+
+    // --- LOGIKA BRANDINGU (Pobieranie z bazy) ---
+    // Używamy AsNoTracking, bo w Layout tylko czytamy dane, nie modyfikujemy ich.
+    var brandingInfo = _context.ContactInfos.AsNoTracking().FirstOrDefault();
+
+    // Domyślne wartości, jeśli baza jest pusta lub brak konfiguracji
+    string restaurantName = brandingInfo?.RestaurantName ?? "RestaurantManager";
+    string? logoUrl = brandingInfo?.LogoPath;
+
+    // Sprawdzamy nową flagę (czy wyświetlać logo zamiast nazwy).
+    // Jeśli model ContactInfo nie ma jeszcze tego pola (przed migracją), to założymy false.
+    // Ale skoro zrobiliśmy migrację, to pole istnieje.
+    bool showLogo = brandingInfo?.ShowLogoInHeader ?? false;
+    // ---------------------------------------------
 }
 
 <!DOCTYPE html>
@@ -20,7 +37,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - RestaurantManager</title>
+    @* Używamy nazwy restauracji w tytule karty przeglądarki *@
+    <title>@ViewData["Title"] - @restaurantName</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/RestaurantManager.styles.css" asp-append-version="true" />
@@ -33,9 +51,22 @@
     <header>
         <nav class="navbar navbar-expand-lg fixed-top">
             <div class="container">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-hexagon-fill me-2"></i>RestaurantManager
+
+                @* --- LOGO LUB NAZWA W NAVBARZE --- *@
+                <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                    @if (showLogo && !string.IsNullOrEmpty(logoUrl))
+                    {
+                        @* OPCJA 1: TYLKO LOGO (Jeśli wybrano w ustawieniach i plik istnieje) *@
+                        <img src="@logoUrl" alt="@restaurantName" style="height: 45px; width: auto;" />
+                    }
+                    else
+                    {
+                        @* OPCJA 2: NAZWA TEKSTOWA Z IKONĄ (Domyślna) *@
+                        <i class="bi bi-hexagon-fill me-2"></i>
+                        <span>@restaurantName</span>
+                    }
                 </a>
+                @* ---------------------------------- *@
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarNav" aria-controls="navbarNav"
@@ -170,7 +201,8 @@
 
     <footer class="border-top footer text-muted bg-white mt-auto py-3">
         <div class="container text-center">
-            &copy; @DateTime.Now.Year - <strong>RestaurantManager</strong> - <a asp-controller="Home" asp-action="Privacy" class="text-decoration-none text-muted">Prywatność</a>
+            @* Wyświetlamy pobraną nazwę restauracji w stopce *@
+            &copy; @DateTime.Now.Year - <strong>@restaurantName</strong> - <a asp-controller="Home" asp-action="Privacy" class="text-decoration-none text-muted">Prywatność</a>
         </div>
     </footer>
 
