@@ -1,6 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Http
 @using Microsoft.EntityFrameworkCore
-@* Wstrzykujemy kontekst bazy danych, aby pobrać branding (nazwę/logo) *@
+@* Importujemy Extension Methods (GetObject) i ViewModels (CartItemViewModel) dla obsługi koszyka *@
+@using RestaurantManager.Extensions
+@using RestaurantManager.ViewModels
+
 @inject RestaurantManager.Data.AppDbContext _context
 
 @{
@@ -18,18 +21,18 @@
     bool isManager = (role == "Manager" || role == "Admin");
 
     // --- LOGIKA BRANDINGU (Pobieranie z bazy) ---
-    // Używamy AsNoTracking, bo w Layout tylko czytamy dane, nie modyfikujemy ich.
     var brandingInfo = _context.ContactInfos.AsNoTracking().FirstOrDefault();
-
-    // Domyślne wartości, jeśli baza jest pusta lub brak konfiguracji
     string restaurantName = brandingInfo?.RestaurantName ?? "RestaurantManager";
     string? logoUrl = brandingInfo?.LogoPath;
-
-    // Sprawdzamy nową flagę (czy wyświetlać logo zamiast nazwy).
-    // Jeśli model ContactInfo nie ma jeszcze tego pola (przed migracją), to założymy false.
-    // Ale skoro zrobiliśmy migrację, to pole istnieje.
     bool showLogo = brandingInfo?.ShowLogoInHeader ?? false;
     // ---------------------------------------------
+
+    // --- LOGIKA LICZNIKA KOSZYKA (NOWOŚĆ) ---
+    // Pobieramy koszyk z sesji. Jeśli jest pusty, to null.
+    var cart = Context.Session.GetObject<List<CartItemViewModel>>("Cart");
+    // Sumujemy ilość przedmiotów. Jeśli cart jest null, to count = 0.
+    int cartCount = cart?.Sum(x => x.Quantity) ?? 0;
+    // ----------------------------------------
 }
 
 <!DOCTYPE html>
@@ -37,7 +40,6 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    @* Używamy nazwy restauracji w tytule karty przeglądarki *@
     <title>@ViewData["Title"] - @restaurantName</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -52,21 +54,17 @@
         <nav class="navbar navbar-expand-lg fixed-top">
             <div class="container">
 
-                @* --- LOGO LUB NAZWA W NAVBARZE --- *@
                 <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
                     @if (showLogo && !string.IsNullOrEmpty(logoUrl))
                     {
-                        @* OPCJA 1: TYLKO LOGO (Jeśli wybrano w ustawieniach i plik istnieje) *@
                         <img src="@logoUrl" alt="@restaurantName" style="height: 45px; width: auto;" />
                     }
                     else
                     {
-                        @* OPCJA 2: NAZWA TEKSTOWA Z IKONĄ (Domyślna) *@
                         <i class="bi bi-hexagon-fill me-2"></i>
                         <span>@restaurantName</span>
                     }
                 </a>
-                @* ---------------------------------- *@
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarNav" aria-controls="navbarNav"
@@ -81,11 +79,22 @@
                         <li class="nav-item"><a class="nav-link" asp-controller="ContactInfo" asp-action="Index">Kontakt</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Announcements" asp-action="Index">Aktualności</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Faq" asp-action="Index">FAQ</a></li>
+
+                        @* --- ZMODYFIKOWANY LINK DO KOSZYKA --- *@
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Cart" asp-action="Index">
+                            <a class="nav-link position-relative" asp-controller="Cart" asp-action="Index">
                                 <i class="bi bi-cart3"></i> Koszyk
+
+                                @if (cartCount > 0)
+                                {
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                                        @cartCount
+                                        <span class="visually-hidden">w koszyku</span>
+                                    </span>
+                                }
                             </a>
                         </li>
+                        @* ------------------------------------- *@
 
                         @if (logged)
                         {
@@ -201,7 +210,6 @@
 
     <footer class="border-top footer text-muted bg-white mt-auto py-3">
         <div class="container text-center">
-            @* Wyświetlamy pobraną nazwę restauracji w stopce *@
             &copy; @DateTime.Now.Year - <strong>@restaurantName</strong> - <a asp-controller="Home" asp-action="Privacy" class="text-decoration-none text-muted">Prywatność</a>
         </div>
     </footer>
