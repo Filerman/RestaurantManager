@@ -1,24 +1,24 @@
 ﻿@model RestaurantManager.Models.MenuItem
+@using Microsoft.AspNetCore.Http
 
 @{
     ViewData["Title"] = Model.Name;
-    bool canManage = User.IsInRole("Admin") || User.IsInRole("Manager");
+    var role = Context.Session.GetString("UserRole");
+    bool canManage = (role == "Employee" || role == "Manager" || role == "Admin");
+    bool hasImage = !string.IsNullOrEmpty(Model.ImagePath);
 }
 
 <div class="container mt-5">
     <div class="card shadow-lg border-0 overflow-hidden rounded-4">
         <div class="row g-0">
-            <div class="col-md-6 bg-light d-flex align-items-center justify-content-center" style="min-height: 400px;">
-                @if (!string.IsNullOrEmpty(Model.ImagePath))
-                {
+            @if (hasImage)
+            {
+                <div class="col-md-6 bg-light d-flex align-items-center justify-content-center" style="min-height: 400px; background-color: #f8f9fa;">
                     <img src="@Model.ImagePath" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover;" alt="@Model.Name">
-                }
-                else
-                {
-                    <i class="bi bi-image text-muted" style="font-size: 10rem;"></i>
-                }
-            </div>
-            <div class="col-md-6">
+                </div>
+            }
+
+            <div class="@(hasImage ? "col-md-6" : "col-12")">
                 <div class="card-body p-5 d-flex flex-column h-100">
                     <div class="d-flex justify-content-between align-items-start">
                         <span class="badge bg-secondary text-uppercase mb-2">@Model.Category</span>
@@ -36,9 +36,16 @@
 
                     <h3 class="text-success fw-bold mb-4">@Model.Price.ToString("F2") zł</h3>
 
-                    <p class="card-text text-muted fs-5 mb-4 flex-grow-1">
-                        @(Model.Description ?? "Brak szczegółowego opisu.")
-                    </p>
+                    <div class="card-text text-muted fs-5 mb-4 flex-grow-1">
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            @Model.Description
+                        }
+                        else
+                        {
+                            <span class="fst-italic opacity-50">Brak opisu dla tego dania.</span>
+                        }
+                    </div>
 
                     <div class="d-grid gap-2">
                         @if (Model.IsAvailable)
@@ -67,7 +74,9 @@
                             <hr />
                             <div class="d-flex justify-content-between">
                                 <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning"><i class="bi bi-pencil"></i> Edytuj</a>
-                                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger"><i class="bi bi-trash"></i> Usuń</a>
+                                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Czy na pewno usunąć to danie?');">
+                                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Usuń</button>
+                                </form>
                             </div>
                         }
                     </div>

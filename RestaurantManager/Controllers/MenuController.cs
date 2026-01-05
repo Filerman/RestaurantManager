@@ -8,7 +8,7 @@ using RestaurantManager.Filters;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using System;
-using System.Collections.Generic; // Potrzebne do list
+using System.Collections.Generic;
 
 namespace RestaurantManager.Controllers
 {
@@ -22,10 +22,13 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // Widok menu jest publiczny
+        // --- GET: Index (Lista) ---
         public async Task<IActionResult> Index()
         {
-            var isStaff = User.IsInRole("Admin") || User.IsInRole("Manager") || User.IsInRole("Employee");
+            // POPRAWKA: Sprawdzamy rolę z Sesji, bo User.IsInRole nie działa przy tym typie logowania
+            var role = HttpContext.Session.GetString("UserRole");
+            var isStaff = (role == "Admin" || role == "Manager" || role == "Employee");
+
             var query = _context.MenuItems.AsQueryable();
 
             if (!isStaff)
@@ -36,7 +39,7 @@ namespace RestaurantManager.Controllers
             return View(await query.ToListAsync());
         }
 
-        // GET: Menu/Details/5
+        // --- GET: Details (Szczegóły) ---
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -49,22 +52,16 @@ namespace RestaurantManager.Controllers
             return View(menuItem);
         }
 
+        // --- GET: Create ---
         [HttpGet]
         [RoleAuthorize("Employee", "Manager", "Admin")]
         public async Task<IActionResult> Create()
         {
-            // Pobieramy istniejące kategorie do podpowiedzi
-            var categories = await _context.MenuItems
-                .Select(m => m.Category)
-                .Where(c => c != null && c != "")
-                .Distinct()
-                .OrderBy(c => c)
-                .ToListAsync();
-
-            ViewBag.Categories = categories;
+            await LoadCategoriesToViewBag();
             return View();
         }
 
+        // --- POST: Create ---
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Employee", "Manager", "Admin")]
@@ -86,43 +83,33 @@ namespace RestaurantManager.Controllers
                     }
                     item.ImagePath = "/" + Path.Combine(_imageFolder, fileName).Replace("\\", "/");
                 }
+                else
+                {
+                    item.ImagePath = null;
+                }
 
                 _context.MenuItems.Add(item);
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
-            // W razie błędu walidacji musimy ponownie załadować kategorie
-            var categories = await _context.MenuItems
-               .Select(m => m.Category)
-               .Where(c => c != null && c != "")
-               .Distinct()
-               .OrderBy(c => c)
-               .ToListAsync();
-            ViewBag.Categories = categories;
 
+            await LoadCategoriesToViewBag();
             return View(item);
         }
 
+        // --- GET: Edit ---
         [HttpGet]
         [RoleAuthorize("Employee", "Manager", "Admin")]
         public async Task<IActionResult> Edit(int id)
         {
             var item = await _context.MenuItems.FindAsync(id);
-            if (item == null)
-                return NotFound();
+            if (item == null) return NotFound();
 
-            // Pobieramy istniejące kategorie do podpowiedzi
-            var categories = await _context.MenuItems
-                .Select(m => m.Category)
-                .Where(c => c != null && c != "")
-                .Distinct()
-                .OrderBy(c => c)
-                .ToListAsync();
-
-            ViewBag.Categories = categories;
+            await LoadCategoriesToViewBag();
             return View(item);
         }
 
+        // --- POST: Edit ---
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Employee", "Manager", "Admin")]
@@ -173,29 +160,22 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction("Index");
             }
 
-            // W razie błędu walidacji ponownie ładujemy kategorie
-            var categories = await _context.MenuItems
-               .Select(m => m.Category)
-               .Where(c => c != null && c != "")
-               .Distinct()
-               .OrderBy(c => c)
-               .ToListAsync();
-            ViewBag.Categories = categories;
-
+            await LoadCategoriesToViewBag();
             return View(item);
         }
 
+        // --- GET: Delete ---
         [HttpGet]
         [RoleAuthorize("Employee", "Manager", "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var item = await _context.MenuItems.FindAsync(id);
-            if (item == null)
-                return NotFound();
+            if (item == null) return NotFound();
 
             return View(item);
         }
 
+        // --- POST: Delete ---
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Employee", "Manager", "Admin")]
@@ -214,6 +194,18 @@ namespace RestaurantManager.Controllers
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction("Index");
+        }
+
+        private async Task LoadCategoriesToViewBag()
+        {
+            var categories = await _context.MenuItems
+                .Select(m => m.Category)
+                .Where(c => c != null && c != "")
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+
+            ViewBag.Categories = categories;
         }
     }
 }

@@ -1,28 +1,36 @@
 ﻿@model RestaurantManager.Models.MenuItem
+@using Microsoft.AspNetCore.Http
+
+@{
+    var role = Context.Session.GetString("UserRole");
+    bool canManage = (role == "Employee" || role == "Manager" || role == "Admin");
+}
 
 <div class="card card-menu h-100 shadow-sm">
-    <div class="position-relative">
-        @if (!string.IsNullOrEmpty(Model.ImagePath))
-        {
+    @if (!string.IsNullOrEmpty(Model.ImagePath))
+    {
+        <div class="position-relative">
             <img src="@Model.ImagePath" class="menu-card-img" alt="@Model.Name">
-        }
-        else
-        {
-            <div class="d-flex align-items-center justify-content-center bg-light text-muted menu-card-img">
-                <i class="bi bi-image fs-1"></i>
-            </div>
-        }
-        <span class="price-tag">@Model.Price.ToString("F2") zł</span>
-    </div>
+            <span class="price-tag">@Model.Price.ToString("F2") zł</span>
+        </div>
+    }
 
     <div class="card-body d-flex flex-column">
-        <h5 class="card-title fw-bold text-dark text-truncate">@Model.Name</h5>
-        <p class="card-text text-muted small flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h5 class="card-title fw-bold text-dark mb-0 me-2" style="word-break: break-word;">@Model.Name</h5>
+            @* Jeśli nie ma zdjęcia, wyświetl cenę tutaj *@
+            @if (string.IsNullOrEmpty(Model.ImagePath))
+            {
+                <span class="text-success fw-bold text-nowrap">@Model.Price.ToString("F2") zł</span>
+            }
+        </div>
+
+        <p class="card-text text-muted small flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
             @Model.Description
         </p>
 
         <div class="mt-3 d-flex justify-content-between align-items-center">
-            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary rounded-pill">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
                 Szczegóły
             </a>
 
@@ -39,10 +47,25 @@
                 else
                 {
                     <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" disabled>
-                        Niedostępne
+                        <i class="bi bi-slash-circle"></i> Brak
                     </button>
                 }
             </form>
         </div>
+
+        @if (canManage)
+        {
+            <div class="mt-2 pt-2 border-top d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-warning w-50">
+                    <i class="bi bi-pencil"></i> Edytuj
+                </a>
+
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="w-50" onsubmit="return confirm('Czy na pewno usunąć to danie?');">
+                    <button type="submit" class="btn btn-sm btn-danger w-100">
+                        <i class="bi bi-trash"></i> Usuń
+                    </button>
+                </form>
+            </div>
+        }
     </div>
 </div>
