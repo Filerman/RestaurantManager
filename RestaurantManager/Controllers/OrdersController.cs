@@ -71,7 +71,8 @@ namespace RestaurantManager.Controllers
             var vm = new OrderCheckoutViewModel
             {
                 TotalAmount = cart.Sum(x => x.TotalPrice),
-                IsAsap = true // Domyślnie zaznaczamy "Jak najszybciej"
+                IsAsap = true, // Domyślnie zaznaczamy "Jak najszybciej"
+                PaymentMethod = PaymentMethod.Cash // Domyślna metoda płatności
             };
 
             if (user != null)
@@ -80,7 +81,6 @@ namespace RestaurantManager.Controllers
                 vm.CustomerName = user.Username;
 
                 // *** POPRAWKA: Automatyczne uzupełnianie telefonu z profilu ***
-                // Dzięki temu Gość nie musi wpisywać numeru za każdym razem
                 if (!string.IsNullOrEmpty(user.PhoneNumber))
                 {
                     vm.CustomerPhone = user.PhoneNumber;
@@ -204,6 +204,8 @@ namespace RestaurantManager.Controllers
                     ScheduledDate = model.ScheduledDate,
                     Status = OrderStatus.Created,
                     Type = model.OrderType,
+                    // *** NOWOŚĆ: Zapisujemy metodę płatności ***
+                    PaymentMethod = model.PaymentMethod,
                     TotalAmount = cart.Sum(x => x.TotalPrice) + deliveryFee,
                     CustomerName = model.CustomerName,
                     CustomerPhone = model.CustomerPhone,

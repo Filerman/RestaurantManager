@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RestaurantManager.Models
 {
@@ -30,6 +31,15 @@ namespace RestaurantManager.Models
         DineIn
     }
 
+    // *** NOWOŚĆ: Enum dla płatności ***
+    public enum PaymentMethod
+    {
+        [Display(Name = "Gotówka")]
+        Cash,
+        [Display(Name = "Karta (Terminal)")]
+        Card
+    }
+
     public class Order
     {
         public int Id { get; set; }
@@ -46,7 +56,12 @@ namespace RestaurantManager.Models
         [Display(Name = "Typ zamówienia")]
         public OrderType Type { get; set; }
 
+        // *** NOWOŚĆ: Pole sposobu płatności w bazie ***
+        [Display(Name = "Płatność")]
+        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
+
         [Display(Name = "Łączna kwota")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal TotalAmount { get; set; }
 
         // Dane zamawiającego (może być zalogowany lub gość)

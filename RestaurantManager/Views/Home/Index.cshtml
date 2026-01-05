@@ -1,18 +1,179 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Strona Główna";
+    bool isManager = User.IsInRole("Manager") || User.IsInRole("Admin");
+    bool isEmployee = User.IsInRole("Employee");
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome to RestaurantManager</h1>
+<div class="hero-dashboard d-flex align-items-center justify-content-between">
+    <div>
+        @if (isManager)
+        {
+            <h1 class="hero-title">Witaj w Centrum Dowodzenia!</h1>
+            <p class="fs-5 opacity-75">Statystyki, grafiki i zarządzanie w jednym miejscu.</p>
+            <div class="mt-4">
+                <a asp-controller="Orders" asp-action="Index" class="hero-btn text-decoration-none me-2">
+                    <i class="bi bi-pc-display me-2"></i>Panel POS
+                </a>
+                <a asp-controller="Schedules" asp-action="Index" class="btn btn-outline-light rounded-pill px-4 fw-bold">
+                    Grafik
+                </a>
+            </div>
+        }
+        else if (isEmployee)
+        {
+            <h1 class="hero-title">Miłego dnia w pracy!</h1>
+            <p class="fs-5 opacity-75">Sprawdź swoje zadania i zmiany na nadchodzący tydzień.</p>
+            <div class="mt-4">
+                <a asp-controller="Orders" asp-action="Index" class="hero-btn text-decoration-none me-2">
+                    <i class="bi bi-plus-lg me-2"></i>Nowe Zamówienie
+                </a>
+                <a asp-controller="Schedules" asp-action="MySchedule" class="btn btn-outline-light rounded-pill px-4 fw-bold">
+                    Mój Grafik
+                </a>
+            </div>
+        }
+        else
+        {
+            <h1 class="hero-title">Najlepsze smaki w mieście.</h1>
+            <p class="fs-5 opacity-75">Odkryj nasze menu i zarezerwuj stolik na wyjątkowy wieczór.</p>
+            <div class="mt-4">
+                <a asp-controller="Menu" asp-action="Index" class="hero-btn text-decoration-none me-2">
+                    <i class="bi bi-book-half me-2"></i>Zobacz Menu
+                </a>
+                @if (!User.Identity.IsAuthenticated)
+                {
+                    <a asp-controller="Auth" asp-action="Login" class="btn btn-outline-light rounded-pill px-4 fw-bold">Zaloguj się</a>
+                }
+            </div>
+        }
+    </div>
 
-    @if (ViewBag.Username != null)
+    <div class="d-none d-lg-block">
+        <i class="bi bi-shop text-white" style="font-size: 150px; opacity: 0.2;"></i>
+    </div>
+</div>
+
+<div class="container-fluid px-0">
+
+    @if (isManager)
     {
-        <p>Hello, <strong>@ViewBag.Username</strong>! You are logged in.</p>
-        <p><a asp-controller="Auth" asp-action="Logout" class="btn btn-outline-danger">Logout</a></p>
+        <h4 class="section-header">Zarządzanie Operacyjne</h4>
+        <div class="row g-4 mb-5">
+            <div class="col-md-6 col-lg-3">
+                <a asp-controller="Employees" asp-action="Index" class="text-decoration-none">
+                    <div class="dashboard-card">
+                        <div class="icon-wrapper bg-blue-light"><i class="bi bi-people-fill"></i></div>
+                        <h5 class="card-title">Zespół</h5>
+                        <p class="card-text">Lista pracowników, edycja danych i stawek.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a asp-controller="Schedules" asp-action="Index" class="text-decoration-none">
+                    <div class="dashboard-card">
+                        <div class="icon-wrapper bg-purple-light"><i class="bi bi-calendar-week"></i></div>
+                        <h5 class="card-title">Planowanie</h5>
+                        <p class="card-text">Twórz grafiki i zarządzaj dyspozycyjnością.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a asp-controller="Menu" asp-action="Index" class="text-decoration-none">
+                    <div class="dashboard-card">
+                        <div class="icon-wrapper bg-orange-light"><i class="bi bi-journal-album"></i></div>
+                        <h5 class="card-title">Menu & Ceny</h5>
+                        <p class="card-text">Aktualizuj dania i zarządzaj kategoriami.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a asp-controller="Support" asp-action="Manage" class="text-decoration-none">
+                    <div class="dashboard-card">
+                        <div class="icon-wrapper bg-pink-light"><i class="bi bi-life-preserver"></i></div>
+                        <h5 class="card-title">Zgłoszenia</h5>
+                        <p class="card-text">Rozwiązuj problemy zgłoszone przez personel.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
     }
-    else
+
+    @if (isEmployee || isManager)
     {
-        <p>You are not logged in.</p>
-        <p><a asp-controller="Auth" asp-action="Login" class="btn btn-primary">Login</a></p>
+        <h4 class="section-header">Panel Pracownika</h4>
+        <div class="row g-4 mb-5">
+            <div class="col-md-6 col-lg-4">
+                <a asp-controller="Orders" asp-action="Index" class="text-decoration-none">
+                    <div class="dashboard-card" style="border-left: 4px solid var(--secondary-color);">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-wrapper bg-blue-light mb-0 me-3" style="width:50px; height:50px; font-size:24px;"><i class="bi bi-pc-display"></i></div>
+                            <h5 class="card-title mb-0">System POS</h5>
+                        </div>
+                        <p class="card-text">Przyjmowanie i realizacja zamówień.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <a asp-controller="Users" asp-action="Directory" class="text-decoration-none">
+                    <div class="dashboard-card">
+                        <div class="icon-wrapper bg-green-light"><i class="bi bi-person-lines-fill"></i></div>
+                        <h5 class="card-title">Kontakty</h5>
+                        <p class="card-text">Telefony do współpracowników i gości.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="row g-3 h-100">
+                    <div class="col-12">
+                        <a asp-controller="LossLogs" asp-action="Report" class="text-decoration-none">
+                            <div class="dashboard-card py-3 d-flex align-items-center">
+                                <i class="bi bi-trash text-danger fs-3 me-3"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">Zgłoś Stratę</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-12">
+                        <a asp-controller="Support" asp-action="MyTickets" class="text-decoration-none">
+                            <div class="dashboard-card py-3 d-flex align-items-center">
+                                <i class="bi bi-question-circle text-primary fs-3 me-3"></i>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">Pomoc IT</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     }
+
+    <h4 class="section-header">Informacje</h4>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <a asp-controller="Menu" asp-action="Index" class="text-decoration-none">
+                <div class="dashboard-card text-center p-4">
+                    <i class="bi bi-cup-hot fs-1 text-primary mb-2 d-block"></i>
+                    <h5 class="card-title">Nasze Menu</h5>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="Gallery" asp-action="Index" class="text-decoration-none">
+                <div class="dashboard-card text-center p-4">
+                    <i class="bi bi-images fs-1 text-primary mb-2 d-block"></i>
+                    <h5 class="card-title">Galeria Zdjęć</h5>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="ContactInfo" asp-action="Index" class="text-decoration-none">
+                <div class="dashboard-card text-center p-4">
+                    <i class="bi bi-map fs-1 text-primary mb-2 d-block"></i>
+                    <h5 class="card-title">Lokalizacja</h5>
+                </div>
+            </a>
+        </div>
+    </div>
 </div>

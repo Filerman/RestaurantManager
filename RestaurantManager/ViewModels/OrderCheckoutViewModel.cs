@@ -32,7 +32,11 @@ namespace RestaurantManager.ViewModels
         [Display(Name = "Typ zamówienia")]
         public OrderType OrderType { get; set; }
 
-        // *** NOWOŚĆ: Flaga ASAP (Jak najszybciej) ***
+        // *** NOWOŚĆ: Wybór płatności w formularzu ***
+        [Required(ErrorMessage = "Wybierz sposób płatności")]
+        [Display(Name = "Sposób płatności")]
+        public PaymentMethod PaymentMethod { get; set; }
+
         [Display(Name = "Jak najszybciej")]
         public bool IsAsap { get; set; } = true;
 

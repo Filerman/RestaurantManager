@@ -1,4 +1,5 @@
-﻿@model RestaurantManager.ViewModels.OrderCheckoutViewModel
+﻿@using RestaurantManager.Models
+@model RestaurantManager.ViewModels.OrderCheckoutViewModel
 @{
     ViewData["Title"] = "Finalizacja Zamówienia";
     decimal cartTotal = Model.TotalAmount;
@@ -132,6 +133,25 @@
                     </div>
                 </div>
 
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header bg-light fw-bold">Płatność</div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="@PaymentMethod.Cash" id="paymentCash" checked>
+                            <label class="form-check-label fw-bold" for="paymentCash">
+                                <i class="bi bi-cash-coin text-success me-2"></i> Gotówka (przy odbiorze)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="@PaymentMethod.Card" id="paymentCard">
+                            <label class="form-check-label fw-bold" for="paymentCard">
+                                <i class="bi bi-credit-card-2-front text-primary me-2"></i> Karta Płatnicza (terminal u dostawcy)
+                            </label>
+                        </div>
+                        <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-success btn-lg w-100 py-3">
                     Zamawiam i Płacę (<span id="totalButtonAmount">@cartTotal.ToString("F2")</span> zł)
                 </button>
@@ -145,7 +165,7 @@
                     <hr>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Koszyk:</span>
-                        <span>@cartTotal.ToString("F2") zł</span>
+                        <span class="fw-bold">@cartTotal.ToString("F2") zł</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2 text-muted" id="deliveryRow" style="display:none;">
                         <span>Dostawa:</span>
@@ -183,8 +203,8 @@
         var addressDiv = document.getElementById('addressFields');
         var deliveryRow = document.getElementById('deliveryRow');
 
-        // Sprawdzamy wartość enum. Zazwyczaj Delivery = 0.
-        // Upewnij się w HTML (zbadaj element), czy value="0" to Dostawa.
+        // Sprawdzamy wartość enum. W C# Delivery to 0 (jeśli to pierwszy element enuma)
+        // Wartość "0" powinna odpowiadać Delivery.
         var isDelivery = (select.value == '0');
 
         if (isDelivery) {

@@ -11,13 +11,12 @@
         picturePath = "/images/profiles/default.png";
     }
 
-    // Helper variables for determining roles
     bool isEmployee = (role == "Employee" || role == "Manager" || role == "Admin");
     bool isManager = (role == "Manager" || role == "Admin");
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -32,10 +31,12 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg fixed-top">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-hexagon-fill me-2"></i>RestaurantManager
+                </a>
 
-                <a class="navbar-brand" asp-controller="Menu" asp-action="Index">RestaurantManager</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarNav" aria-controls="navbarNav"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -43,80 +44,38 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarNav">
-
                     <ul class="navbar-nav me-auto">
-
+                        <li class="nav-item"><a class="nav-link" asp-controller="Menu" asp-action="Index">Menu</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Gallery" asp-action="Index">Galeria</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="ContactInfo" asp-action="Index">Kontakt</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Announcements" asp-action="Index">Aktualności</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Faq" asp-action="Index">FAQ</a></li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Menu" asp-action="Index">Menu</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Gallery" asp-action="Index">Galeria</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="ContactInfo" asp-action="Index">Kontakt</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Announcements" asp-action="Index">Aktualności</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Faq" asp-action="Index">FAQ</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">
-                                <i class="bi bi-cart-fill text-primary"></i> Koszyk
+                            <a class="nav-link" asp-controller="Cart" asp-action="Index">
+                                <i class="bi bi-cart3"></i> Koszyk
                             </a>
                         </li>
 
                         @if (logged)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Reservations" asp-action="Index">Rezerwacje</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Reservations" asp-action="Index">Rezerwacje</a></li>
                         }
 
                         @if (isEmployee)
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="employeeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Panel Pracownika
+                                <a class="nav-link dropdown-toggle" href="#" id="employeeDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-briefcase me-1"></i> Pracownik
                                 </a>
-                                <ul class="dropdown-menu" aria-labelledby="employeeDropdown">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Schedules" asp-action="MySchedule">Mój Grafik</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Availability" asp-action="Index">Moja Dostępność</a>
-                                    </li>
-
-                                    @* --- LINK DO KATALOGU KONTAKTÓW (Dla każdego pracownika) --- *@
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Users" asp-action="Directory">
-                                            <i class="bi bi-person-lines-fill me-2"></i>Katalog Kontaktów
-                                        </a>
-                                    </li>
-                                    @* ----------------------------------------------------------- *@
-
+                                <ul class="dropdown-menu shadow border-0" aria-labelledby="employeeDropdown">
+                                    <li><a class="dropdown-item" asp-controller="Schedules" asp-action="MySchedule">Mój Grafik</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Availability" asp-action="Index">Moja Dostępność</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Users" asp-action="Directory">Katalog Kontaktów</a></li>
                                     <li><hr class="dropdown-divider"></li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Support" asp-action="MyTickets">Wsparcie / Zgłoszenia</a>
-                                    </li>
-
+                                    <li><a class="dropdown-item" asp-controller="Support" asp-action="MyTickets">Wsparcie</a></li>
+                                    <li><a class="dropdown-item" asp-controller="LossLogs" asp-action="Report">Zgłoś Stratę</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="LossLogs" asp-action="Report">Zgłoś Stratę</a>
-                                    </li>
-
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item fw-bold text-primary" asp-controller="Orders" asp-action="Index">
-                                            <i class="bi bi-receipt"></i> System POS (Zamówienia)
-                                        </a>
-                                    </li>
+                                    <li><a class="dropdown-item fw-bold text-primary" asp-controller="Orders" asp-action="Index">System POS</a></li>
                                 </ul>
                             </li>
                         }
@@ -124,173 +83,94 @@
                         @if (isManager)
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="managerDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Panel Zarządzania
+                                <a class="nav-link dropdown-toggle" href="#" id="managerDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-shield-lock me-1"></i> Zarządzanie
                                 </a>
-                                <ul class="dropdown-menu" aria-labelledby="managerDropdown">
-                                    <li><h6 class="dropdown-header">Personel</h6></li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Schedules" asp-action="Index">Grafiki</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Employees" asp-action="Index">Pracownicy</a>
-                                    </li>
-
-                                    @* --- LINK DO WYPŁAT --- *@
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Employees" asp-action="Payroll">
-                                            <i class="bi bi-cash-coin"></i> Wypłaty
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Availability" asp-action="Manage">
-                                            <i class="bi bi-calendar-range"></i> Zarządzaj Dyspozycyjnością
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Users" asp-action="Index">Użytkownicy</a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Support" asp-action="Manage">HelpDesk (Zgłoszenia)</a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="PositionTags" asp-action="Index">Tagi Stanowisk</a>
-                                    </li>
+                                <ul class="dropdown-menu shadow border-0" aria-labelledby="managerDropdown">
+                                    <li><h6 class="dropdown-header text-uppercase text-muted smaller">Personel</h6></li>
+                                    <li><a class="dropdown-item" asp-controller="Schedules" asp-action="Index">Grafiki</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Employees" asp-action="Index">Pracownicy</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Employees" asp-action="Payroll">Wypłaty</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Availability" asp-action="Manage">Dyspozycyjność</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Users" asp-action="Index">Użytkownicy</a></li>
+                                    <li><a class="dropdown-item" asp-controller="PositionTags" asp-action="Index">Tagi Stanowisk</a></li>
 
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><h6 class="dropdown-header">Restauracja</h6></li>
-
-                                    <li>
-                                        <a class="dropdown-item fw-bold text-primary" asp-controller="Orders" asp-action="Index">
-                                            <i class="bi bi-receipt"></i> System POS (Zamówienia)
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Faq" asp-action="Manage">Zarządzaj FAQ</a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Announcements" asp-action="Manage">Zarządzaj Aktualnościami</a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="OpeningHours" asp-action="Index">Godziny Otwarcia</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="DeliveryZones" asp-action="Index">Strefy Dostaw</a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="ContactInfo" asp-action="Edit">Dane Kontaktowe</a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Tables" asp-action="Index">Stoliki</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Gallery" asp-action="Manage">Zarządzaj Galerią</a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="LossLogs" asp-action="Index">Rejestr Strat</a>
-                                    </li>
+                                    <li><h6 class="dropdown-header text-uppercase text-muted smaller">Restauracja</h6></li>
+                                    <li><a class="dropdown-item" asp-controller="Menu" asp-action="Index">Edycja Menu</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Tables" asp-action="Index">Stoliki</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Announcements" asp-action="Manage">Ogłoszenia</a></li>
+                                    <li><a class="dropdown-item" asp-controller="OpeningHours" asp-action="Index">Godziny</a></li>
+                                    <li><a class="dropdown-item" asp-controller="DeliveryZones" asp-action="Index">Dostawy</a></li>
+                                    <li><a class="dropdown-item" asp-controller="ContactInfo" asp-action="Edit">Dane Firmy</a></li>
                                 </ul>
                             </li>
                         }
-
                     </ul>
 
-                    <ul class="navbar-nav ms-auto">
-
+                    <ul class="navbar-nav ms-auto align-items-center">
                         @if (!logged)
                         {
+                            <li class="nav-item"><a class="nav-link" asp-controller="Auth" asp-action="Login">Zaloguj</a></li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Auth" asp-action="Login">Login</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Auth" asp-action="Register">Register</a>
+                                <a class="btn btn-primary btn-sm rounded-pill px-3 ms-2 text-white" asp-controller="Auth" asp-action="Register">Rejestracja</a>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <img src="@picturePath" alt="Avatar" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 5px;">
-                                    Hello, @usernameInSession!
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                                    <img src="@picturePath" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-right: 8px; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                    <span class="fw-bold">@usernameInSession</span>
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                    <li>
-                                        <span class="dropdown-item-text text-muted" style="font-size: 0.9em;">Rola: @role</span>
-                                    </li>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="profileDropdown">
+                                    <li><span class="dropdown-item-text text-muted small">Rola: <strong>@role</strong></span></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Auth" asp-action="Profile">
-                                            <i class="bi bi-person-circle me-2"></i>Mój Profil
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Orders" asp-action="History">
-                                            <i class="bi bi-clock-history me-2"></i>Historia Zamówień
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Auth" asp-action="EditProfile">
-                                            <i class="bi bi-pencil-square me-2"></i>Edytuj Profil
-                                        </a>
-                                    </li>
+                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="Profile"><i class="bi bi-person me-2"></i>Mój Profil</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Orders" asp-action="History"><i class="bi bi-clock-history me-2"></i>Historia</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="EditProfile"><i class="bi bi-gear me-2"></i>Ustawienia</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item text-danger" asp-controller="Auth" asp-action="Logout">
-                                            <i class="bi bi-box-arrow-right me-2"></i>Logout
-                                        </a>
-                                    </li>
+                                    <li><a class="dropdown-item text-danger" asp-controller="Auth" asp-action="Logout"><i class="bi bi-box-arrow-right me-2"></i>Wyloguj</a></li>
                                 </ul>
                             </li>
                         }
-
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
 
-    <div class="container">
+    <div class="container" style="padding-top: 80px;">
         @if (TempData["SuccessMessage"] != null)
         {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                @TempData["SuccessMessage"]
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
         @if (TempData["ErrorMessage"] != null)
         {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                @TempData["ErrorMessage"]
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
         @if (TempData["InfoMessage"] != null)
         {
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                @TempData["InfoMessage"]
+            <div class="alert alert-info alert-dismissible fade show shadow-sm border-0" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i> @TempData["InfoMessage"]
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
 
-        <main role="main" class="pb-3">
+        <main role="main" class="pb-5">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; @DateTime.Now.Year - RestaurantManager
+    <footer class="border-top footer text-muted bg-white mt-auto py-3">
+        <div class="container text-center">
+            &copy; @DateTime.Now.Year - <strong>RestaurantManager</strong> - <a asp-controller="Home" asp-action="Privacy" class="text-decoration-none text-muted">Prywatność</a>
         </div>
     </footer>
 
