@@ -150,6 +150,7 @@
                                     <li><a class="dropdown-item" asp-controller="OpeningHours" asp-action="Index">Godziny</a></li>
                                     <li><a class="dropdown-item" asp-controller="DeliveryZones" asp-action="Index">Dostawy</a></li>
                                     <li><a class="dropdown-item" asp-controller="ContactInfo" asp-action="Edit">Dane Firmy</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Gallery" asp-action="Manage">Edycja Galerii</a></li>
                                 </ul>
                             </li>
                         }
@@ -167,7 +168,6 @@
                                 <a class="nav-link dropdown-toggle d-flex align-items-center position-relative" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
                                     <img src="@picturePath" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-right: 8px; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
 
-                                    @* KROPKA PRZY AVATARZE (OPCJONALNIE) *@
                                     @if (hasTicketResponse)
                                     {
                                         <span class="position-absolute top-0 start-0 translate-middle p-1 bg-danger border border-light rounded-circle" style="left: 10px !important; top: 10px !important;"></span>
@@ -180,7 +180,6 @@
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" asp-controller="Auth" asp-action="Profile"><i class="bi bi-person me-2"></i>Mój Profil</a></li>
 
-                                    @* --- LINK MOJE ZGŁOSZENIA (Z KROPKĄ OBOK TEKSTU) --- *@
                                     <li>
                                         <a class="dropdown-item d-flex justify-content-between align-items-center" asp-controller="Support" asp-action="MyTickets">
                                             <span><i class="bi bi-chat-text me-2"></i>Moje Zgłoszenia</span>
@@ -190,7 +189,6 @@
                                             }
                                         </a>
                                     </li>
-                                    @* ---------------------------------------------------- *@
 
                                     <li><a class="dropdown-item" asp-controller="Orders" asp-action="History"><i class="bi bi-clock-history me-2"></i>Historia</a></li>
                                     <li><a class="dropdown-item" asp-controller="Auth" asp-action="EditProfile"><i class="bi bi-gear me-2"></i>Ustawienia</a></li>

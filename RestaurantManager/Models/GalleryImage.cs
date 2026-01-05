@@ -7,8 +7,10 @@ namespace RestaurantManager.Models
         public int Id { get; set; }
 
         [Required]
-        public string FilePath { get; set; } // Ścieżka do pliku (np. /images/gallery/obrazek.jpg)
+        public string FilePath { get; set; }
 
-        public string? Caption { get; set; } // Opcjonalny opis
+        public string? Caption { get; set; }
+
+        public bool IsInCarousel { get; set; } = false;
     }
 }

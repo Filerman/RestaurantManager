@@ -4,77 +4,84 @@
     ViewData["Title"] = "Zarządzaj Galerią";
 }
 
-<style>
-    .manage-gallery-item {
-        position: relative;
-        margin-bottom: 15px;
-    }
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="bi bi-images me-2"></i>Zarządzanie Galerią</h2>
 
-        .manage-gallery-item img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 5px;
-        }
-
-        .manage-gallery-item .delete-btn {
-            position: absolute;
-            top: 5px;
-            right: 15px; /* Dodatkowy margines, bo kolumna ma padding */
-        }
-</style>
-
-<h1>@ViewData["Title"]</h1>
-
-<div class="card mb-4">
-    <div class="card-header">
-        Dodaj nowe zdjęcie
-    </div>
-    <div class="card-body">
-        <form asp-action="Upload" asp-controller="Gallery" method="post" enctype="multipart/form-data">
-            @Html.AntiForgeryToken()
-
-            <div class="mb-3">
-                <label for="imageFile" class="form-label">Plik zdjęcia</label>
-                <input type="file" name="imageFile" class="form-control" id="imageFile" accept="image/png, image/jpeg, image/gif" required />
-            </div>
-
-            <div class="mb-3">
-                <label for="caption" class="form-label">Opcjonalny opis</label>
-                <input type="text" name="caption" class="form-control" id="caption" placeholder="Np. Widok na salę główną" />
-            </div>
-
-            <button type="submit" class="btn btn-primary">Prześlij zdjęcie</button>
-        </form>
-    </div>
-</div>
-
-<hr />
-
-<h3>Istniejące zdjęcia</h3>
-
-@if (!Model.Any())
-{
-    <p>W galerii nie ma jeszcze żadnych zdjęć.</p>
-}
-else
-{
-    <div class="row">
-        @foreach (var image in Model)
-        {
-            <div class="col-md-3">
-                <div class="manage-gallery-item">
-                    <img src="@Url.Content(image.FilePath)" alt="@(image.Caption ?? "Zdjęcie z galerii")" class="img-fluid" />
-
-                    <form asp-action="Delete" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć to zdjęcie?');">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@image.Id" />
-                        <button type="submit" class="btn btn-danger btn-sm delete-btn" title="Usuń">
-                            X
-                        </button>
-                    </form>
+    <div class="card mb-5 shadow-sm border-0 bg-light">
+        <div class="card-body p-4">
+            <h5 class="card-title mb-3">Dodaj nowe zdjęcie</h5>
+            <form asp-action="Upload" asp-controller="Gallery" method="post" enctype="multipart/form-data" class="row g-3 align-items-end">
+                @Html.AntiForgeryToken()
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Wybierz plik</label>
+                    <input type="file" name="imageFile" class="form-control" accept="image/*" required />
                 </div>
-            </div>
-        }
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Opis (opcjonalnie)</label>
+                    <input type="text" name="caption" class="form-control" placeholder="Np. Nasze wnętrze" />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-upload"></i> Wyślij</button>
+                </div>
+            </form>
+        </div>
     </div>
-}
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center">Brak zdjęć w galerii.</div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var image in Model)
+            {
+                <div class="col-md-6 col-lg-3">
+                    <div class="card h-100 shadow-sm">
+                        <div class="position-relative">
+                            <img src="@Url.Content(image.FilePath)" class="card-img-top" style="height: 200px; object-fit: cover;" alt="Foto">
+
+                            @if (image.IsInCarousel)
+                            {
+                                <span class="position-absolute top-0 start-0 badge bg-success m-2 shadow">
+                                    <i class="bi bi-play-circle-fill"></i> Karuzela
+                                </span>
+                            }
+                        </div>
+
+                        <div class="card-body p-2">
+                            <p class="card-text small text-muted text-truncate mb-2">@(image.Caption ?? "Brak opisu")</p>
+
+                            <div class="d-flex justify-content-between gap-1">
+                                <form asp-action="ToggleCarousel" method="post" class="flex-grow-1">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@image.Id" />
+                                    <button type="submit" class="btn btn-sm w-100 @(image.IsInCarousel ? "btn-outline-warning" : "btn-outline-secondary")"
+                                            title="@(image.IsInCarousel ? "Usuń z karuzeli" : "Dodaj do karuzeli")">
+                                        @if (image.IsInCarousel)
+                                        {
+                                            <span><i class="bi bi-dash-circle"></i> Zdejmij</span>
+                                        }
+                                        else
+                                        {
+
+                                            <span><i class="bi bi-plus-circle"></i> Karuzela</span>
+                                        }
+                                    </button>
+                                </form>
+
+                                <form asp-action="Delete" method="post" onsubmit="return confirm('Usunąć to zdjęcie?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@image.Id" />
+                                    <button type="submit" class="btn btn-sm btn-danger px-3">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
