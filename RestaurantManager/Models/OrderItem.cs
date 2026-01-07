@@ -20,6 +20,8 @@ namespace RestaurantManager.Models
 
         [Display(Name = "Cena jednostkowa")]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal UnitPrice { get; set; } // Cena w momencie zakupu (zabezpieczenie przed zmianą cen w menu)
+        public decimal UnitPrice { get; set; }
+
+        public bool IsServed { get; set; } = false;
     }
 }

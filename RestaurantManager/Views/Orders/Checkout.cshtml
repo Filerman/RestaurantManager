@@ -99,10 +99,14 @@
 
                         <div class="form-group mb-4">
                             <label asp-for="OrderType" class="form-label fw-bold">Sposób odbioru:</label>
-                            <select asp-for="OrderType" class="form-select" id="orderTypeSelect" asp-items="Html.GetEnumSelectList<RestaurantManager.Models.OrderType>()" onchange="toggleAddressFields()">
+                            @{
+                                var allowedOrderTypes = Html.GetEnumSelectList<RestaurantManager.Models.OrderType>()
+                                .Where(x => x.Value != ((int)RestaurantManager.Models.OrderType.DineIn).ToString());
+                            }
+                            <select asp-for="OrderType" class="form-select" id="orderTypeSelect" asp-items="allowedOrderTypes" onchange="toggleAddressFields()">
                             </select>
                             <span asp-validation-for="OrderType" class="text-danger"></span>
-                        </div>
+                        </div>>
 
                         <div id="addressFields" style="display:none;">
                             <h6 class="text-muted mb-3">Adres dostawy:</h6>

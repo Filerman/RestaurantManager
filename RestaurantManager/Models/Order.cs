@@ -31,7 +31,6 @@ namespace RestaurantManager.Models
         DineIn
     }
 
-    // *** NOWOŚĆ: Enum dla płatności ***
     public enum PaymentMethod
     {
         [Display(Name = "Gotówka")]
@@ -48,7 +47,7 @@ namespace RestaurantManager.Models
         public DateTime OrderDate { get; set; } = DateTime.Now;
 
         [Display(Name = "Zaplanowane na")]
-        public DateTime ScheduledDate { get; set; } // Data realizacji
+        public DateTime ScheduledDate { get; set; }
 
         [Display(Name = "Status")]
         public OrderStatus Status { get; set; } = OrderStatus.Created;
@@ -56,7 +55,6 @@ namespace RestaurantManager.Models
         [Display(Name = "Typ zamówienia")]
         public OrderType Type { get; set; }
 
-        // *** NOWOŚĆ: Pole sposobu płatności w bazie ***
         [Display(Name = "Płatność")]
         public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
 
@@ -64,30 +62,32 @@ namespace RestaurantManager.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalAmount { get; set; }
 
-        // Dane zamawiającego (może być zalogowany lub gość)
-        public string? UserId { get; set; } // Trzymamy ID jako string (lub int zależnie od User.cs), ale user może być nullem (gość)
+        public string? UserId { get; set; }
 
-        [Required(ErrorMessage = "Imię i nazwisko jest wymagane")]
+        // Pola klienta mogą być puste przy zamówieniu "Na miejscu" (DineIn)
         [Display(Name = "Klient")]
-        public string CustomerName { get; set; }
+        public string? CustomerName { get; set; }
 
-        [Required(ErrorMessage = "Telefon jest wymagany")]
         [Phone]
         [Display(Name = "Telefon")]
-        public string CustomerPhone { get; set; }
+        public string? CustomerPhone { get; set; }
 
-        [Required(ErrorMessage = "Email jest wymagany")]
         [EmailAddress]
         [Display(Name = "Email")]
-        public string CustomerEmail { get; set; }
+        public string? CustomerEmail { get; set; }
 
         [Display(Name = "Adres dostawy")]
-        public string? DeliveryAddress { get; set; } // Wymagane tylko dla OrderType.Delivery
+        public string? DeliveryAddress { get; set; }
 
         [Display(Name = "Uwagi do zamówienia")]
         public string? Notes { get; set; }
 
-        // Relacja: Jedno zamówienie ma wiele pozycji
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
+        [Display(Name = "Stolik")]
+        public int? TableId { get; set; }
+
+        [ForeignKey("TableId")]
+        public virtual Table? Table { get; set; }
     }
 }

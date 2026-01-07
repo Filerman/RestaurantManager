@@ -1,0 +1,31 @@
+﻿@using RestaurantManager.Models
+@model RestaurantManager.Models.Order
+
+@{
+    // Pobieramy informację o zakładce z ViewData (przekazaną z Index.cshtml)
+    string currentTab = ViewData["Tab"] as string ?? "online";
+}
+
+<p class="fw-bold">Status: <span class="text-primary">@Model.Status</span></p>
+
+<form asp-controller="Orders" asp-action="UpdateStatus" method="post">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <input type="hidden" name="returnTab" value="@currentTab" />
+
+    @if (Model.Status == OrderStatus.Created)
+    {
+        <button type="submit" name="status" value="@OrderStatus.Accepted" class="btn btn-warning btn-sm w-100">Zatwierdź</button>
+    }
+    else if (Model.Status == OrderStatus.Accepted)
+    {
+        <button type="submit" name="status" value="@OrderStatus.InKitchen" class="btn btn-info btn-sm w-100">Na Kuchnię</button>
+    }
+    else if (Model.Status == OrderStatus.InKitchen)
+    {
+        <button type="submit" name="status" value="@OrderStatus.Ready" class="btn btn-success btn-sm w-100">Gotowe</button>
+    }
+    else if (Model.Status == OrderStatus.Ready)
+    {
+        <button type="submit" name="status" value="@OrderStatus.Completed" class="btn btn-outline-dark btn-sm w-100">Zakończ</button>
+    }
+</form>

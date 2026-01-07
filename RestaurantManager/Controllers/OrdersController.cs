@@ -26,20 +26,25 @@ namespace RestaurantManager.Controllers
 
         // --- SEKCJA POS (DLA PERSONELU) ---
         [RoleAuthorize("Admin", "Manager", "Employee")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string activeTab = "online")
         {
+            // Przekazujemy aktywną zakładkę do widoku, żeby po odświeżeniu wrócić w dobre miejsce
+            ViewBag.ActiveTab = activeTab;
+
             var orders = await _context.Orders
                 .Include(o => o.OrderItems).ThenInclude(oi => oi.MenuItem)
+                .Include(o => o.Table) // Dołączamy info o stoliku
                 .Where(o => o.Status != OrderStatus.Completed && o.Status != OrderStatus.Canceled)
                 .OrderBy(o => o.ScheduledDate)
                 .ToListAsync();
+
             return View(orders);
         }
 
         [HttpPost]
         [RoleAuthorize("Admin", "Manager", "Employee")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStatus(int id, OrderStatus status)
+        public async Task<IActionResult> UpdateStatus(int id, OrderStatus status, string returnTab = "online")
         {
             var order = await _context.Orders.FindAsync(id);
             if (order != null)
@@ -47,10 +52,128 @@ namespace RestaurantManager.Controllers
                 order.Status = status;
                 await _context.SaveChangesAsync();
             }
-            return RedirectToAction(nameof(Index));
+            // Powrót do tej samej zakładki (online lub dinein)
+            return RedirectToAction(nameof(Index), new { activeTab = returnTab });
         }
 
-        // --- SEKCJA KLIENTA ---
+        // --- MAPA STOLIKÓW ---
+        [RoleAuthorize("Admin", "Manager", "Employee")]
+        public async Task<IActionResult> Tables()
+        {
+            var tables = await _context.Tables.ToListAsync();
+
+            // Pobieramy ID stolików, które mają otwarte zamówienie
+            var busyTableIds = await _context.Orders
+                .Where(o => o.Status != OrderStatus.Completed && o.Status != OrderStatus.Canceled && o.Type == OrderType.DineIn && o.TableId != null)
+                .Select(o => o.TableId.Value)
+                .ToListAsync();
+
+            ViewBag.BusyTableIds = busyTableIds;
+            return View(tables);
+        }
+
+        // --- ZARZĄDZANIE KONKRETNYM STOLIKIEM ---
+        [RoleAuthorize("Admin", "Manager", "Employee")]
+        public async Task<IActionResult> ManageTable(int id)
+        {
+            var table = await _context.Tables.FindAsync(id);
+            if (table == null) return NotFound();
+
+            var activeOrder = await _context.Orders
+                .Include(o => o.OrderItems).ThenInclude(oi => oi.MenuItem)
+                .FirstOrDefaultAsync(o => o.TableId == id && o.Status != OrderStatus.Completed && o.Status != OrderStatus.Canceled);
+
+            var menuItems = await _context.MenuItems.Where(m => m.IsAvailable).ToListAsync();
+            var categories = menuItems.Select(m => m.Category).Distinct().ToList();
+
+            var vm = new ManageTableViewModel
+            {
+                Table = table,
+                CurrentOrder = activeOrder,
+                MenuItems = menuItems,
+                Categories = categories
+            };
+
+            return View(vm);
+        }
+
+        // --- DODAWANIE DO STOLIKA ---
+        [HttpPost]
+        [RoleAuthorize("Admin", "Manager", "Employee")]
+        public async Task<IActionResult> AddToTable(int tableId, int menuItemId)
+        {
+            var menuItem = await _context.MenuItems.FindAsync(menuItemId);
+            if (menuItem == null) return NotFound();
+
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.TableId == tableId && o.Status != OrderStatus.Completed && o.Status != OrderStatus.Canceled);
+
+            if (order == null)
+            {
+                order = new Order
+                {
+                    TableId = tableId,
+                    OrderDate = DateTime.Now,
+                    ScheduledDate = DateTime.Now,
+                    Status = OrderStatus.Created,
+                    Type = OrderType.DineIn,
+                    CustomerName = $"Stolik #{tableId}",
+                    TotalAmount = 0
+                };
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+            }
+
+            var orderItem = new OrderItem
+            {
+                OrderId = order.Id,
+                MenuItemId = menuItemId,
+                Quantity = 1,
+                UnitPrice = menuItem.Price,
+                IsServed = false // Domyślnie niewydane
+            };
+
+            order.TotalAmount += menuItem.Price;
+            _context.OrderItems.Add(orderItem);
+
+            // Jeśli zamówienie było już gotowe, cofamy status, bo doszło nowe danie
+            if (order.Status == OrderStatus.Ready) order.Status = OrderStatus.InKitchen;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(ManageTable), new { id = tableId });
+        }
+
+        // --- ODZNACZANIE WYDANYCH DAŃ ---
+        [HttpPost]
+        [RoleAuthorize("Admin", "Manager", "Employee")]
+        public async Task<IActionResult> ToggleItemServed(int orderItemId, int tableId)
+        {
+            var item = await _context.OrderItems.FindAsync(orderItemId);
+            if (item != null)
+            {
+                item.IsServed = !item.IsServed;
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(ManageTable), new { id = tableId });
+        }
+
+        // --- ZAMYKANIE STOLIKA ---
+        [HttpPost]
+        [RoleAuthorize("Admin", "Manager", "Employee")]
+        public async Task<IActionResult> CloseTable(int orderId, PaymentMethod paymentMethod)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order != null)
+            {
+                order.Status = OrderStatus.Completed;
+                order.PaymentMethod = paymentMethod;
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Tables));
+        }
+
+        // --- SEKCJA KLIENTA (E-COMMERCE) ---
 
         public async Task<IActionResult> Checkout()
         {
@@ -71,36 +194,31 @@ namespace RestaurantManager.Controllers
             var vm = new OrderCheckoutViewModel
             {
                 TotalAmount = cart.Sum(x => x.TotalPrice),
-                IsAsap = true, // Domyślnie zaznaczamy "Jak najszybciej"
-                PaymentMethod = PaymentMethod.Cash // Domyślna metoda płatności
+                IsAsap = true,
+                PaymentMethod = PaymentMethod.Cash,
+                // Domyślnie ustawiamy dostawę, bo "Na miejscu" jest ukryte
+                OrderType = OrderType.Delivery
             };
 
             if (user != null)
             {
                 vm.CustomerEmail = user.Email;
                 vm.CustomerName = user.Username;
-
-                // *** POPRAWKA: Automatyczne uzupełnianie telefonu z profilu ***
                 if (!string.IsNullOrEmpty(user.PhoneNumber))
                 {
                     vm.CustomerPhone = user.PhoneNumber;
                 }
             }
 
-            // Pobieramy minimalny czas z bazy
             var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
             int deliveryMinutes = contactInfo?.EstimatedDeliveryTimeMinutes ?? 45;
             if (deliveryMinutes < 15) deliveryMinutes = 15;
 
-            // Przekazujemy czas dostawy do widoku
             ViewBag.EstimatedTime = deliveryMinutes;
-
-            // Pobieramy dzisiejsze godziny otwarcia dla informacji
             var today = DateTime.Now.DayOfWeek;
             var todayHours = await _context.OpeningHours.FirstOrDefaultAsync(h => h.DayOfWeek == today);
             ViewBag.TodayOpeningHours = todayHours;
 
-            // Ustawiamy domyślną datę w kalendarzu na "Teraz + Czas"
             vm.ScheduledDate = DateTime.Now.AddMinutes(deliveryMinutes);
 
             PrepareCitiesList();
@@ -114,34 +232,33 @@ namespace RestaurantManager.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue) return RedirectToAction("Login", "Auth");
 
+            // Dodatkowe zabezpieczenie: Nie pozwalamy na zamówienia "Na miejscu" przez Checkout online
+            if (model.OrderType == OrderType.DineIn)
+            {
+                ModelState.AddModelError("OrderType", "Zamówienia 'Na miejscu' są obsługiwane tylko przez obsługę w lokalu.");
+            }
+
             var cart = HttpContext.Session.GetObject<List<CartItemViewModel>>(CartSessionKey);
             if (cart == null || !cart.Any()) return RedirectToAction("Index", "Menu");
 
-            // 1. Pobieramy ustawienia czasu
             var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
             int minMinutes = contactInfo?.EstimatedDeliveryTimeMinutes ?? 45;
             if (minMinutes < 15) minMinutes = 15;
-
-            // 2. Obliczamy minimalną datę (Teraz + minuty)
             var minDeliveryTime = DateTime.Now.AddMinutes(minMinutes);
 
-            // LOGIKA ASAP vs PLANOWANE
             if (model.IsAsap)
             {
-                // Jeśli ASAP -> ignorujemy datę z formularza i ustawiamy najwcześniejszą możliwą
                 model.ScheduledDate = minDeliveryTime;
                 ModelState.Remove(nameof(model.ScheduledDate));
             }
             else
             {
-                // Jeśli PLANOWANE -> sprawdzamy, czy klient nie wybrał za wcześnie
                 if (model.ScheduledDate < minDeliveryTime.AddMinutes(-1))
                 {
                     ModelState.AddModelError("ScheduledDate", $"Aktualny minimalny czas oczekiwania to {minMinutes} minut. Wybierz późniejszą godzinę.");
                 }
             }
 
-            // 3. WALIDACJA GODZIN OTWARCIA
             var dayOfWeek = model.ScheduledDate.DayOfWeek;
             var openingHour = await _context.OpeningHours.FirstOrDefaultAsync(oh => oh.DayOfWeek == dayOfWeek);
 
@@ -154,7 +271,6 @@ namespace RestaurantManager.Controllers
                 else
                 {
                     var time = model.ScheduledDate.TimeOfDay;
-                    // Sprawdzamy czy wybrana godzina mieści się w zakresie otwarcia
                     if (time < openingHour.OpenTime || time > openingHour.CloseTime)
                     {
                         ModelState.AddModelError("ScheduledDate", $"Restauracja jest nieczynna o tej godzinie. Zapraszamy w godzinach: {openingHour.OpenTime:hh\\:mm} - {openingHour.CloseTime:hh\\:mm}.");
@@ -164,7 +280,6 @@ namespace RestaurantManager.Controllers
 
             decimal deliveryFee = 0;
 
-            // 4. Walidacja adresu i opłaty
             if (model.OrderType == OrderType.Delivery)
             {
                 if (string.IsNullOrWhiteSpace(model.DeliveryStreet) ||
@@ -204,7 +319,6 @@ namespace RestaurantManager.Controllers
                     ScheduledDate = model.ScheduledDate,
                     Status = OrderStatus.Created,
                     Type = model.OrderType,
-                    // *** NOWOŚĆ: Zapisujemy metodę płatności ***
                     PaymentMethod = model.PaymentMethod,
                     TotalAmount = cart.Sum(x => x.TotalPrice) + deliveryFee,
                     CustomerName = model.CustomerName,
@@ -225,7 +339,8 @@ namespace RestaurantManager.Controllers
                         OrderId = order.Id,
                         MenuItemId = item.MenuItemId,
                         Quantity = item.Quantity,
-                        UnitPrice = item.Price
+                        UnitPrice = item.Price,
+                        IsServed = false // Online, więc na start niewydane
                     });
                 }
                 await _context.SaveChangesAsync();
@@ -234,15 +349,11 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction(nameof(Confirmation), new { id = order.Id });
             }
 
-            // Jeśli walidacja nie przeszła, przywracamy dane do widoku
             PrepareCitiesList();
-
-            // Ponowne pobranie danych do ViewBag, aby wyświetliły się po błędzie
             var contactInfoForView = await _context.ContactInfos.FirstOrDefaultAsync();
             ViewBag.EstimatedTime = contactInfoForView?.EstimatedDeliveryTimeMinutes ?? 45;
             var todayForView = DateTime.Now.DayOfWeek;
             ViewBag.TodayOpeningHours = await _context.OpeningHours.FirstOrDefaultAsync(h => h.DayOfWeek == todayForView);
-
             model.TotalAmount = cart.Sum(x => x.TotalPrice);
             return View(model);
         }
@@ -270,7 +381,6 @@ namespace RestaurantManager.Controllers
             ViewBag.CityFeesJson = System.Text.Json.JsonSerializer.Serialize(feesDict);
         }
 
-        // GET: /Orders/Confirmation/5
         public async Task<IActionResult> Confirmation(int id)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -282,6 +392,7 @@ namespace RestaurantManager.Controllers
 
             if (order == null) return NotFound();
 
+            // Pozwalamy na dostęp właścicielowi LUB pracownikom
             if (role != "Admin" && role != "Manager" && role != "Employee" && order.UserId != userId.ToString())
             {
                 return RedirectToAction("AccessDenied", "Auth");
@@ -290,7 +401,6 @@ namespace RestaurantManager.Controllers
             return View(order);
         }
 
-        // GET: /Orders/History
         public async Task<IActionResult> History()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
