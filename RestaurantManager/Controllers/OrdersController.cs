@@ -28,12 +28,12 @@ namespace RestaurantManager.Controllers
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> Index(string activeTab = "online")
         {
-            // Przekazujemy aktywną zakładkę do widoku, żeby po odświeżeniu wrócić w dobre miejsce
+            // Przekazujemy aktywną zakładkę do widoku
             ViewBag.ActiveTab = activeTab;
 
             var orders = await _context.Orders
                 .Include(o => o.OrderItems).ThenInclude(oi => oi.MenuItem)
-                .Include(o => o.Table) // Dołączamy info o stoliku
+                .Include(o => o.Table)
                 .Where(o => o.Status != OrderStatus.Completed && o.Status != OrderStatus.Canceled)
                 .OrderBy(o => o.ScheduledDate)
                 .ToListAsync();
@@ -52,7 +52,6 @@ namespace RestaurantManager.Controllers
                 order.Status = status;
                 await _context.SaveChangesAsync();
             }
-            // Powrót do tej samej zakładki (online lub dinein)
             return RedirectToAction(nameof(Index), new { activeTab = returnTab });
         }
 
@@ -62,7 +61,6 @@ namespace RestaurantManager.Controllers
         {
             var tables = await _context.Tables.ToListAsync();
 
-            // Pobieramy ID stolików, które mają otwarte zamówienie
             var busyTableIds = await _context.Orders
                 .Where(o => o.Status != OrderStatus.Completed && o.Status != OrderStatus.Canceled && o.Type == OrderType.DineIn && o.TableId != null)
                 .Select(o => o.TableId.Value)
@@ -73,8 +71,9 @@ namespace RestaurantManager.Controllers
         }
 
         // --- ZARZĄDZANIE KONKRETNYM STOLIKIEM ---
+        // Dodano parametr activeCategory, aby wiedzieć, którą zakładkę menu otworzyć
         [RoleAuthorize("Admin", "Manager", "Employee")]
-        public async Task<IActionResult> ManageTable(int id)
+        public async Task<IActionResult> ManageTable(int id, string activeCategory = null)
         {
             var table = await _context.Tables.FindAsync(id);
             if (table == null) return NotFound();
@@ -85,6 +84,9 @@ namespace RestaurantManager.Controllers
 
             var menuItems = await _context.MenuItems.Where(m => m.IsAvailable).ToListAsync();
             var categories = menuItems.Select(m => m.Category).Distinct().ToList();
+
+            // Jeśli nie podano kategorii, domyślnie pierwsza
+            ViewBag.ActiveCategory = activeCategory ?? (categories.FirstOrDefault() ?? "");
 
             var vm = new ManageTableViewModel
             {
@@ -98,9 +100,10 @@ namespace RestaurantManager.Controllers
         }
 
         // --- DODAWANIE DO STOLIKA ---
+        // Dodano parametr returnCategory, aby wrócić do tej samej zakładki
         [HttpPost]
         [RoleAuthorize("Admin", "Manager", "Employee")]
-        public async Task<IActionResult> AddToTable(int tableId, int menuItemId)
+        public async Task<IActionResult> AddToTable(int tableId, int menuItemId, string returnCategory)
         {
             var menuItem = await _context.MenuItems.FindAsync(menuItemId);
             if (menuItem == null) return NotFound();
@@ -130,18 +133,18 @@ namespace RestaurantManager.Controllers
                 MenuItemId = menuItemId,
                 Quantity = 1,
                 UnitPrice = menuItem.Price,
-                IsServed = false // Domyślnie niewydane
+                IsServed = false
             };
 
             order.TotalAmount += menuItem.Price;
             _context.OrderItems.Add(orderItem);
 
-            // Jeśli zamówienie było już gotowe, cofamy status, bo doszło nowe danie
             if (order.Status == OrderStatus.Ready) order.Status = OrderStatus.InKitchen;
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(ManageTable), new { id = tableId });
+            // Przekierowanie z powrotem do ManageTable z ustawioną aktywną kategorią
+            return RedirectToAction(nameof(ManageTable), new { id = tableId, activeCategory = returnCategory });
         }
 
         // --- ODZNACZANIE WYDANYCH DAŃ ---
@@ -158,7 +161,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(ManageTable), new { id = tableId });
         }
 
-        // --- ZAMYKANIE STOLIKA ---
+        // --- ZAMYKANIE STOLIKA (Do paragonu) ---
         [HttpPost]
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> CloseTable(int orderId, PaymentMethod paymentMethod)
@@ -168,10 +171,42 @@ namespace RestaurantManager.Controllers
             {
                 order.Status = OrderStatus.Completed;
                 order.PaymentMethod = paymentMethod;
+                // Ustawiamy datę zamknięcia na teraz (dla celów sortowania w archiwum)
+                order.ScheduledDate = DateTime.Now;
                 await _context.SaveChangesAsync();
             }
-            return RedirectToAction(nameof(Tables));
+            // Przekierowanie do widoku rachunku zamiast do mapy
+            return RedirectToAction(nameof(Receipt), new { id = orderId });
         }
+
+        // --- NOWE: WIDOK RACHUNKU ---
+        [RoleAuthorize("Admin", "Manager", "Employee")]
+        public async Task<IActionResult> Receipt(int id)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems).ThenInclude(oi => oi.MenuItem)
+                .Include(o => o.Table)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order == null) return NotFound();
+
+            return View(order);
+        }
+
+        // --- NOWE: ARCHIWUM ZAMÓWIEŃ ---
+        [RoleAuthorize("Admin", "Manager", "Employee")]
+        public async Task<IActionResult> Archive()
+        {
+            var archivedOrders = await _context.Orders
+                .Include(o => o.OrderItems).ThenInclude(oi => oi.MenuItem)
+                .Include(o => o.Table)
+                .Where(o => o.Status == OrderStatus.Completed || o.Status == OrderStatus.Canceled)
+                .OrderByDescending(o => o.ScheduledDate) // Najnowsze na górze
+                .ToListAsync();
+
+            return View(archivedOrders);
+        }
+
 
         // --- SEKCJA KLIENTA (E-COMMERCE) ---
 
@@ -196,7 +231,6 @@ namespace RestaurantManager.Controllers
                 TotalAmount = cart.Sum(x => x.TotalPrice),
                 IsAsap = true,
                 PaymentMethod = PaymentMethod.Cash,
-                // Domyślnie ustawiamy dostawę, bo "Na miejscu" jest ukryte
                 OrderType = OrderType.Delivery
             };
 
@@ -232,7 +266,6 @@ namespace RestaurantManager.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue) return RedirectToAction("Login", "Auth");
 
-            // Dodatkowe zabezpieczenie: Nie pozwalamy na zamówienia "Na miejscu" przez Checkout online
             if (model.OrderType == OrderType.DineIn)
             {
                 ModelState.AddModelError("OrderType", "Zamówienia 'Na miejscu' są obsługiwane tylko przez obsługę w lokalu.");
@@ -340,7 +373,7 @@ namespace RestaurantManager.Controllers
                         MenuItemId = item.MenuItemId,
                         Quantity = item.Quantity,
                         UnitPrice = item.Price,
-                        IsServed = false // Online, więc na start niewydane
+                        IsServed = false
                     });
                 }
                 await _context.SaveChangesAsync();
@@ -392,7 +425,6 @@ namespace RestaurantManager.Controllers
 
             if (order == null) return NotFound();
 
-            // Pozwalamy na dostęp właścicielowi LUB pracownikom
             if (role != "Admin" && role != "Manager" && role != "Employee" && order.UserId != userId.ToString())
             {
                 return RedirectToAction("AccessDenied", "Auth");

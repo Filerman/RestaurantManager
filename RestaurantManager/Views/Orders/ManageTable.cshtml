@@ -1,4 +1,8 @@
 ﻿@model RestaurantManager.ViewModels.ManageTableViewModel
+@{
+    ViewData["Title"] = $"Obsługa - {Model.Table.Name}";
+    string activeCategory = ViewBag.ActiveCategory as string;
+}
 
 <div class="container-fluid mt-3">
     <div class="row">
@@ -18,14 +22,12 @@
                             <span class="badge bg-light text-dark">@Model.CurrentOrder.Status</span>
                         </div>
 
-                        <div class="list-group list-group-flush">
+                        <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
                             @foreach (var item in Model.CurrentOrder.OrderItems)
                             {
-                                // Style w zależności czy wydano
                                 var itemClass = item.IsServed ? "bg-light text-muted" : "";
                                 var btnIcon = item.IsServed ? "bi-arrow-counterclockwise" : "bi-check-lg";
                                 var btnClass = item.IsServed ? "btn-outline-secondary" : "btn-success";
-                                var btnTitle = item.IsServed ? "Cofnij wydanie" : "Oznacz jako wydane";
 
                                 <div class="list-group-item d-flex justify-content-between align-items-center @itemClass">
                                     <div class="me-2">
@@ -42,8 +44,7 @@
                                     <form asp-action="ToggleItemServed" method="post">
                                         <input type="hidden" name="orderItemId" value="@item.Id" />
                                         <input type="hidden" name="tableId" value="@Model.Table.Id" />
-
-                                        <button type="submit" class="btn @btnClass btn-sm rounded-circle" style="width: 32px; height: 32px; padding: 0;" title="@btnTitle">
+                                        <button type="submit" class="btn @btnClass btn-sm rounded-circle" style="width: 32px; height: 32px; padding: 0;">
                                             <i class="bi @btnIcon"></i>
                                         </button>
                                     </form>
@@ -58,8 +59,12 @@
 
                     <form asp-action="CloseTable" method="post" class="d-grid gap-2">
                         <input type="hidden" name="orderId" value="@Model.CurrentOrder.Id" />
-                        <button type="submit" name="paymentMethod" value="Cash" class="btn btn-success btn-lg">Zapłać Gotówką i Zamknij</button>
-                        <button type="submit" name="paymentMethod" value="Card" class="btn btn-primary btn-lg">Zapłać Kartą i Zamknij</button>
+                        <button type="submit" name="paymentMethod" value="Cash" class="btn btn-success btn-lg">
+                            <i class="bi bi-cash-coin"></i> Gotówka - Drukuj Rachunek
+                        </button>
+                        <button type="submit" name="paymentMethod" value="Card" class="btn btn-primary btn-lg">
+                            <i class="bi bi-credit-card"></i> Karta - Drukuj Rachunek
+                        </button>
                     </form>
                 }
 
@@ -70,14 +75,19 @@
         </div>
 
         <div class="col-md-8">
-            <h3 class="pt-3">Dodaj do zamówienia</h3>
+            <h3 class="pt-3">Menu</h3>
 
             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                 @for (int i = 0; i < Model.Categories.Count; i++)
                 {
                     var cat = Model.Categories[i];
+                    // Jeśli activeCategory jest ustawione, sprawdzamy czy to ta kategoria.
+                    // Jeśli nie jest ustawione, pierwsza kategoria jest aktywna.
+                    bool isActive = (!string.IsNullOrEmpty(activeCategory) && activeCategory == cat) || (string.IsNullOrEmpty(activeCategory) && i == 0);
+                    string activeClass = isActive ? "active" : "";
+
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link @(i == 0 ? "active" : "")" id="pills-@i-tab" data-bs-toggle="pill" data-bs-target="#pills-@i" type="button" role="tab">
+                        <button class="nav-link @activeClass" id="pills-@i-tab" data-bs-toggle="pill" data-bs-target="#pills-@i" type="button" role="tab">
                             @cat
                         </button>
                     </li>
@@ -90,7 +100,10 @@
                     var cat = Model.Categories[i];
                     var items = Model.MenuItems.Where(m => m.Category == cat).ToList();
 
-                    <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="pills-@i" role="tabpanel">
+                    bool isActive = (!string.IsNullOrEmpty(activeCategory) && activeCategory == cat) || (string.IsNullOrEmpty(activeCategory) && i == 0);
+                    string showActive = isActive ? "show active" : "";
+
+                    <div class="tab-pane fade @showActive" id="pills-@i" role="tabpanel">
                         <div class="row">
                             @foreach (var item in items)
                             {
@@ -98,13 +111,15 @@
                                     <form asp-action="AddToTable" method="post">
                                         <input type="hidden" name="tableId" value="@Model.Table.Id" />
                                         <input type="hidden" name="menuItemId" value="@item.Id" />
+                                        <input type="hidden" name="returnCategory" value="@cat" />
 
-                                        <button type="submit" class="btn btn-outline-dark w-100 h-100 p-3 text-start shadow-sm hover-shadow">
-                                            <div class="d-flex justify-content-between">
+                                        <button type="submit" class="btn btn-outline-dark w-100 h-100 p-3 text-start shadow-sm hover-shadow position-relative">
+                                            <div class="d-flex justify-content-between align-items-start">
                                                 <span class="fw-bold">@item.Name</span>
                                                 <span class="badge bg-success">@item.Price.ToString("F2") zł</span>
                                             </div>
-                                            <small class="text-muted">@item.Description</small>
+                                            <small class="text-muted d-block mt-1">@item.Description</small>
+                                            <div class="mt-2 text-end text-primary opacity-50"><i class="bi bi-plus-circle-fill fs-5"></i></div>
                                         </button>
                                     </form>
                                 </div>
