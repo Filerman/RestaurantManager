@@ -21,11 +21,13 @@ namespace RestaurantManager.Models
         [Required, EmailAddress]
         public string Email { get; set; }
 
-        // *** TO JEST TO BRAKUJĄCE POLE ***
         [StringLength(15)]
         [Display(Name = "Numer telefonu")]
         public string? PhoneNumber { get; set; }
-        // **********************************
+
+        [Display(Name = "PIN Ratunkowy")]
+        [StringLength(6, MinimumLength = 4, ErrorMessage = "PIN musi mieć 4-6 znaków")]
+        public string? RecoveryPin { get; set; }
 
         [Required]
         public string Password { get; set; }

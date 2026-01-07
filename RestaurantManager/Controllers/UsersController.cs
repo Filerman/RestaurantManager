@@ -221,5 +221,42 @@ namespace RestaurantManager.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+
+
+        // GET: Users/AdminResetPassword/5
+        [Filters.RoleAuthorize("Admin")]
+        public async Task<IActionResult> AdminResetPassword(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            return View(user);
+        }
+
+        // POST: Users/AdminResetPassword/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Filters.RoleAuthorize("Admin")]
+        public async Task<IActionResult> AdminResetPassword(int id, string newPassword)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            if (string.IsNullOrEmpty(newPassword) || newPassword.Length < 4)
+            {
+                ModelState.AddModelError("", "Hasło musi mieć co najmniej 4 znaki.");
+                return View(user);
+            }
+
+            // Nadpisujemy hasło (bez sprawdzania starego!)
+            user.Password = newPassword;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Hasło dla użytkownika {user.Username} zostało zresetowane.";
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

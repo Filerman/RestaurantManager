@@ -52,8 +52,8 @@ namespace RestaurantManager.Controllers
         public IActionResult Register() => View();
 
         [HttpPost, ValidateAntiForgeryToken]
-        // Dodano parametr 'phone'
-        public async Task<IActionResult> Register(string username, string email, string password, string phone)
+        // Dodano parametr 'recoveryPin'
+        public async Task<IActionResult> Register(string username, string email, string password, string phone, string recoveryPin)
         {
             if (await _context.Users.AnyAsync(u => u.Username == username || u.Email == email))
             {
@@ -66,7 +66,8 @@ namespace RestaurantManager.Controllers
                 Username = username,
                 Email = email,
                 Password = password,
-                PhoneNumber = phone, // <-- ZAPIS TELEFONU
+                PhoneNumber = phone,
+                RecoveryPin = recoveryPin, // <-- ZAPISUJEMY PIN
                 Role = "Guest",
                 ProfilePicturePath = DefaultAvatar
             };
@@ -75,6 +76,89 @@ namespace RestaurantManager.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Rejestracja udana! Możesz się teraz zalogować.";
+            return RedirectToAction("Login");
+        }
+
+        // --- ODZYSKIWANIE HASŁA (PIN) ---
+
+        // KROK 1: Formularz podania Loginu i PINu
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(string login, string recoveryPin)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => (u.Username == login || u.Email == login));
+
+            if (user == null)
+            {
+                // Bezpieczeństwo: nie zdradzamy, że użytkownik nie istnieje
+                TempData["Error"] = "Nieprawidłowe dane lub PIN.";
+                return View();
+            }
+
+            if (user.RecoveryPin != recoveryPin)
+            {
+                TempData["Error"] = "Nieprawidłowe dane lub PIN.";
+                return View();
+            }
+
+            // SUKCES: PIN się zgadza.
+            // Zapisujemy ID użytkownika w sesji tymczasowej, żeby wiedzieć komu zmienić hasło w kroku 2.
+            HttpContext.Session.SetInt32("ResetUserId", user.Id);
+
+            return RedirectToAction("ResetPasswordByPin");
+        }
+
+        // KROK 2: Ustawienie nowego hasła
+        [HttpGet]
+        public IActionResult ResetPasswordByPin()
+        {
+            // Sprawdzamy czy użytkownik przeszedł pomyślnie krok 1
+            if (HttpContext.Session.GetInt32("ResetUserId") == null)
+            {
+                return RedirectToAction("Login");
+            }
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPasswordByPin(string newPassword, string confirmPassword)
+        {
+            var resetUserId = HttpContext.Session.GetInt32("ResetUserId");
+            if (resetUserId == null) return RedirectToAction("Login");
+
+            if (newPassword != confirmPassword)
+            {
+                ModelState.AddModelError("", "Hasła nie są identyczne.");
+                return View();
+            }
+
+            if (string.IsNullOrEmpty(newPassword) || newPassword.Length < 4)
+            {
+                ModelState.AddModelError("", "Hasło musi mieć min. 4 znaki.");
+                return View();
+            }
+
+            var user = await _context.Users.FindAsync(resetUserId);
+            if (user != null)
+            {
+                user.Password = newPassword;
+                await _context.SaveChangesAsync();
+
+                // Czyścimy sesję resetowania
+                HttpContext.Session.Remove("ResetUserId");
+
+                TempData["Success"] = "Hasło zostało zmienione. Zaloguj się nowym hasłem.";
+                return RedirectToAction("Login");
+            }
+
             return RedirectToAction("Login");
         }
 

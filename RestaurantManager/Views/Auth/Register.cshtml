@@ -29,6 +29,13 @@
                 <input type="text" name="phone" class="form-control" placeholder="Ułatwi kontakt przy zamówieniach" />
             </div>
 
+            @* NOWE POLE: PIN RATUNKOWY *@
+            <div class="mb-3">
+                <label for="recoveryPin" class="form-label fw-bold">PIN Ratunkowy (do odzyskiwania hasła)</label>
+                <input type="text" name="recoveryPin" class="form-control" placeholder="4-6 cyfr, np. 1234" pattern="\d{4,6}" title="4 do 6 cyfr" required />
+                <div class="form-text">Zapamiętaj ten PIN. Pozwoli Ci zresetować hasło bez kontaktu z Adminem.</div>
+            </div>
+
             <div class="mb-3">
                 <label for="password" class="form-label fw-bold">Hasło</label>
                 <input type="password" name="password" class="form-control" required />
