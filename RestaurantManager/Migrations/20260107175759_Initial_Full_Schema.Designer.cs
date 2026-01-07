@@ -12,8 +12,8 @@ using RestaurantManager.Data;
 namespace RestaurantManager.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251209205544_telefondlakazdego")]
-    partial class telefondlakazdego
+    [Migration("20260107175759_Initial_Full_Schema")]
+    partial class Initial_Full_Schema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -120,6 +120,9 @@ namespace RestaurantManager.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("AvailabilityDeadlineDays")
+                        .HasColumnType("int");
+
                     b.Property<string>("ContactEmail")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -130,13 +133,18 @@ namespace RestaurantManager.Migrations
                     b.Property<string>("GoogleMapsLink")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("LogoPath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RestaurantName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ShowLogoInHeader")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -224,6 +232,9 @@ namespace RestaurantManager.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsInCarousel")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.ToTable("GalleryImages");
@@ -279,6 +290,9 @@ namespace RestaurantManager.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImagePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsAvailable")
@@ -349,6 +363,9 @@ namespace RestaurantManager.Migrations
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("ScheduledDate")
                         .HasColumnType("datetime2");
@@ -559,6 +576,9 @@ namespace RestaurantManager.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("HasUnreadResponse")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ManagerResponse")
                         .HasColumnType("nvarchar(max)");
 
@@ -656,6 +676,10 @@ namespace RestaurantManager.Migrations
 
                     b.Property<string>("ProfilePicturePath")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RecoveryPin")
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
 
                     b.Property<string>("Role")
                         .IsRequired()
