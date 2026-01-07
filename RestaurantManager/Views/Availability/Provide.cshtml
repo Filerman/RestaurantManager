@@ -2,115 +2,134 @@
 @using System.Globalization
 @{
     var polishCulture = new CultureInfo("pl-PL");
-    ViewData["Title"] = "Zgłoś Dostępność Miesięczną";
+    var currentDate = new DateTime(Model.Year, Model.Month, 1);
+    string monthName = currentDate.ToString("MMMM yyyy", polishCulture);
+    ViewData["Title"] = "Edytor Dostępności";
 }
 
-<h2>@ViewData["Title"] dla @(new DateTime(Model.Year, Model.Month, 1).ToString("MMMM yyyy", polishCulture))</h2>
+<div class="container mt-4">
+    <form method="post" class="mb-0">
+        @Html.AntiForgeryToken()
 
-<form method="post" class="mb-3">
-    @Html.AntiForgeryToken()
-    <div class="row align-items-center">
-        @* Użyj align-items-center dla lepszego wyrównania *@
-        <div class="col-auto">
-            <button type="submit" name="direction" value="prev" class="btn btn-secondary @(new DateTime(Model.Year, Model.Month, 1) <= DateTime.Today.AddDays(-DateTime.Today.Day + 1) ? "disabled" : "")">&laquo; Poprzedni</button> @* Wyłącz, jeśli to bieżący miesiąc *@
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm">
+            <h2 class="mb-2 mb-md-0 text-primary fw-bold">
+                <i class="bi bi-calendar-range me-2"></i> @ViewData["Title"]
+            </h2>
+
+            <div class="d-flex align-items-center">
+                <a asp-action="Index" class="btn btn-outline-primary me-3">
+                    <i class="bi bi-arrow-left"></i> Wróć
+                </a>
+
+                <div class="btn-group" role="group">
+                    <button type="submit" name="direction" value="prev"
+                            class="btn btn-outline-secondary @(currentDate <= DateTime.Today.AddDays(-DateTime.Today.Day + 1) ? "disabled" : "")">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+
+                    <button type="button" class="btn btn-secondary active px-4" style="min-width: 180px;" disabled>
+                        <strong>@monthName</strong>
+                    </button>
+
+                    <button type="submit" name="direction" value="next" class="btn btn-outline-secondary">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="col-auto">
-            <button type="submit" name="direction" value="next" class="btn btn-secondary">Następny &raquo;</button>
-        </div>
-        <div class="col-auto ms-auto">
-            <a asp-action="Index" class="btn btn-outline-secondary">Wróć do listy</a>
+    </form>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <form method="post" asp-action="SubmitAvailability">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Year" />
+                <input type="hidden" asp-for="Month" />
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success m-3">@TempData["SuccessMessage"]</div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger m-3">@TempData["ErrorMessage"]</div>
+                }
+                <div asp-validation-summary="All" class="text-danger m-3"></div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 20%;" class="ps-4">Dzień</th>
+                                <th style="width: 10%;" class="text-center">Dostępny?</th>
+                                <th style="width: 35%;">Od</th>
+                                <th style="width: 35%;">Do</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Days.Count; i++)
+                            {
+                                var day = Model.Days[i];
+                                bool isPast = day.Date < DateTime.Today;
+                                var rowClass = isPast ? "table-light text-muted" : "";
+
+                                <input type="hidden" asp-for="Days[i].Date" />
+                                <input type="hidden" asp-for="Days[i].IsInCurrentMonth" />
+                                @if (day.Availability != null)
+                                {
+                                    <input type="hidden" asp-for="Days[i].Availability!.Id" />
+                                    <input type="hidden" asp-for="Days[i].Availability!.UserId" />
+                                    <input type="hidden" asp-for="Days[i].Availability!.Date" />
+                                }
+
+                                <tr class="@rowClass">
+                                    <td class="ps-4">
+                                        <div class="fw-bold">@day.Date.ToString("dd.MM", polishCulture)</div>
+                                        <small>@day.Date.ToString("dddd", polishCulture)</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input type="checkbox" asp-for="Days[i].IsSelected" class="form-check-input" disabled="@isPast" style="cursor: pointer; transform: scale(1.2);" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (day.Availability != null)
+                                        {
+                                            <input type="time" asp-for="Days[i].Availability!.StartTime" class="form-control" disabled="@isPast" />
+                                        }
+                                        else
+                                        {
+
+                                            <span>-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (day.Availability != null)
+                                        {
+                                            <input type="time" asp-for="Days[i].Availability!.EndTime" class="form-control" disabled="@isPast" />
+                                        }
+                                        else
+                                        {
+
+                                            <span>-</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-footer bg-light p-3 text-end">
+                    <a asp-action="Index" class="btn btn-outline-secondary me-2">Anuluj</a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-save me-1"></i> Zapisz zmiany
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-</form>
-
-<form method="post" asp-action="SubmitAvailability">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="Year" />
-    <input type="hidden" asp-for="Month" />
-
-    @* Pokazuje ogólne błędy walidacji (np. z IValidatableObject) *@
-    <div asp-validation-summary="All" class="text-danger mb-2"></div>
-
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
-        </div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
-        </div>
-    }
-
-    <table class="table table-bordered table-hover">
-        @* Dodano table-hover dla lepszego UX *@
-        <thead class="table-light">
-            <tr>
-                <th style="width: 20%;">Dzień</th>
-                <th style="width: 10%;" class="text-center">Zgłoś</th>
-                <th style="width: 35%;">Godzina Rozpoczęcia</th>
-                <th style="width: 35%;">Godzina Zakończenia</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (int i = 0; i < Model.Days.Count; i++)
-            {
-                var day = Model.Days[i];
-                bool isPast = day.Date < DateTime.Today;
-                var rowClass = isPast ? "table-secondary text-muted" : "";
-                var disabledAttribute = isPast ? "disabled" : null; // null zamiast "" dla tag helperów
-
-                // --- Ukryte pola ---
-                <input type="hidden" asp-for="Days[i].Date" />
-                <input type="hidden" asp-for="Days[i].IsInCurrentMonth" />
-                @if (day.Availability != null) // Tylko jeśli obiekt istnieje
-                {
-                    <input type="hidden" asp-for="Days[i].Availability!.Id" />
-                    <input type="hidden" asp-for="Days[i].Availability!.UserId" />
-                    <input type="hidden" asp-for="Days[i].Availability!.Date" />
-                }
-                // -------------------
-
-                <tr class="@rowClass">
-                    <td>@day.Date.ToString("ddd, dd MMM", polishCulture)</td>
-                    <td class="text-center">
-                        <input type="checkbox" asp-for="Days[i].IsSelected" class="form-check-input" disabled="@isPast" />
-                    </td>
-                    <td>
-                        @if (day.Availability != null) // Renderuj tylko jeśli jest obiekt (czyli nie jest to przeszły dzień bez wpisu)
-                        {
-                            <input type="time" asp-for="Days[i].Availability!.StartTime" class="form-control" disabled="@isPast" />
-                            <span asp-validation-for="Days[i].Availability!.StartTime" class="text-danger"></span>
-                        }
-                        else
-                        {
-                            <span>-</span>
-                            // Dla przeszłych dni bez wpisu
-                        }
-                    </td>
-                    <td>
-                        @if (day.Availability != null)
-                        {
-                            <input type="time" asp-for="Days[i].Availability!.EndTime" class="form-control" disabled="@isPast" />
-                            <span asp-validation-for="Days[i].Availability!.EndTime" class="text-danger"></span>
-                        }
-                        else
-                        {
-                            <span>-</span>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    <button type="submit" class="btn btn-primary">Zapisz Dostępność</button>
-    <a asp-action="Index" class="btn btn-secondary">Anuluj</a>
-</form>
+</div>
 
 @section Scripts {
     @{
