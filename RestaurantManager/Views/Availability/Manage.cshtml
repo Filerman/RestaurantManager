@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Zarządzanie Dyspozycyjnością";
     var nextMonthName = new DateTime(Model.NextMonthYear, Model.NextMonth, 1).ToString("MMMM yyyy", new System.Globalization.CultureInfo("pl-PL"));
+    int currentDeadline = ViewBag.DeadlineDays ?? 7;
 }
 
 <div class="container mt-4">
@@ -10,11 +11,32 @@
         <h2><i class="bi bi-calendar-check text-primary"></i> Dyspozycyjność na: @nextMonthName</h2>
     </div>
 
+    <div class="card shadow-sm mb-4 border-light bg-light">
+        <div class="card-body">
+            <h5 class="card-title text-muted mb-3"><i class="bi bi-gear-fill"></i> Konfiguracja</h5>
+            <form asp-action="UpdateDeadline" method="post" class="row row-cols-lg-auto g-3 align-items-center">
+                <div class="col-12">
+                    <label class="form-label mb-0" for="deadlineDays">
+                        Wymagane wyprzedzenie zgłoszeń (dni przed końcem miesiąca):
+                    </label>
+                </div>
+                <div class="col-12">
+                    <input type="number" class="form-control" id="deadlineDays" name="deadlineDays"
+                           value="@currentDeadline" min="1" max="31" style="width: 80px;" required />
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary btn-sm">Zapisz ustawienie</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @if (Model.IsUrgent)
     {
         <div class="alert alert-warning border-start border-warning border-4">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            <strong>Uwaga!</strong> Do końca miesiąca zostało mniej niż tydzień. Pracownicy oznaczeni na czerwono nie uzupełnili jeszcze dyspozycyjności.
+            <strong>Uwaga!</strong> Do końca miesiąca zostało mniej niż @currentDeadline dni.
+            Pracownicy oznaczeni na czerwono nie uzupełnili jeszcze dyspozycyjności.
         </div>
     }
 
@@ -57,22 +79,11 @@
                                 }
                             </td>
                             <td class="text-end">
-                                @if (!emp.HasProvidedAvailability)
-                                {
-                                    <form asp-action="SendReminder" method="post" class="d-inline">
-                                        <input type="hidden" name="userId" value="@emp.UserId" />
-                                        <button type="submit" class="btn btn-sm btn-outline-dark">
-                                            <i class="bi bi-bell"></i> Przypomnij
-                                        </button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    @* POPRAWKA: asp-route-targetUserId, aby pasowało do kontrolera *@
-                                    <a asp-action="Index" asp-route-targetUserId="@emp.UserId" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i> Podgląd
-                                    </a>
-                                }
+                                @* TERAZ PRZYCISK PODGLĄDU JEST DOSTĘPNY ZAWSZE *@
+                                <a asp-action="Index" asp-route-targetUserId="@emp.UserId"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> Podgląd
+                                </a>
                             </td>
                         </tr>
                     }

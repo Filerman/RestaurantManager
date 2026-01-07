@@ -53,6 +53,12 @@ namespace RestaurantManager.Controllers
                 }
             }
 
+            // *** Pobieramy ustawienie terminu z ContactInfo (singleton settings) ***
+            var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
+            int deadlineDays = contactInfo?.AvailabilityDeadlineDays ?? 7;
+            ViewBag.DeadlineDays = deadlineDays;
+            // *********************************************************************
+
             var availabilities = await _context.Availabilities
                 .Where(a => a.UserId == userIdToDisplay && a.Date >= DateTime.Today)
                 .OrderBy(a => a.Date)
@@ -389,8 +395,17 @@ namespace RestaurantManager.Controllers
             int targetMonth = targetDate.Month;
             int targetYear = targetDate.Year;
 
+            // Pobranie ustawienia terminu z ContactInfo
+            var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
+            int deadlineDays = contactInfo?.AvailabilityDeadlineDays ?? 7;
+            ViewBag.DeadlineDays = deadlineDays;
+
             int daysInCurrentMonth = DateTime.DaysInMonth(today.Year, today.Month);
-            bool isUrgent = (daysInCurrentMonth - today.Day) <= 7;
+            // Obliczamy ile dni zostało do końca miesiąca
+            int daysRemaining = daysInCurrentMonth - today.Day;
+
+            // "Pilne" jeśli zostało mniej lub tyle samo dni co w ustawieniu
+            bool isUrgent = daysRemaining <= deadlineDays;
 
             var employees = await _context.Users
                 .Where(u => u.Role == "Employee")
@@ -423,17 +438,37 @@ namespace RestaurantManager.Controllers
             return View(vm);
         }
 
-        // POST: Availability/SendReminder
+        // POST: Availability/UpdateDeadline
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Admin", "Manager")]
-        public async Task<IActionResult> SendReminder(int userId)
+        public async Task<IActionResult> UpdateDeadline(int deadlineDays)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound();
+            var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
+            if (contactInfo == null)
+            {
+                // Jeśli z jakiegoś powodu nie ma rekordu (choć DatabaseSeeder powinien go dodać), tworzymy go
+                contactInfo = new ContactInfo
+                {
+                    AddressCity = "Brak",
+                    AddressStreet = "Brak",
+                    AddressZipCode = "00-000",
+                    ContactEmail = "brak@brak.pl",
+                    PhoneNumber = "000000000"
+                };
+                _context.ContactInfos.Add(contactInfo);
+            }
 
-            string message = $"Wysłano przypomnienie do: {user.Username} ({user.Email})";
-            TempData["SuccessMessage"] = message;
+            if (deadlineDays < 1 || deadlineDays > 31)
+            {
+                TempData["ErrorMessage"] = "Termin musi wynosić od 1 do 31 dni.";
+                return RedirectToAction(nameof(Manage));
+            }
+
+            contactInfo.AvailabilityDeadlineDays = deadlineDays;
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Zaktualizowano ustawienia terminu zgłaszania dyspozycyjności.";
             return RedirectToAction(nameof(Manage));
         }
     }

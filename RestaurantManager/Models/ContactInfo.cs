@@ -42,5 +42,9 @@ namespace RestaurantManager.Models
         [Display(Name = "Średni czas realizacji (minuty)")]
         [Range(15, 240, ErrorMessage = "Czas musi wynosić od 15 do 240 minut")]
         public int EstimatedDeliveryTimeMinutes { get; set; } = 45; // Domyślnie 45 min
+
+        [Display(Name = "Termin zgłaszania (dni przed końcem miesiąca)")]
+        [Range(1, 31, ErrorMessage = "Wartość musi wynosić od 1 do 31 dni.")]
+        public int AvailabilityDeadlineDays { get; set; } = 7; // Domyślnie 7 dni przed końcem miesiąca
     }
 }

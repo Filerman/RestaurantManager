@@ -4,6 +4,7 @@
     // Pobieramy flagę z ViewBag
     bool isViewingOthers = ViewBag.IsViewingOthers ?? false;
     ViewData["Title"] = ViewBag.TitleHeader ?? "Moja Dostępność";
+    int deadlineDays = ViewBag.DeadlineDays ?? 7;
 }
 
 <div class="container mt-4">
@@ -23,6 +24,14 @@
             </a>
         }
     </div>
+
+    @if (!isViewingOthers)
+    {
+        <div class="alert alert-info border-start border-info border-4">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Dyspozycyjność należy uzupełnić najpóźniej <strong>@deadlineDays dni</strong> przed rozpoczęciem miesiąca.
+        </div>
+    }
 
     @if (TempData["SuccessMessage"] != null)
     {
@@ -144,7 +153,7 @@
                     {
                         <div class="p-4 text-center text-muted">
                             <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
-                            Brak zgłoszonej dyspozycyjności na nadchodzące dni.
+                            @(isViewingOthers ? "Ten pracownik nie zgłosił jeszcze dyspozycyjności." : "Brak zgłoszonej dyspozycyjności na nadchodzące dni.")
                         </div>
                     }
                 </div>
