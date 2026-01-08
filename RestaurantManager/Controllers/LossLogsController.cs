@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering; // Do SelectListItem
 using Microsoft.EntityFrameworkCore;
 using RestaurantManager.Data;
 using RestaurantManager.Models;
 using RestaurantManager.Filters;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http; // Dla HttpContext.Session
-using System; // Dla DateTime
+using Microsoft.AspNetCore.Http;
+using System;
 
 namespace RestaurantManager.Controllers
 {
@@ -19,28 +20,50 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // [GET] /LossLogs/Index - Rejestr strat (Admin/Manager)
+        // [GET] /LossLogs/Index - Rejestr strat z filtrowaniem
         [HttpGet]
         [RoleAuthorize("Manager", "Admin")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(DateTime? startDate, DateTime? endDate)
         {
-            var lossLogs = await _context.LossLogs
+            var query = _context.LossLogs
                 .Include(l => l.ReportedByUser)
-                .OrderByDescending(l => l.DateReported)
-                .ToListAsync();
+                .Include(l => l.MenuItem) // Dołączamy info o menu
+                .AsQueryable();
+
+            // Domyślne filtrowanie (np. bieżący miesiąc, jeśli brak dat)
+            if (!startDate.HasValue) startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            if (!endDate.HasValue) endDate = DateTime.Now.Date.AddDays(1).AddSeconds(-1);
+
+            query = query.Where(l => l.DateReported >= startDate && l.DateReported <= endDate);
+
+            var lossLogs = await query.OrderByDescending(l => l.DateReported).ToListAsync();
+
+            // Przekazujemy daty do widoku, żeby zachować stan filtrów
+            ViewBag.StartDate = startDate.Value.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endDate.Value.ToString("yyyy-MM-dd");
 
             return View(lossLogs);
         }
 
-        // [GET] /LossLogs/Report - Formularz zgłaszania straty (Pracownicy)
+        // [GET] /LossLogs/Report - Formularz zgłaszania straty
         [HttpGet]
         [RoleAuthorize("Employee", "Manager", "Admin")]
-        public IActionResult Report()
+        public async Task<IActionResult> Report()
         {
-            // Przekazujemy nowy model do widoku, aby bindowanie asp-for działało poprawnie
+            // Pobieramy listę dań do selecta
+            ViewBag.MenuItems = await _context.MenuItems
+                .Where(m => m.IsAvailable)
+                .Select(m => new SelectListItem
+                {
+                    Value = m.Id.ToString(),
+                    Text = $"{m.Name} ({m.Price:F2} zł)"
+                })
+                .ToListAsync();
+
             var model = new LossLog
             {
-                DateReported = DateTime.Now
+                DateReported = DateTime.Now,
+                Quantity = 1 // Domyślna ilość
             };
             return View(model);
         }
@@ -49,7 +72,7 @@ namespace RestaurantManager.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Employee", "Manager", "Admin")]
-        public async Task<IActionResult> Report([Bind("Description,LossType,EstimatedValue")] LossLog lossLog)
+        public async Task<IActionResult> Report(LossLog lossLog, string itemSource)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue)
@@ -57,34 +80,72 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            // *** POPRAWKA ***
-            // Ustawiamy pola, które nie pochodzą z formularza, PRZED sprawdzeniem ModelState
+            // 1. Walidacja "Menu" vs "Własne" (itemSource pochodzi z radio buttonów w widoku)
+            if (itemSource == "menu")
+            {
+                if (lossLog.MenuItemId == null)
+                    ModelState.AddModelError("MenuItemId", "Wybierz pozycję z menu.");
+
+                lossLog.CustomItemName = null;
+                lossLog.CustomItemCost = null;
+            }
+            else // itemSource == "custom"
+            {
+                if (string.IsNullOrWhiteSpace(lossLog.CustomItemName))
+                    ModelState.AddModelError("CustomItemName", "Wpisz nazwę przedmiotu.");
+                if (lossLog.CustomItemCost == null)
+                    ModelState.AddModelError("CustomItemCost", "Podaj koszt jednostkowy.");
+
+                lossLog.MenuItemId = null;
+            }
+
+            // 2. Uzupełnianie danych systemowych
             lossLog.ReportedByUserId = userId.Value;
             lossLog.DateReported = DateTime.Now;
 
-            // Błąd "The Zgłoszony przez field is required" jest mylący.
-            // Walidator próbuje sprawdzić właściwość nawigacyjną 'ReportedByUser' (która jest null).
-            // Mówimy walidatorowi, aby zignorował ten błąd, ponieważ my i tak ręcznie ustawiamy ID.
+            // Ignorujemy walidację nawigacji, bo ustawiamy ID ręcznie
             ModelState.Remove(nameof(lossLog.ReportedByUser));
-            // *** KONIEC POPRAWKI ***
+            ModelState.Remove(nameof(lossLog.MenuItem));
+            // Ignorujemy EstimatedValue, bo zaraz ją sami policzymy
+            ModelState.Remove(nameof(lossLog.EstimatedValue));
 
             if (ModelState.IsValid)
             {
+                // 3. Obliczenie wartości straty (EstimatedValue)
+                if (lossLog.MenuItemId != null)
+                {
+                    var menuItem = await _context.MenuItems.FindAsync(lossLog.MenuItemId);
+                    if (menuItem != null)
+                    {
+                        lossLog.EstimatedValue = menuItem.Price * lossLog.Quantity;
+                    }
+                }
+                else
+                {
+                    lossLog.EstimatedValue = (lossLog.CustomItemCost ?? 0) * lossLog.Quantity;
+                }
+
                 _context.LossLogs.Add(lossLog);
                 await _context.SaveChangesAsync();
 
                 TempData["SuccessMessage"] = "Strata została pomyślnie zarejestrowana.";
-                // Wracamy do formularza, aby można było zgłosić kolejną stratę
                 return RedirectToAction(nameof(Report));
             }
 
-            // Jeśli model nadal nie jest poprawny (np. brak opisu), wróć do widoku z błędami
-            // Błąd "Zgłoszony przez" już się nie pojawi, ale błędy "Opis" lub "Wartość" tak.
+            // W razie błędu, ponownie ładujemy listę dań
+            ViewBag.MenuItems = await _context.MenuItems
+                .Where(m => m.IsAvailable)
+                .Select(m => new SelectListItem
+                {
+                    Value = m.Id.ToString(),
+                    Text = $"{m.Name} ({m.Price:F2} zł)"
+                })
+                .ToListAsync();
+
             return View(lossLog);
         }
 
-
-        // [POST] /LossLogs/Delete - Usuwanie wpisu (Admin/Manager)
+        // [POST] /LossLogs/Delete
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Manager", "Admin")]
@@ -105,7 +166,6 @@ namespace RestaurantManager.Controllers
             }
             catch (Exception ex)
             {
-                // TODO: Logowanie błędu (ex)
                 TempData["ErrorMessage"] = "Wystąpił błąd podczas usuwania wpisu: " + ex.Message;
             }
 

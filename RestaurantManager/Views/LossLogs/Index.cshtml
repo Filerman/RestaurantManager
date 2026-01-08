@@ -5,32 +5,46 @@
     var totalLoss = Model.Sum(l => l.EstimatedValue);
 }
 
-<h1>@ViewData["Title"]</h1>
-<p>Poniżej znajduje się lista wszystkich zarejestrowanych strat w restauracji.</p>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>@ViewData["Title"]</h1>
+    <a asp-action="Report" class="btn btn-danger"><i class="bi bi-plus-lg"></i> Zgłoś nową stratę</a>
+</div>
 
-<div class="alert alert-warning" role="alert">
-    <strong>Całkowita suma strat: @totalLoss.ToString("C", new System.Globalization.CultureInfo("pl-PL"))</strong>
+<div class="card mb-4 bg-light">
+    <div class="card-body py-2">
+        <form asp-action="Index" method="get" class="row g-2 align-items-end">
+            <div class="col-auto">
+                <label class="form-label small fw-bold mb-0">Od daty:</label>
+                <input type="date" name="startDate" value="@ViewBag.StartDate" class="form-control form-control-sm" />
+            </div>
+            <div class="col-auto">
+                <label class="form-label small fw-bold mb-0">Do daty:</label>
+                <input type="date" name="endDate" value="@ViewBag.EndDate" class="form-control form-control-sm" />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-sm">Filtruj</button>
+                <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="alert alert-warning d-flex justify-content-between align-items-center" role="alert">
+    <span>Suma strat w wybranym okresie:</span>
+    <strong class="fs-5">@totalLoss.ToString("C2")</strong>
 </div>
 
 <div class="table-responsive">
-    <table class="table table-striped table-hover">
+    <table class="table table-striped table-hover align-middle">
         <thead class="table-dark">
             <tr>
-                <th>
-                    @Html.DisplayNameFor(model => model.DateReported)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Description)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.LossType)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.EstimatedValue)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.ReportedByUser)
-                </th>
+                <th>Data</th>
+                <th>Przedmiot</th>
+                <th class="text-center">Ilość</th>
+                <th>Kategoria</th>
+                <th>Opis</th>
+                <th class="text-end">Wartość</th>
+                <th>Zgłosił</th>
                 <th></th>
             </tr>
         </thead>
@@ -38,34 +52,39 @@
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="6" class="text-center">Nie zarejestrowano jeszcze żadnych strat.</td>
+                    <td colspan="8" class="text-center py-4 text-muted">Brak zarejestrowanych strat w tym okresie.</td>
                 </tr>
             }
 
             @foreach (var item in Model)
             {
+                // Ustalanie nazwy do wyświetlenia
+                string itemName = item.MenuItem != null ? item.MenuItem.Name : item.CustomItemName;
+                string itemIcon = item.MenuItem != null ? "🍔" : "🍽️";
+
                 <tr>
+                    <td>@item.DateReported.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td class="fw-bold text-primary">@itemIcon @itemName</td>
+                    <td class="text-center fw-bold">@item.Quantity</td>
+                    <td><span class="badge bg-secondary">@item.LossType</span></td>
+                    <td><small>@item.Description</small></td>
+                    <td class="text-end text-danger fw-bold">@item.EstimatedValue.ToString("C2")</td>
                     <td>
-                        @Html.DisplayFor(modelItem => item.DateReported)
+                        @if (item.ReportedByUser != null)
+                        {
+                            @item.ReportedByUser.Username
+                        }
+                        else
+                        {
+                            <span class="text-muted">ID: @item.ReportedByUserId</span>
+                        }
                     </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Description)
-                    </td>
-                    <td>
-                        <span class="badge bg-secondary">@Html.DisplayFor(modelItem => item.LossType)</span>
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.EstimatedValue)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.ReportedByUser.Username)
-                    </td>
-                    <td>
-                        <form asp-action="Delete" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć ten wpis straty?');">
+                    <td class="text-end">
+                        <form asp-action="Delete" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć ten wpis?');" class="d-inline">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@item.Id" />
-                            <button type="submit" class="btn btn-danger btn-sm" title="Usuń wpis">
-                                Usuń
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Usuń">
+                                <i class="bi bi-trash"></i> Usuń
                             </button>
                         </form>
                     </td>

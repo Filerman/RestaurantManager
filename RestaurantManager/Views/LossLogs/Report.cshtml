@@ -4,54 +4,109 @@
     ViewData["Title"] = "Zgłoś Stratę";
 }
 
-<h1>@ViewData["Title"]</h1>
-<p>Użyj tego formularza, aby zarejestrować straty (np. rozbite naczynia, przeterminowane produkty).</p>
-<hr />
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Zgłoś Stratę</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Wypełnij formularz, aby zarejestrować straty (jedzenie lub sprzęt).</p>
 
-<div classrow="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form asp-action="Report" method="post">
-                    @Html.AntiForgeryToken()
+                    <form asp-action="Report" method="post" id="reportForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="All" class="alert alert-danger" role="alert" data-valmsg-summary="true"></div>
 
-                    <div asp-validation-summary="All" class="alert alert-danger" role="alert" data-valmsg-summary="true"></div>
+                        <div class="mb-4 text-center">
+                            <label class="form-label d-block fw-bold">Co zostało utracone?</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="itemSource" id="sourceMenu" value="menu" checked onchange="toggleSource()">
+                                <label class="btn btn-outline-secondary" for="sourceMenu">🍔 Pozycja z Menu</label>
 
-                    <div class="mb-3">
-                        <label asp-for="Description" class="form-label"></label>
-                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                        <span asp-validation-for="Description" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="LossType" class="form-label"></label>
-                        <select asp-for="LossType" class="form-select">
-                            <option value="">-- Wybierz typ --</option>
-                            <option value="Uszkodzenie">Uszkodzenie (np. rozbity talerz)</option>
-                            <option value="Zepsucie">Zepsucie (np. przeterminowane mleko)</option>
-                            <option value="Odpady">Odpady (np. resztki kuchenne)</option>
-                            <option value="Inne">Inne</option>
-                        </select>
-                        <span asp-validation-for="LossType" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="EstimatedValue" class="form-label"></label>
-                        <div class="input-group">
-                            <input asp-for="EstimatedValue" type="number" step="0.01" class="form-control" />
-                            <span class="input-group-text">PLN</span>
+                                <input type="radio" class="btn-check" name="itemSource" id="sourceCustom" value="custom" onchange="toggleSource()">
+                                <label class="btn btn-outline-secondary" for="sourceCustom">🍽️ Inne (Sprzęt/Towar)</label>
+                            </div>
                         </div>
-                        <span asp-validation-for="EstimatedValue" class="text-danger"></span>
-                    </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">Zarejestruj Stratę</button>
-                    </div>
-                </form>
+                        <div id="menuSection">
+                            <div class="mb-3">
+                                <label asp-for="MenuItemId" class="form-label fw-bold">Wybierz danie</label>
+                                <select asp-for="MenuItemId" class="form-select" asp-items="ViewBag.MenuItems">
+                                    <option value="" selected disabled>-- Wybierz z listy --</option>
+                                </select>
+                                <span asp-validation-for="MenuItemId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div id="customSection" style="display:none;">
+                            <div class="mb-3">
+                                <label asp-for="CustomItemName" class="form-label fw-bold">Nazwa przedmiotu</label>
+                                <input asp-for="CustomItemName" class="form-control" placeholder="np. Talerz głęboki, Szklanka" />
+                                <span asp-validation-for="CustomItemName" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="CustomItemCost" class="form-label fw-bold">Koszt jednostkowy (PLN)</label>
+                                <input asp-for="CustomItemCost" class="form-control" type="number" step="0.01" />
+                                <div class="form-text">Jaki jest koszt zakupu jednej sztuki dla restauracji?</div>
+                                <span asp-validation-for="CustomItemCost" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Quantity" class="form-label fw-bold"></label>
+                                <input asp-for="Quantity" class="form-control text-center fw-bold" type="number" min="1" />
+                                <span asp-validation-for="Quantity" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="LossType" class="form-label fw-bold">Kategoria</label>
+                                <select asp-for="LossType" class="form-select">
+                                    <option value="">-- Wybierz typ --</option>
+                                    <option value="Uszkodzenie">Uszkodzenie (np. stłuczka)</option>
+                                    <option value="Zepsucie">Zepsucie (np. przeterminowane)</option>
+                                    <option value="Odpady">Odpady produkcyjne/Błąd kuchni</option>
+                                    <option value="Reklamacja">Zwrot od klienta</option>
+                                    <option value="Inne">Inne</option>
+                                </select>
+                                <span asp-validation-for="LossType" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Szczegóły / Powód</label>
+                            <textarea asp-for="Description" class="form-control" rows="2" placeholder="Opisz dokładnie sytuację..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-danger btn-lg">Zarejestruj Stratę</button>
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-link text-muted mt-2">Anuluj</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    function toggleSource() {
+        var isMenu = document.getElementById('sourceMenu').checked;
+        var menuSection = document.getElementById('menuSection');
+        var customSection = document.getElementById('customSection');
+
+        if (isMenu) {
+            menuSection.style.display = 'block';
+            customSection.style.display = 'none';
+        } else {
+            menuSection.style.display = 'none';
+            customSection.style.display = 'block';
+        }
+    }
+</script>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
