@@ -30,6 +30,8 @@ namespace RestaurantManager.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<DeliveryZone> DeliveryZones { get; set; }
+        public DbSet<HomePageSetting> HomePageSettings { get; set; }
+        public DbSet<CarouselImage> CarouselImages { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

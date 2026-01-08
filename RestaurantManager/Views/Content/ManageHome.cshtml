@@ -1,0 +1,190 @@
+﻿@model RestaurantManager.ViewModels.HomeContentViewModel
+@{
+    ViewData["Title"] = "Edycja Strony Głównej";
+    double aspectRatio = 4.0 / 3.0;
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+
+<div class="container mt-4 mb-5">
+    <div class="card shadow border-0">
+        <div class="card-header bg-white py-3">
+            <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-pencil-square me-2"></i>Edycja Treści Strony Głównej</h4>
+        </div>
+        <div class="card-body p-4">
+
+            <form asp-action="ManageHome" enctype="multipart/form-data" method="post" id="mainForm">
+                <input type="hidden" asp-for="Id" />
+
+                <h5 class="text-muted mb-3 text-uppercase small ls-1 fw-bold">Teksty powitalne</h5>
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="HeroTitle" class="form-label fw-bold"></label>
+                        <input asp-for="HeroTitle" class="form-control form-control-lg" placeholder="Np. Witamy w naszej restauracji" />
+                        <span asp-validation-for="HeroTitle" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="HeroSubtitle" class="form-label fw-bold"></label>
+                        <textarea asp-for="HeroSubtitle" class="form-control form-control-lg" rows="2" placeholder="Krótki opis zachęcający klientów"></textarea>
+                        <span asp-validation-for="HeroSubtitle" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <h5 class="text-muted mb-3 text-uppercase small ls-1 fw-bold">Karuzela Zdjęć</h5>
+                <div class="alert alert-info d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                    <div>
+                        <strong>Wskazówka:</strong> Po wybraniu zdjęcia otworzy się okno kadrowania.
+                        Wymuszamy proporcje <strong>4:3</strong>, aby wszystkie zdjęcia na stronie głównej wyglądały spójnie.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="NewImages" class="form-label fw-bold">Dodaj nowe zdjęcie</label>
+                    <input asp-for="NewImages" type="file" class="form-control" accept="image/*" id="imageInput" />
+                    <div class="form-text" id="uploadHelp">Wybierz plik graficzny (JPG, PNG).</div>
+                </div>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg py-3 fw-bold shadow-sm" id="submitBtn">
+                        <i class="bi bi-save me-2"></i>Zapisz zmiany (Teksty i nowe zdjęcia)
+                    </button>
+                </div>
+            </form>
+
+            @if (Model.ExistingImages != null && Model.ExistingImages.Any())
+            {
+                <hr class="my-5" />
+                <h5 class="fw-bold mb-3">Zarządzaj istniejącymi zdjęciami:</h5>
+                <div class="row g-3">
+                    @foreach (var img in Model.ExistingImages)
+                    {
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <div class="card h-100 border shadow-sm position-relative group-hover-btn">
+                                <div class="ratio ratio-4x3">
+                                    <img src="@img.ImagePath" class="card-img-top object-fit-cover rounded-top" alt="Zdjęcie z karuzeli">
+                                </div>
+                                <div class="card-body p-2 text-center bg-light border-top">
+                                    <form asp-action="DeleteImage" method="post">
+                                        <input type="hidden" name="id" value="@img.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Na pewno usunąć to zdjęcie z karuzeli?');">
+                                            <i class="bi bi-trash"></i> Usuń
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-secondary mt-5"><i class="bi bi-images me-2"></i> Brak aktywnych zdjęć w karuzeli.</div>
+            }
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="cropModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="cropModalLabel"><i class="bi bi-crop me-2"></i>Wykadruj zdjęcie (Proporcje 4:3)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="resetInput()"></button>
+            </div>
+            <div class="modal-body p-0 bg-dark">
+                <div class="img-container" style="max-height: 70vh;">
+                    <img id="imageToCrop" src="" alt="Picture to crop" style="display: block; max-width: 100%;">
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" onclick="resetInput()">Anuluj</button>
+                <button type="button" class="btn btn-primary fw-bold px-4" id="cropAndSaveBtn">
+                    <i class="bi bi-check-lg me-2"></i>Zatwierdź kadr
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+    <script>
+        let cropper;
+        const imageInput = document.getElementById('imageInput');
+        const imageToCrop = document.getElementById('imageToCrop');
+        const cropModalElement = document.getElementById('cropModal');
+        const cropModal = new bootstrap.Modal(cropModalElement);
+        const cropAndSaveBtn = document.getElementById('cropAndSaveBtn');
+        const uploadHelp = document.getElementById('uploadHelp');
+
+        function resetInput() {
+            imageInput.value = '';
+            uploadHelp.textContent = "Wybierz plik graficzny (JPG, PNG).";
+            uploadHelp.classList.remove('text-success', 'fw-bold');
+        }
+
+        imageInput.addEventListener('change', function (e) {
+            const files = e.target.files;
+            if (files && files.length > 0 && files[0].type.startsWith('image/')) {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    imageToCrop.src = event.target.result;
+                    cropModal.show();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        cropModalElement.addEventListener('shown.bs.modal', function () {
+            if (cropper) {
+                cropper.destroy();
+            }
+            cropper = new Cropper(imageToCrop, {
+                aspectRatio: @(aspectRatio.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.9,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: false,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+            });
+        });
+
+        cropAndSaveBtn.addEventListener('click', function () {
+            if (!cropper) return;
+            cropper.getCroppedCanvas({
+                width: 1200,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            }).toBlob((blob) => {
+                const fileName = imageInput.files[0].name;
+                const croppedFile = new File([blob], fileName, { type: blob.type });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                imageInput.files = dataTransfer.files;
+
+                uploadHelp.textContent = "✅ Zdjęcie zostało wykadrowane i jest gotowe do wysłania.";
+                uploadHelp.classList.add('text-success', 'fw-bold');
+                cropModal.hide();
+            }, 'image/jpeg', 0.9);
+        });
+    </script>
+    <style>
+        .img-container img {
+            max-width: 100%;
+        }
+    </style>
+}

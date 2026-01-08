@@ -1,51 +1,88 @@
-﻿@{
+﻿@model RestaurantManager.Models.HomePageSetting
+@{
     ViewData["Title"] = "Strona Główna";
     bool isManager = User.IsInRole("Manager") || User.IsInRole("Admin");
     bool isEmployee = User.IsInRole("Employee");
 }
 
-<div class="hero-dashboard d-flex align-items-center justify-content-between">
-    <div>
+<div class="hero-dashboard d-flex align-items-stretch justify-content-between gap-4 flex-wrap flex-lg-nowrap mb-5">
+
+    <div class="d-flex flex-column justify-content-center py-4" style="flex: 1; min-width: 300px;">
         @if (isManager)
         {
-            <h1 class="hero-title">Witaj w Centrum Dowodzenia!</h1>
-            <p class="fs-5 opacity-75">Statystyki, grafiki i zarządzanie w jednym miejscu.</p>
-            <div class="mt-4">
-                <a asp-controller="Orders" asp-action="Index" class="hero-btn text-decoration-none me-2">
+            <h1 class="hero-title display-5 fw-bold mb-3">Centrum Dowodzenia</h1>
+            <p class="fs-5 opacity-75 mb-4">Statystyki, grafiki i zarządzanie w jednym miejscu.</p>
+            <div class="d-flex gap-2">
+                <a asp-controller="Orders" asp-action="Index" class="btn btn-success btn-lg rounded-pill px-4 shadow-sm">
                     <i class="bi bi-pc-display me-2"></i>Panel POS
                 </a>
-                <a asp-controller="Schedules" asp-action="Index" class="btn btn-outline-light rounded-pill px-4 fw-bold">
+                <a asp-controller="Schedules" asp-action="Index" class="btn btn-outline-dark btn-lg rounded-pill px-4">
                     Grafik
                 </a>
             </div>
         }
         else if (isEmployee)
         {
-            <h1 class="hero-title">Miłego dnia w pracy!</h1>
-            <p class="fs-5 opacity-75">Sprawdź swoje zadania i zmiany na nadchodzący tydzień.</p>
-            <div class="mt-4">
-                <a asp-controller="Orders" asp-action="Index" class="hero-btn text-decoration-none me-2">
+            <h1 class="hero-title display-5 fw-bold mb-3">Miłego dnia w pracy!</h1>
+            <p class="fs-5 opacity-75 mb-4">Sprawdź swoje zadania i zmiany na nadchodzący tydzień.</p>
+            <div class="d-flex gap-2">
+                <a asp-controller="Orders" asp-action="Index" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">
                     <i class="bi bi-plus-lg me-2"></i>Nowe Zamówienie
                 </a>
-                <a asp-controller="Schedules" asp-action="MySchedule" class="btn btn-outline-light rounded-pill px-4 fw-bold">
+                <a asp-controller="Schedules" asp-action="MySchedule" class="btn btn-outline-dark btn-lg rounded-pill px-4">
                     Mój Grafik
                 </a>
             </div>
         }
         else
         {
-            <h1 class="hero-title">Najlepsze smaki w mieście.</h1>
-            <p class="fs-5 opacity-75">Odkryj nasze menu i zarezerwuj stolik na wyjątkowy wieczór.</p>
-            <div class="mt-4">
-                <a asp-controller="Menu" asp-action="Index" class="hero-btn text-decoration-none me-2">
-                    <i class="bi bi-book-half me-2"></i>Zobacz Menu
-                </a>
-            </div>
+            <h1 class="hero-title display-4 fw-bold mb-3 ls-tight text-primary">@Model.HeroTitle</h1>
+            <p class="fs-5 text-muted mb-4 pe-lg-5">@Model.HeroSubtitle</p>
+
         }
     </div>
 
-    <div class="d-none d-lg-block">
-        <i class="bi bi-shop text-white" style="font-size: 150px; opacity: 0.2;"></i>
+    <div class="hero-image-container shadow-lg position-relative d-none d-md-block flex-grow-1" style="flex: 1; min-height: 400px; max-height: 500px;">
+        @if (Model.CarouselImages != null && Model.CarouselImages.Any())
+        {
+            <div id="heroCarousel" class="carousel slide carousel-fade h-100" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    @for (int i = 0; i < Model.CarouselImages.Count; i++)
+                    {
+                        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i + 1)"></button>
+                    }
+                </div>
+
+                <div class="carousel-inner h-100">
+                    @for (int i = 0; i < Model.CarouselImages.Count; i++)
+                    {
+                        var img = Model.CarouselImages.ElementAt(i);
+                        <div class="carousel-item h-100 @(i == 0 ? "active" : "")">
+                            <img src="@img.ImagePath" class="d-block w-100 h-100" style="object-fit: cover;" alt="Zdjęcie restauracji">
+                            <div class="position-absolute bottom-0 start-0 w-100 h-25" style="background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);"></div>
+                        </div>
+                    }
+                </div>
+
+                <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon bg-dark rounded-circle p-3 bg-opacity-25" aria-hidden="true"></span>
+                    <span class="visually-hidden">Poprzedni</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon bg-dark rounded-circle p-3 bg-opacity-25" aria-hidden="true"></span>
+                    <span class="visually-hidden">Następny</span>
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="h-100 w-100 d-flex align-items-center justify-content-center bg-light text-muted border">
+                <div class="text-center opacity-50">
+                    <i class="bi bi-images" style="font-size: 5rem;"></i>
+                    <p class="mt-3 fw-bold">Dodaj zdjęcia w panelu zarządzania</p>
+                </div>
+            </div>
+        }
     </div>
 </div>
 
@@ -53,41 +90,41 @@
 
     @if (isManager)
     {
-        <h4 class="section-header">Zarządzanie Operacyjne</h4>
+        <h4 class="section-header mt-5 border-bottom pb-2 mb-4">Zarządzanie Operacyjne</h4>
         <div class="row g-4 mb-5">
             <div class="col-md-6 col-lg-3">
-                <a asp-controller="Employees" asp-action="Index" class="text-decoration-none">
-                    <div class="dashboard-card">
+                <a asp-controller="Employees" asp-action="Index" class="text-decoration-none card-hover-effect">
+                    <div class="dashboard-card h-100">
                         <div class="icon-wrapper bg-blue-light"><i class="bi bi-people-fill"></i></div>
                         <h5 class="card-title">Zespół</h5>
-                        <p class="card-text">Lista pracowników, edycja danych i stawek.</p>
+                        <p class="card-text text-muted small">Pracownicy, dane, stawki.</p>
                     </div>
                 </a>
             </div>
             <div class="col-md-6 col-lg-3">
-                <a asp-controller="Schedules" asp-action="Index" class="text-decoration-none">
-                    <div class="dashboard-card">
+                <a asp-controller="Schedules" asp-action="Index" class="text-decoration-none card-hover-effect">
+                    <div class="dashboard-card h-100">
                         <div class="icon-wrapper bg-purple-light"><i class="bi bi-calendar-week"></i></div>
                         <h5 class="card-title">Planowanie</h5>
-                        <p class="card-text">Twórz grafiki i zarządzaj dyspozycyjnością.</p>
+                        <p class="card-text text-muted small">Grafiki i dyspozycyjność.</p>
                     </div>
                 </a>
             </div>
             <div class="col-md-6 col-lg-3">
-                <a asp-controller="Menu" asp-action="Index" class="text-decoration-none">
-                    <div class="dashboard-card">
+                <a asp-controller="Menu" asp-action="Index" class="text-decoration-none card-hover-effect">
+                    <div class="dashboard-card h-100">
                         <div class="icon-wrapper bg-orange-light"><i class="bi bi-journal-album"></i></div>
                         <h5 class="card-title">Menu & Ceny</h5>
-                        <p class="card-text">Aktualizuj dania i zarządzaj kategoriami.</p>
+                        <p class="card-text text-muted small">Edycja dań i kategorii.</p>
                     </div>
                 </a>
             </div>
             <div class="col-md-6 col-lg-3">
-                <a asp-controller="Support" asp-action="Manage" class="text-decoration-none">
-                    <div class="dashboard-card">
-                        <div class="icon-wrapper bg-pink-light"><i class="bi bi-life-preserver"></i></div>
-                        <h5 class="card-title">Zgłoszenia</h5>
-                        <p class="card-text">Rozwiązuj problemy zgłoszone przez personel.</p>
+                <a asp-controller="Content" asp-action="ManageHome" class="text-decoration-none card-hover-effect">
+                    <div class="dashboard-card h-100 border-primary border-2">
+                        <div class="icon-wrapper bg-primary-soft text-primary"><i class="bi bi-pencil-square"></i></div>
+                        <h5 class="card-title">Edycja Strony</h5>
+                        <p class="card-text text-muted small">Tekst powitalny i zdjęcia.</p>
                     </div>
                 </a>
             </div>
@@ -96,47 +133,43 @@
 
     @if (isEmployee || isManager)
     {
-        <h4 class="section-header">Panel Pracownika</h4>
+        <h4 class="section-header mt-4 border-bottom pb-2 mb-4">Panel Pracownika</h4>
         <div class="row g-4 mb-5">
             <div class="col-md-6 col-lg-4">
-                <a asp-controller="Orders" asp-action="Index" class="text-decoration-none">
-                    <div class="dashboard-card" style="border-left: 4px solid var(--secondary-color);">
+                <a asp-controller="Orders" asp-action="Index" class="text-decoration-none card-hover-effect">
+                    <div class="dashboard-card h-100" style="border-left: 5px solid var(--bs-success);">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="icon-wrapper bg-blue-light mb-0 me-3" style="width:50px; height:50px; font-size:24px;"><i class="bi bi-pc-display"></i></div>
+                            <div class="icon-wrapper bg-green-light mb-0 me-3"><i class="bi bi-pc-display"></i></div>
                             <h5 class="card-title mb-0">System POS</h5>
                         </div>
-                        <p class="card-text">Przyjmowanie i realizacja zamówień.</p>
+                        <p class="card-text text-muted small">Przyjmowanie i realizacja zamówień.</p>
                     </div>
                 </a>
             </div>
             <div class="col-md-6 col-lg-4">
-                <a asp-controller="Users" asp-action="Directory" class="text-decoration-none">
-                    <div class="dashboard-card">
-                        <div class="icon-wrapper bg-green-light"><i class="bi bi-person-lines-fill"></i></div>
+                <a asp-controller="Users" asp-action="Directory" class="text-decoration-none card-hover-effect">
+                    <div class="dashboard-card h-100">
+                        <div class="icon-wrapper bg-info-light"><i class="bi bi-person-lines-fill"></i></div>
                         <h5 class="card-title">Kontakty</h5>
-                        <p class="card-text">Telefony do współpracowników i gości.</p>
+                        <p class="card-text text-muted small">Numery do załogi.</p>
                     </div>
                 </a>
             </div>
             <div class="col-md-6 col-lg-4">
                 <div class="row g-3 h-100">
                     <div class="col-12">
-                        <a asp-controller="LossLogs" asp-action="Report" class="text-decoration-none">
-                            <div class="dashboard-card py-3 d-flex align-items-center">
-                                <i class="bi bi-trash text-danger fs-3 me-3"></i>
-                                <div>
-                                    <h6 class="fw-bold mb-0 text-dark">Zgłoś Stratę</h6>
-                                </div>
+                        <a asp-controller="LossLogs" asp-action="Report" class="text-decoration-none card-hover-effect">
+                            <div class="dashboard-card py-3 d-flex align-items-center h-100">
+                                <div class="icon-wrapper bg-danger-light me-3 mb-0" style="width:40px; height:40px; font-size: 1.2rem;"><i class="bi bi-trash"></i></div>
+                                <h6 class="fw-bold mb-0 text-dark">Zgłoś Stratę</h6>
                             </div>
                         </a>
                     </div>
                     <div class="col-12">
-                        <a asp-controller="Support" asp-action="MyTickets" class="text-decoration-none">
-                            <div class="dashboard-card py-3 d-flex align-items-center">
-                                <i class="bi bi-question-circle text-primary fs-3 me-3"></i>
-                                <div>
-                                    <h6 class="fw-bold mb-0 text-dark">Pomoc IT</h6>
-                                </div>
+                        <a asp-controller="Support" asp-action="MyTickets" class="text-decoration-none card-hover-effect">
+                            <div class="dashboard-card py-3 d-flex align-items-center h-100">
+                                <div class="icon-wrapper bg-warning-light me-3 mb-0" style="width:40px; height:40px; font-size: 1.2rem;"><i class="bi bi-question-circle"></i></div>
+                                <h6 class="fw-bold mb-0 text-dark">Pomoc IT</h6>
                             </div>
                         </a>
                     </div>
@@ -145,31 +178,144 @@
         </div>
     }
 
-    <h4 class="section-header">Informacje</h4>
+    <h4 class="section-header mt-4 border-bottom pb-2 mb-4">Informacje</h4>
     <div class="row g-4">
         <div class="col-md-4">
-            <a asp-controller="Menu" asp-action="Index" class="text-decoration-none">
-                <div class="dashboard-card text-center p-4">
-                    <i class="bi bi-cup-hot fs-1 text-primary mb-2 d-block"></i>
+            <a asp-controller="Menu" asp-action="Index" class="text-decoration-none card-hover-effect">
+                <div class="dashboard-card text-center p-4 h-100">
+                    <i class="bi bi-cup-hot fs-1 text-primary mb-3 d-block"></i>
                     <h5 class="card-title">Nasze Menu</h5>
+                    <p class="text-muted small">Przejrzyj nasze specjały.</p>
                 </div>
             </a>
         </div>
         <div class="col-md-4">
-            <a asp-controller="Gallery" asp-action="Index" class="text-decoration-none">
-                <div class="dashboard-card text-center p-4">
-                    <i class="bi bi-images fs-1 text-primary mb-2 d-block"></i>
+            <a asp-controller="Gallery" asp-action="Index" class="text-decoration-none card-hover-effect">
+                <div class="dashboard-card text-center p-4 h-100">
+                    <i class="bi bi-images fs-1 text-primary mb-3 d-block"></i>
                     <h5 class="card-title">Galeria Zdjęć</h5>
+                    <p class="text-muted small">Zobacz jak wygląda nasz lokal.</p>
                 </div>
             </a>
         </div>
         <div class="col-md-4">
-            <a asp-controller="ContactInfo" asp-action="Index" class="text-decoration-none">
-                <div class="dashboard-card text-center p-4">
-                    <i class="bi bi-map fs-1 text-primary mb-2 d-block"></i>
+            <a asp-controller="ContactInfo" asp-action="Index" class="text-decoration-none card-hover-effect">
+                <div class="dashboard-card text-center p-4 h-100">
+                    <i class="bi bi-map fs-1 text-primary mb-3 d-block"></i>
                     <h5 class="card-title">Lokalizacja</h5>
+                    <p class="text-muted small">Sprawdź jak do nas trafić.</p>
                 </div>
             </a>
         </div>
     </div>
 </div>
+
+<style>
+    /* Stylowanie kontenera karuzeli */
+    .hero-image-container {
+        /* Wymuszamy zaokrąglenie na poziomie kontenera */
+        border-radius: 1.5rem;
+        overflow: hidden;
+        background-color: #fff;
+        border: 1px solid rgba(0,0,0,0.05);
+        /* Kluczowe dla Safari i niektórych przeglądarek mobilnych */
+        transform: translateZ(0);
+    }
+
+        /* Wymuszamy zaokrąglenie również na elementach wewnętrznych karuzeli */
+        .hero-image-container .carousel-inner,
+        .hero-image-container .carousel-item {
+            border-radius: 1.5rem;
+            overflow: hidden;
+        }
+
+        /* I na samym obrazku */
+        .hero-image-container img {
+            border-radius: 1.5rem;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    .hover-scale:hover {
+        transform: scale(1.05);
+    }
+
+    .transition {
+        transition: all 0.3s ease;
+    }
+
+    .ls-tight {
+        letter-spacing: -1px;
+    }
+
+    /* Kolorowe tła dla ikonek */
+    .bg-blue-light {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+
+    .bg-purple-light {
+        background-color: rgba(111, 66, 193, 0.1);
+        color: #6f42c1;
+    }
+
+    .bg-orange-light {
+        background-color: rgba(253, 126, 20, 0.1);
+        color: #fd7e14;
+    }
+
+    .bg-pink-light {
+        background-color: rgba(214, 51, 132, 0.1);
+        color: #d63384;
+    }
+
+    .bg-green-light {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+
+    .bg-danger-light {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .bg-warning-light {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+    .bg-info-light {
+        background-color: rgba(13, 202, 240, 0.1);
+        color: #0dcaf0;
+    }
+
+    /* Efekt hover na kafelki */
+    .card-hover-effect .dashboard-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card-hover-effect:hover .dashboard-card {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+    }
+
+    .dashboard-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .icon-wrapper {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+</style>
