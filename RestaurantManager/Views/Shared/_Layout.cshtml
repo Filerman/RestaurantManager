@@ -19,7 +19,7 @@
 
     // Branding
     var brandingInfo = _context.ContactInfos.AsNoTracking().FirstOrDefault();
-    string restaurantName = brandingInfo?.RestaurantName ?? "RestaurantManager";
+    string restaurantName = brandingInfo?.RestaurantName ?? "Bistro Manager";
     string? logoUrl = brandingInfo?.LogoPath;
     bool showLogo = brandingInfo?.ShowLogoInHeader ?? false;
 
@@ -38,7 +38,6 @@
     bool hasTicketResponse = false;
     if (logged)
     {
-        // Sprawdzamy, czy jest jakikolwiek bilet usera z flagą HasUnreadResponse
         hasTicketResponse = _context.SupportTickets.Any(t => t.CreatedByUserId == userId.Value && t.HasUnreadResponse);
     }
 }
@@ -49,154 +48,156 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - @restaurantName</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/RestaurantManager.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/pl.min.js"></script>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg fixed-top">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm py-3">
             <div class="container">
-                <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                <a class="navbar-brand d-flex align-items-center fw-bold text-dark" asp-controller="Home" asp-action="Index">
                     @if (showLogo && !string.IsNullOrEmpty(logoUrl))
                     {
-                        <img src="@logoUrl" alt="@restaurantName" style="height: 45px; width: auto;" />
+                        <img src="@logoUrl" alt="@restaurantName" class="me-2" style="height: 40px; width: auto;" />
                     }
                     else
                     {
-                        <i class="bi bi-hexagon-fill me-2"></i>
-                        <span>@restaurantName</span>
+                        <div class="brand-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                            <i class="bi bi-egg-fried fs-5"></i>
+                        </div>
                     }
+                    <span class="tracking-tight">@restaurantName</span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Menu" asp-action="Index">Menu</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Gallery" asp-action="Index">Galeria</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="ContactInfo" asp-action="Index">Kontakt</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Announcements" asp-action="Index">Aktualności</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Faq" asp-action="Index">FAQ</a></li>
 
-                        <li class="nav-item">
-                            <a class="nav-link position-relative" asp-controller="Cart" asp-action="Index">
-                                <i class="bi bi-cart3"></i> Koszyk
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link px-3" asp-controller="Menu" asp-action="Index">Menu</a></li>
+
+                        @if (logged)
+                        {
+                            <li class="nav-item"><a class="nav-link px-3" asp-controller="Reservations" asp-action="Index">Rezerwacje</a></li>
+                        }
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link px-3 dropdown-toggle" href="#" id="infoDropdown" role="button" data-bs-toggle="dropdown">
+                                Info
+                            </a>
+                            <ul class="dropdown-menu border-0 shadow-sm rounded-3">
+                                <li><a class="dropdown-item" asp-controller="ContactInfo" asp-action="Index">Kontakt & Godziny</a></li>
+                                <li><a class="dropdown-item" asp-controller="Gallery" asp-action="Index">Galeria</a></li>
+                                <li><a class="dropdown-item" asp-controller="Announcements" asp-action="Index">Aktualności</a></li>
+                                <li><a class="dropdown-item" asp-controller="Faq" asp-action="Index">FAQ</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav align-items-center">
+
+                        <li class="nav-item me-3">
+                            <a class="btn btn-outline-dark border-0 position-relative rounded-pill px-3" asp-controller="Cart" asp-action="Index">
+                                <i class="bi bi-bag"></i> <span class="d-none d-lg-inline ms-1">Koszyk</span>
                                 @if (cartCount > 0)
                                 {
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">@cartCount</span>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark border border-white">
+                                        @cartCount
+                                    </span>
                                 }
                             </a>
                         </li>
 
-                        @if (logged)
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Reservations" asp-action="Index">Rezerwacje</a></li>
-                        }
-
                         @if (isEmployee)
                         {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="employeeDropdown" role="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-briefcase me-1"></i> Pracownik
+                            <li class="nav-item dropdown me-2">
+                                <a class="btn btn-light text-primary fw-medium dropdown-toggle rounded-pill px-3" href="#" id="employeeDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-grid-fill me-1"></i> Panel
                                 </a>
-                                <ul class="dropdown-menu shadow border-0">
-                                    <li><a class="dropdown-item" asp-controller="Schedules" asp-action="MySchedule">Mój Grafik</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Availability" asp-action="Index">Moja Dostępność</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Users" asp-action="Directory">Katalog Kontaktów</a></li>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-3 p-2" style="min-width: 220px;">
+                                    <li><h6 class="dropdown-header text-uppercase smaller fw-bold ls-1 text-primary">Szybkie Akcje</h6></li>
+                                    <li><a class="dropdown-item rounded-2 py-2 fw-bold bg-primary-soft text-primary mb-1" asp-controller="Orders" asp-action="Index"><i class="bi bi-calculator me-2"></i>System POS</a></li>
+                                    <li><a class="dropdown-item rounded-2 py-2" asp-controller="LossLogs" asp-action="Report"><i class="bi bi-trash3 me-2"></i>Zgłoś Stratę</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" asp-controller="Support" asp-action="MyTickets">Help Desk</a></li>
-                                    <li><a class="dropdown-item" asp-controller="LossLogs" asp-action="Report">Zgłoś Stratę</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item fw-bold text-primary" asp-controller="Orders" asp-action="Index">System POS</a></li>
+                                    <li><h6 class="dropdown-header text-uppercase smaller fw-bold ls-1">Organizacja</h6></li>
+                                    <li><a class="dropdown-item rounded-2 py-2" asp-controller="Schedules" asp-action="MySchedule">Mój Grafik</a></li>
+                                    <li><a class="dropdown-item rounded-2 py-2" asp-controller="Availability" asp-action="Index">Dyspozycyjność</a></li>
+                                    <li><a class="dropdown-item rounded-2 py-2" asp-controller="Support" asp-action="MyTickets">Help Desk</a></li>
+                                    <li><a class="dropdown-item rounded-2 py-2" asp-controller="Users" asp-action="Directory">Kontakty</a></li>
                                 </ul>
                             </li>
                         }
 
                         @if (isManager)
                         {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="managerDropdown" role="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-shield-lock me-1"></i> Zarządzanie
+                            <li class="nav-item dropdown me-3">
+                                <a class="nav-link dropdown-toggle fw-medium" href="#" id="managerDropdown" role="button" data-bs-toggle="dropdown">
+                                    Zarządzanie
                                 </a>
-                                <ul class="dropdown-menu shadow border-0">
-                                    <li><h6 class="dropdown-header text-uppercase text-muted smaller">Personel</h6></li>
-                                    <li><a class="dropdown-item" asp-controller="Schedules" asp-action="Index">Grafiki</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Employees" asp-action="Index">Pracownicy</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Employees" asp-action="Payroll">Wypłaty</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Availability" asp-action="Manage">Dyspozycyjność</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Users" asp-action="Index">Użytkownicy</a></li>
-                                    <li><a class="dropdown-item" asp-controller="PositionTags" asp-action="Index">Tagi Stanowisk</a></li>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-3 p-2" style="min-width: 240px;">
+                                    <li><h6 class="dropdown-header text-uppercase smaller fw-bold ls-1">Restauracja</h6></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="Menu" asp-action="Index">Edycja Menu</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="Tables" asp-action="Index">Stoliki</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="OpeningHours" asp-action="Index">Godziny Otwarcia</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="DeliveryZones" asp-action="Index">Strefy Dostaw</a></li>
+                                    <li><a class="dropdown-item rounded-2 text-danger" asp-controller="LossLogs" asp-action="Index"><i class="bi bi-trash me-2"></i>Rejestr Strat</a></li>
 
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header text-uppercase smaller fw-bold ls-1">Personel & Admin</h6></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="Employees" asp-action="Index">Pracownicy</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="Schedules" asp-action="Index">Grafiki Pracy</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="Employees" asp-action="Payroll">Wypłaty</a></li>
                                     <li>
-                                        <a class="dropdown-item d-flex justify-content-between align-items-center" asp-controller="Support" asp-action="Manage">
-                                            Zgłoszenia (HelpDesk)
+                                        <a class="dropdown-item rounded-2 d-flex justify-content-between align-items-center" asp-controller="Support" asp-action="Manage">
+                                            Zgłoszenia
                                             @if (openTicketsCount > 0)
                                             {
-                                                <span class="badge bg-danger rounded-pill ms-2">@openTicketsCount</span>
+                                                <span class="badge bg-danger rounded-pill">@openTicketsCount</span>
                                             }
                                         </a>
                                     </li>
-
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><h6 class="dropdown-header text-uppercase text-muted smaller">Restauracja</h6></li>
-                                    <li><a class="dropdown-item" asp-controller="Menu" asp-action="Index">Edycja Menu</a></li>
-
-                                    <li><a class="dropdown-item text-danger" asp-controller="LossLogs" asp-action="Index">Rejestr Strat</a></li>
-
-                                    <li><a class="dropdown-item" asp-controller="Tables" asp-action="Index">Stoliki</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Announcements" asp-action="Manage">Ogłoszenia</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Faq" asp-action="Manage">Edycja FAQ</a></li>
-                                    <li><a class="dropdown-item" asp-controller="OpeningHours" asp-action="Index">Godziny</a></li>
-                                    <li><a class="dropdown-item" asp-controller="DeliveryZones" asp-action="Index">Dostawy</a></li>
-                                    <li><a class="dropdown-item" asp-controller="ContactInfo" asp-action="Edit">Dane Firmy</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Gallery" asp-action="Manage">Edycja Galerii</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="ContactInfo" asp-action="Edit">Ustawienia Firmy</a></li>
                                 </ul>
                             </li>
                         }
-                    </ul>
 
-                    <ul class="navbar-nav ms-auto align-items-center">
                         @if (!logged)
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Auth" asp-action="Login">Zaloguj</a></li>
-                            <li class="nav-item"><a class="btn btn-primary btn-sm rounded-pill px-3 ms-2 text-white" asp-controller="Auth" asp-action="Register">Rejestracja</a></li>
+                            <li class="nav-item"><a class="btn btn-link text-dark text-decoration-none fw-medium" asp-controller="Auth" asp-action="Login">Zaloguj</a></li>
+                            <li class="nav-item"><a class="btn btn-primary rounded-pill px-4 shadow-sm" asp-controller="Auth" asp-action="Register">Dołącz</a></li>
                         }
                         else
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle d-flex align-items-center position-relative" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
-                                    <img src="@picturePath" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-right: 8px; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-
-                                    @if (hasTicketResponse)
-                                    {
-                                        <span class="position-absolute top-0 start-0 translate-middle p-1 bg-danger border border-light rounded-circle" style="left: 10px !important; top: 10px !important;"></span>
-                                    }
-
-                                    <span class="fw-bold">@usernameInSession</span>
+                                <a class="nav-link p-0 d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                                    <div class="position-relative">
+                                        <img src="@picturePath" alt="Avatar" class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #fff;">
+                                        @if (hasTicketResponse)
+                                        {
+                                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                                        }
+                                    </div>
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                    <li><span class="dropdown-item-text text-muted small">Rola: <strong>@role</strong></span></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="Profile"><i class="bi bi-person me-2"></i>Mój Profil</a></li>
-
-                                    <li>
-                                        <a class="dropdown-item d-flex justify-content-between align-items-center" asp-controller="Support" asp-action="MyTickets">
-                                            <span><i class="bi bi-chat-text me-2"></i>Moje Zgłoszenia</span>
-                                            @if (hasTicketResponse)
-                                            {
-                                                <span class="p-1 bg-danger border border-light rounded-circle ms-2"></span>
-                                            }
-                                        </a>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-3 p-2" style="min-width: 200px;">
+                                    <li class="px-3 py-2 border-bottom mb-2">
+                                        <div class="fw-bold text-dark">@usernameInSession</div>
+                                        <small class="text-muted">@role</small>
                                     </li>
-
-                                    <li><a class="dropdown-item" asp-controller="Orders" asp-action="History"><i class="bi bi-clock-history me-2"></i>Historia</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="EditProfile"><i class="bi bi-gear me-2"></i>Ustawienia</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="Auth" asp-action="Profile"><i class="bi bi-person me-2"></i>Mój Profil</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="Orders" asp-action="History"><i class="bi bi-clock-history me-2"></i>Historia Zamówień</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="Support" asp-action="MyTickets"><i class="bi bi-chat-dots me-2"></i>Moje Zgłoszenia</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="Auth" asp-action="EditProfile"><i class="bi bi-gear me-2"></i>Ustawienia</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-danger" asp-controller="Auth" asp-action="Logout"><i class="bi bi-box-arrow-right me-2"></i>Wyloguj</a></li>
+                                    <li><a class="dropdown-item rounded-2 text-danger fw-medium" asp-controller="Auth" asp-action="Logout"><i class="bi bi-box-arrow-right me-2"></i>Wyloguj</a></li>
                                 </ul>
                             </li>
                         }
@@ -206,25 +207,46 @@
         </nav>
     </header>
 
-    <div class="container" style="padding-top: 80px;">
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0"><i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"] <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        }
-        @if (TempData["ErrorMessage"] != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0"><i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"] <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        }
-        @if (TempData["InfoMessage"] != null)
-        {
-            <div class="alert alert-info alert-dismissible fade show shadow-sm border-0"><i class="bi bi-info-circle-fill me-2"></i> @TempData["InfoMessage"] <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        }
-        <main role="main" class="pb-5">@RenderBody()</main>
+    <div class="main-content" style="padding-top: 100px;">
+        <div class="container">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 rounded-3 d-flex align-items-center" role="alert">
+                    <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
+                    <div>@TempData["SuccessMessage"]</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 rounded-3 d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-octagon-fill fs-4 me-3 text-danger"></i>
+                    <div>@TempData["ErrorMessage"]</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["InfoMessage"] != null)
+            {
+                <div class="alert alert-primary alert-dismissible fade show shadow-sm border-0 rounded-3 d-flex align-items-center bg-primary-soft text-primary" role="alert">
+                    <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                    <div>@TempData["InfoMessage"]</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <main role="main" class="pb-5 fade-in">
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted bg-white mt-auto py-3">
+    <footer class="bg-white border-top py-4 mt-auto">
         <div class="container text-center">
-            &copy; @DateTime.Now.Year - <strong>@restaurantName</strong> - <a asp-controller="Home" asp-action="Privacy" class="text-decoration-none text-muted">Prywatność</a>
+            <div class="d-flex justify-content-center align-items-center mb-3 text-muted">
+                <i class="bi bi-egg-fried fs-4 me-2"></i>
+                <span class="fw-bold tracking-tight">@restaurantName</span>
+            </div>
+            <p class="text-muted small mb-0">&copy; @DateTime.Now.Year - Wszelkie prawa zastrzeżone. | <a asp-controller="Home" asp-action="Privacy" class="text-decoration-none text-muted fw-medium">Polityka Prywatności</a></p>
         </div>
     </footer>
 
