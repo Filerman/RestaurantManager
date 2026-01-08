@@ -40,10 +40,6 @@
                 <a asp-controller="Menu" asp-action="Index" class="hero-btn text-decoration-none me-2">
                     <i class="bi bi-book-half me-2"></i>Zobacz Menu
                 </a>
-                @if (!User.Identity.IsAuthenticated)
-                {
-                    <a asp-controller="Auth" asp-action="Login" class="btn btn-outline-light rounded-pill px-4 fw-bold">Zaloguj się</a>
-                }
             </div>
         }
     </div>
