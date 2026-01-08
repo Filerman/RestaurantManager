@@ -28,7 +28,6 @@ namespace RestaurantManager.Controllers
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> Index(string activeTab = "online")
         {
-            // Przekazujemy aktywną zakładkę do widoku
             ViewBag.ActiveTab = activeTab;
 
             var orders = await _context.Orders
@@ -71,7 +70,6 @@ namespace RestaurantManager.Controllers
         }
 
         // --- ZARZĄDZANIE KONKRETNYM STOLIKIEM ---
-        // Dodano parametr activeCategory, aby wiedzieć, którą zakładkę menu otworzyć
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> ManageTable(int id, string activeCategory = null)
         {
@@ -85,7 +83,6 @@ namespace RestaurantManager.Controllers
             var menuItems = await _context.MenuItems.Where(m => m.IsAvailable).ToListAsync();
             var categories = menuItems.Select(m => m.Category).Distinct().ToList();
 
-            // Jeśli nie podano kategorii, domyślnie pierwsza
             ViewBag.ActiveCategory = activeCategory ?? (categories.FirstOrDefault() ?? "");
 
             var vm = new ManageTableViewModel
@@ -100,7 +97,6 @@ namespace RestaurantManager.Controllers
         }
 
         // --- DODAWANIE DO STOLIKA ---
-        // Dodano parametr returnCategory, aby wrócić do tej samej zakładki
         [HttpPost]
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> AddToTable(int tableId, int menuItemId, string returnCategory)
@@ -143,7 +139,6 @@ namespace RestaurantManager.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Przekierowanie z powrotem do ManageTable z ustawioną aktywną kategorią
             return RedirectToAction(nameof(ManageTable), new { id = tableId, activeCategory = returnCategory });
         }
 
@@ -161,7 +156,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(ManageTable), new { id = tableId });
         }
 
-        // --- ZAMYKANIE STOLIKA (Do paragonu) ---
+        // --- ZAMYKANIE STOLIKA ---
         [HttpPost]
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> CloseTable(int orderId, PaymentMethod paymentMethod)
@@ -171,18 +166,18 @@ namespace RestaurantManager.Controllers
             {
                 order.Status = OrderStatus.Completed;
                 order.PaymentMethod = paymentMethod;
-                // Ustawiamy datę zamknięcia na teraz (dla celów sortowania w archiwum)
                 order.ScheduledDate = DateTime.Now;
                 await _context.SaveChangesAsync();
             }
-            // Przekierowanie do widoku rachunku zamiast do mapy
             return RedirectToAction(nameof(Receipt), new { id = orderId });
         }
 
-        // --- NOWE: WIDOK RACHUNKU ---
-        [RoleAuthorize("Admin", "Manager", "Employee")]
+        // --- WIDOK RACHUNKU ---
         public async Task<IActionResult> Receipt(int id)
         {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var role = HttpContext.Session.GetString("UserRole");
+
             var order = await _context.Orders
                 .Include(o => o.OrderItems).ThenInclude(oi => oi.MenuItem)
                 .Include(o => o.Table)
@@ -190,10 +185,33 @@ namespace RestaurantManager.Controllers
 
             if (order == null) return NotFound();
 
+            bool isStaff = role == "Admin" || role == "Manager" || role == "Employee";
+            if (!isStaff && (userId == null || order.UserId != userId.ToString()))
+            {
+                return RedirectToAction("AccessDenied", "Auth");
+            }
+
+            // --- POPRAWKA: Składamy adres ręcznie ---
+            var contactInfo = await _context.ContactInfos.AsNoTracking().FirstOrDefaultAsync();
+
+            ViewBag.RestaurantName = contactInfo?.RestaurantName ?? "Restauracja";
+
+            // Tutaj łączymy stringi adresu
+            if (contactInfo != null)
+            {
+                ViewBag.Address = $"{contactInfo.AddressStreet}, {contactInfo.AddressZipCode} {contactInfo.AddressCity}";
+            }
+            else
+            {
+                ViewBag.Address = "Brak adresu";
+            }
+
+            ViewBag.Phone = contactInfo?.PhoneNumber;
+
             return View(order);
         }
 
-        // --- NOWE: ARCHIWUM ZAMÓWIEŃ ---
+        // --- ARCHIWUM ZAMÓWIEŃ ---
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> Archive()
         {
@@ -201,12 +219,11 @@ namespace RestaurantManager.Controllers
                 .Include(o => o.OrderItems).ThenInclude(oi => oi.MenuItem)
                 .Include(o => o.Table)
                 .Where(o => o.Status == OrderStatus.Completed || o.Status == OrderStatus.Canceled)
-                .OrderByDescending(o => o.ScheduledDate) // Najnowsze na górze
+                .OrderByDescending(o => o.ScheduledDate)
                 .ToListAsync();
 
             return View(archivedOrders);
         }
-
 
         // --- SEKCJA KLIENTA (E-COMMERCE) ---
 
@@ -238,10 +255,7 @@ namespace RestaurantManager.Controllers
             {
                 vm.CustomerEmail = user.Email;
                 vm.CustomerName = user.Username;
-                if (!string.IsNullOrEmpty(user.PhoneNumber))
-                {
-                    vm.CustomerPhone = user.PhoneNumber;
-                }
+                if (!string.IsNullOrEmpty(user.PhoneNumber)) vm.CustomerPhone = user.PhoneNumber;
             }
 
             var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
@@ -250,8 +264,7 @@ namespace RestaurantManager.Controllers
 
             ViewBag.EstimatedTime = deliveryMinutes;
             var today = DateTime.Now.DayOfWeek;
-            var todayHours = await _context.OpeningHours.FirstOrDefaultAsync(h => h.DayOfWeek == today);
-            ViewBag.TodayOpeningHours = todayHours;
+            ViewBag.TodayOpeningHours = await _context.OpeningHours.FirstOrDefaultAsync(h => h.DayOfWeek == today);
 
             vm.ScheduledDate = DateTime.Now.AddMinutes(deliveryMinutes);
 
@@ -312,26 +325,18 @@ namespace RestaurantManager.Controllers
             }
 
             decimal deliveryFee = 0;
-
             if (model.OrderType == OrderType.Delivery)
             {
-                if (string.IsNullOrWhiteSpace(model.DeliveryStreet) ||
-                    string.IsNullOrWhiteSpace(model.DeliveryCity) ||
-                    string.IsNullOrWhiteSpace(model.DeliveryZipCode))
-                {
-                    ModelState.AddModelError("OrderType", "Dla dostawy wymagany jest pełny adres.");
-                }
+                if (string.IsNullOrWhiteSpace(model.DeliveryCity))
+                    ModelState.AddModelError("DeliveryCity", "Wymagane miasto.");
                 else
                 {
-                    var zone = await _context.DeliveryZones
-                        .FirstOrDefaultAsync(z => z.CityName.ToLower() == model.DeliveryCity.ToLower());
-
+                    var zone = await _context.DeliveryZones.FirstOrDefaultAsync(z => z.CityName.ToLower() == model.DeliveryCity.ToLower());
                     if (zone != null) deliveryFee = zone.DeliveryFee;
-                    else ModelState.AddModelError("DeliveryCity", "Niestety, nie realizujemy dostaw do wybranej miejscowości.");
+                    else ModelState.AddModelError("DeliveryCity", "Brak dostaw do tej miejscowości.");
                 }
             }
-
-            if (model.OrderType != OrderType.Delivery)
+            else
             {
                 ModelState.Remove(nameof(model.DeliveryStreet));
                 ModelState.Remove(nameof(model.DeliveryCity));
@@ -340,11 +345,7 @@ namespace RestaurantManager.Controllers
 
             if (ModelState.IsValid)
             {
-                string fullAddress = null;
-                if (model.OrderType == OrderType.Delivery)
-                {
-                    fullAddress = $"{model.DeliveryStreet}, {model.DeliveryZipCode} {model.DeliveryCity}";
-                }
+                string fullAddress = model.OrderType == OrderType.Delivery ? $"{model.DeliveryStreet}, {model.DeliveryZipCode} {model.DeliveryCity}" : null;
 
                 var order = new Order
                 {
@@ -372,8 +373,7 @@ namespace RestaurantManager.Controllers
                         OrderId = order.Id,
                         MenuItemId = item.MenuItemId,
                         Quantity = item.Quantity,
-                        UnitPrice = item.Price,
-                        IsServed = false
+                        UnitPrice = item.Price
                     });
                 }
                 await _context.SaveChangesAsync();
@@ -383,30 +383,19 @@ namespace RestaurantManager.Controllers
             }
 
             PrepareCitiesList();
-            var contactInfoForView = await _context.ContactInfos.FirstOrDefaultAsync();
-            ViewBag.EstimatedTime = contactInfoForView?.EstimatedDeliveryTimeMinutes ?? 45;
-            var todayForView = DateTime.Now.DayOfWeek;
-            ViewBag.TodayOpeningHours = await _context.OpeningHours.FirstOrDefaultAsync(h => h.DayOfWeek == todayForView);
-            model.TotalAmount = cart.Sum(x => x.TotalPrice);
             return View(model);
         }
 
         private void PrepareCitiesList()
         {
             var zones = _context.DeliveryZones.OrderBy(z => z.DeliveryFee).ToList();
-            var cityList = new List<SelectListItem>();
+            var cityList = new List<SelectListItem> { new SelectListItem { Text = "-- Wybierz miasto --", Value = "" } };
             var feesDict = new Dictionary<string, decimal>();
-
-            cityList.Add(new SelectListItem { Text = "-- Wybierz miasto --", Value = "" });
 
             foreach (var zone in zones)
             {
                 string feeText = zone.DeliveryFee == 0 ? "Gratis" : $"+{zone.DeliveryFee:F2} zł";
-                cityList.Add(new SelectListItem
-                {
-                    Text = $"{zone.CityName} ({feeText})",
-                    Value = zone.CityName
-                });
+                cityList.Add(new SelectListItem { Text = $"{zone.CityName} ({feeText})", Value = zone.CityName });
                 feesDict[zone.CityName] = zone.DeliveryFee;
             }
 

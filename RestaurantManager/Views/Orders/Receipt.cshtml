@@ -1,90 +1,176 @@
 ﻿@model RestaurantManager.Models.Order
 @{
     ViewData["Title"] = $"Rachunek #{Model.Id}";
-    Layout = "_Layout"; // Możesz zmienić na null jeśli chcesz czysty HTML do druku bez nagłówka strony
+    Layout = null;
 }
 
-<div class="container mt-5">
-    <div class="card mx-auto shadow-sm" style="max-width: 400px;">
-        <div class="card-body">
-            <div class="text-center mb-4">
-                <h2 class="mb-0">Restauracja XYZ</h2>
-                <p class="text-muted">ul. Smaczna 12, Warszawa</p>
-                <hr />
-                <h4>Rachunek nr #@Model.Id</h4>
-                <p>@Model.ScheduledDate.ToString("yyyy-MM-dd HH:mm")</p>
-                @if (Model.Table != null)
-                {
-                    <p><strong>@Model.Table.Name</strong></p>
-                }
-                else
-                {
-                    <p><strong>Zamówienie Online / Wynos</strong></p>
-                }
-            </div>
-
-            <table class="table table-sm table-borderless">
-                <thead>
-                    <tr class="border-bottom">
-                        <th>Nazwa</th>
-                        <th class="text-end">Ilość</th>
-                        <th class="text-end">Cena</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.OrderItems)
-                    {
-                        <tr>
-                            <td>@item.MenuItem.Name</td>
-                            <td class="text-end">@item.Quantity</td>
-                            <td class="text-end">@((item.UnitPrice * item.Quantity).ToString("F2"))</td>
-                        </tr>
-                    }
-                </tbody>
-                <tfoot class="border-top fw-bold">
-                    <tr>
-                        <td colspan="2">RAZEM:</td>
-                        <td class="text-end">@Model.TotalAmount.ToString("F2") zł</td>
-                    </tr>
-                </tfoot>
-            </table>
-
-            <div class="text-center mt-3">
-                <p class="mb-1">Metoda płatności: <strong>@Model.PaymentMethod</strong></p>
-                <p class="small text-muted">Dziękujemy i zapraszamy ponownie!</p>
-            </div>
-        </div>
-        <div class="card-footer bg-white d-print-none text-center">
-            <button onclick="window.print()" class="btn btn-primary btn-lg w-100 mb-2">
-                <i class="bi bi-printer"></i> Drukuj
-            </button>
-            <a asp-action="Tables" class="btn btn-secondary w-100">Wróć do Mapy Stolików</a>
-        </div>
-    </div>
-</div>
-
-<style>
-    /* Ukrywamy wszystko inne podczas drukowania */
-    @@media print {
-        body * {
-            visibility: hidden;
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Rachunek #@Model.Id</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #eee;
+            font-family: 'Space Mono', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding-top: 40px;
         }
 
-        .card, .card * {
-            visibility: visible;
+        .receipt {
+            width: 360px;
+            background: #fff;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+        }
+            /* Efekt "zygzaka" na dole */
+            .receipt::after {
+                content: "";
+                position: absolute;
+                left: 0;
+                bottom: -10px;
+                width: 100%;
+                height: 10px;
+                background: linear-gradient(135deg, transparent 5px, #fff 5px) 0 0, linear-gradient(225deg, transparent 5px, #fff 5px) 0 0;
+                background-size: 10px 10px;
+                background-repeat: repeat-x;
+            }
+
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 5px;
+            text-transform: uppercase;
         }
 
-        .card {
-            position: absolute;
-            left: 0;
-            top: 0;
+        .text-center p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .divider {
+            border-bottom: 1px dashed #ccc;
+            margin: 15px 0;
+        }
+
+        .item-row td {
+            padding: 4px 0;
+            vertical-align: top;
+        }
+
+        .total-section {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 15px;
+        }
+
+        @@media print {
+            body
+
+        {
+            background: #fff;
+            padding: 0;
+            display: block;
+        }
+
+        .receipt {
             width: 100%;
-            border: none !important;
-            box-shadow: none !important;
+            box-shadow: none;
         }
 
         .d-print-none {
             display: none !important;
         }
-    }
-</style>
+
+        }
+    </style>
+</head>
+<body>
+
+    <div class="receipt">
+        <h2>@ViewBag.RestaurantName</h2>
+        <div class="text-center">
+            <p>@ViewBag.Address</p>
+            @if (ViewBag.Phone != null)
+            {
+                <p>Tel: @ViewBag.Phone</p>
+            }
+            <p>NIP: 000-000-00-00</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="d-flex justify-content-between small text-muted">
+            <span>Data: @Model.ScheduledDate.ToString("dd.MM.yy")</span>
+            <span>Godz: @Model.ScheduledDate.ToString("HH:mm")</span>
+        </div>
+        <div class="d-flex justify-content-between small fw-bold mt-1">
+            <span>Rachunek:</span>
+            <span>#@Model.Id</span>
+        </div>
+
+        <div class="text-center fw-bold mt-2 py-1 bg-light border rounded">
+            @if (Model.Table != null)
+            {
+                <span>STOLIK: @Model.Table.Name</span>
+            }
+            else
+            {
+                <span>@(Model.Type == RestaurantManager.Models.OrderType.Delivery ? "DOSTAWA" : "WYNOS")</span>
+            }
+        </div>
+
+        <div class="divider"></div>
+
+        <table class="table table-borderless table-sm mb-0">
+            <tbody>
+                @foreach (var item in Model.OrderItems)
+                {
+                    <tr class="item-row">
+                        <td class="ps-0">
+                            @item.MenuItem.Name
+                            @if (item.Quantity > 1)
+                            {
+                                <div class="text-muted small">@item.Quantity x @item.UnitPrice.ToString("F2")</div>
+                            }
+                        </td>
+                        <td class="text-end pe-0 fw-bold">@((item.Quantity * item.UnitPrice).ToString("F2"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="divider"></div>
+
+        <div class="d-flex justify-content-between total-section">
+            <span>SUMA PLN</span>
+            <span>@Model.TotalAmount.ToString("F2")</span>
+        </div>
+        <div class="d-flex justify-content-between small text-muted mt-2">
+            <span>Metoda płatności:</span>
+            <span class="text-uppercase">@Model.PaymentMethod</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="text-center mt-3">
+            <p>Dziękujemy za wizytę!</p>
+            <p class="small">Zapraszamy ponownie</p>
+        </div>
+
+        <div class="d-print-none mt-4">
+            <button onclick="window.print()" class="btn btn-dark w-100 mb-2 py-2">DRUKUJ</button>
+            <button onclick="window.close()" class="btn btn-light border w-100 py-2">Zamknij okno</button>
+        </div>
+    </div>
+
+</body>
+</html>

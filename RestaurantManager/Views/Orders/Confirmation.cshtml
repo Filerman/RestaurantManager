@@ -1,28 +1,54 @@
 ﻿@model RestaurantManager.Models.Order
 @{
-    ViewData["Title"] = "Dziękujemy";
+    ViewData["Title"] = "Potwierdzenie Zamówienia";
 }
 
-<div class="container mt-5 text-center">
-    <div class="card shadow-sm p-5">
-        <h1 class="text-success mb-4"><i class="bi bi-check-circle-fill"></i> Dziękujemy za zamówienie!</h1>
-        <h3 class="mb-3">Numer zamówienia: <span class="text-primary">#@Model.Id</span></h3>
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6 text-center">
 
-        <p class="lead">Twoje zamówienie zostało przyjęte do realizacji.</p>
+        <div class="card shadow border-0 rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-success text-white py-4">
+                <i class="bi bi-check-circle-fill display-1 mb-3"></i>
+                <h2 class="fw-bold">Zamówienie Przyjęte!</h2>
+                <p class="mb-0 fs-5">Numer zamówienia: <strong>#@Model.Id</strong></p>
+            </div>
 
-        <div class="alert alert-light border d-inline-block px-4 py-2 mt-2">
-            <i class="bi bi-clock"></i> Planowany czas realizacji:
-            <strong>@Model.ScheduledDate.ToString("dd.MM.yyyy HH:mm")</strong>
+            <div class="card-body p-4 p-md-5">
+                <div class="mb-4">
+                    <h6 class="text-uppercase text-muted ls-1 small">Planowany odbiór/dostawa</h6>
+                    <h1 class="display-4 fw-bold text-dark my-2">@Model.ScheduledDate.ToString("HH:mm")</h1>
+                    <span class="badge bg-light text-dark border rounded-pill px-3 py-2">
+                        <i class="bi bi-calendar-event me-1"></i> @Model.ScheduledDate.ToString("dd.MM.yyyy")
+                    </span>
+                </div>
+
+                <ul class="list-group list-group-flush text-start mb-4 border rounded">
+                    <li class="list-group-item d-flex justify-content-between bg-light fw-bold">
+                        <span>Kwota do zapłaty</span>
+                        <span class="text-success">@Model.TotalAmount.ToString("C")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Metoda płatności</span>
+                        <span>@Model.PaymentMethod</span>
+                    </li>
+                    @if (Model.Type == RestaurantManager.Models.OrderType.Delivery)
+                    {
+                        <li class="list-group-item">
+                            <small class="text-muted d-block mb-1">Adres dostawy:</small>
+                            <i class="bi bi-geo-alt me-1 text-danger"></i> @Model.DeliveryAddress
+                        </li>
+                    }
+                </ul>
+
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg rounded-pill px-4">Strona Główna</a>
+                    <a asp-action="Receipt" asp-route-id="@Model.Id" target="_blank" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-receipt me-2"></i> Pobierz Rachunek
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <div class="mt-5">
-            <a asp-controller="Menu" asp-action="Index" class="btn btn-primary btn-lg">
-                <i class="bi bi-arrow-left"></i> Wróć do Menu
-            </a>
-            @* Opcjonalnie: link do historii zamówień, jeśli użytkownik jest zalogowany *@
-            <a asp-controller="Orders" asp-action="History" class="btn btn-outline-secondary btn-lg ms-2">
-                Moje Zamówienia
-            </a>
-        </div>
+        <p class="text-muted small">Potwierdzenie wysłaliśmy również na Twój adres email.</p>
     </div>
 </div>
