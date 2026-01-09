@@ -5,110 +5,84 @@
     var carouselImages = Model.Where(i => i.IsInCarousel).ToList();
 }
 
-<style>
-    /* Styl karuzeli */
-    .carousel-item {
-        height: 500px;
-        background-color: #000;
-    }
+<div class="container mt-5 mb-5">
 
-        .carousel-item img {
-            height: 100%;
-            width: 100%;
-            object-fit: cover;
-            opacity: 0.9;
-        }
-
-    .carousel-caption {
-        background: rgba(0, 0, 0, 0.5);
-        border-radius: 10px;
-        padding: 10px 20px;
-    }
-
-    /* Styl kafelków */
-    .gallery-item {
-        margin-bottom: 24px;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-    }
-
-        .gallery-item:hover {
-            transform: scale(1.03);
-        }
-
-    .gallery-img-thumb {
-        width: 100%;
-        height: 250px;
-        object-fit: cover;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-</style>
-
-@if (carouselImages.Any())
-{
-    <div id="galleryCarousel" class="carousel slide mb-5 shadow rounded overflow-hidden" data-bs-ride="carousel">
-        <div class="carousel-indicators">
-            @for (int i = 0; i < carouselImages.Count; i++)
-            {
-                <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")"></button>
-            }
-        </div>
-        <div class="carousel-inner">
-            @for (int i = 0; i < carouselImages.Count; i++)
-            {
-                var img = carouselImages[i];
-                <div class="carousel-item @(i == 0 ? "active" : "")">
-                    <img src="@Url.Content(img.FilePath)" class="d-block w-100" alt="@img.Caption">
-                    @if (!string.IsNullOrEmpty(img.Caption))
-                    {
-                        <div class="carousel-caption d-none d-md-block">
-                            <h5>@img.Caption</h5>
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Poprzedni</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Następny</span>
-        </button>
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-dark">Nasza Galeria</h1>
+        <p class="text-muted fs-5">Poczuj klimat naszej restauracji</p>
     </div>
-}
 
-<div class="container">
-    <h2 class="text-center mb-4 text-primary fw-bold">Wszystkie Zdjęcia</h2>
+    @if (carouselImages.Any())
+    {
+        <div id="galleryCarousel" class="carousel slide carousel-fade mb-5 shadow-lg rounded-4 overflow-hidden" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                @for (int i = 0; i < carouselImages.Count; i++)
+                {
+                    <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")"></button>
+                }
+            </div>
+            <div class="carousel-inner" style="height: 500px;">
+                @for (int i = 0; i < carouselImages.Count; i++)
+                {
+                    var img = carouselImages[i];
+                    <div class="carousel-item h-100 @(i == 0 ? "active" : "")">
+                        <img src="@Url.Content(img.FilePath)" class="d-block w-100 h-100" style="object-fit: cover;" alt="@img.Caption">
+                        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent, rgba(0,0,0,0.6));"></div>
+                        @if (!string.IsNullOrEmpty(img.Caption))
+                        {
+                            <div class="carousel-caption d-none d-md-block pb-5">
+                                <h3 class="fw-bold text-white text-shadow">@img.Caption</h3>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon bg-dark rounded-circle bg-opacity-25 p-3" aria-hidden="true"></span>
+                <span class="visually-hidden">Poprzedni</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon bg-dark rounded-circle bg-opacity-25 p-3" aria-hidden="true"></span>
+                <span class="visually-hidden">Następny</span>
+            </button>
+        </div>
+    }
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info text-center">Galeria jest obecnie pusta.</div>
+        <div class="alert alert-light text-center py-5 rounded-4 shadow-sm border">
+            <i class="bi bi-images fs-1 text-muted opacity-25 d-block mb-3"></i>
+            <span class="text-muted fw-medium">Galeria jest obecnie pusta. Zapraszamy wkrótce!</span>
+        </div>
     }
     else
     {
-        <div class="row">
+        <h4 class="fw-bold mb-4 ps-2 border-start border-4 border-primary">Wszystkie zdjęcia</h4>
+        <div class="row g-3">
             @foreach (var image in Model)
             {
-                <div class="col-md-4 col-lg-3 gallery-item" data-bs-toggle="modal" data-bs-target="#imageModal"
-                     onclick="showImageInModal('@Url.Content(image.FilePath)', '@(image.Caption ?? "")')">
-                    <img src="@Url.Content(image.FilePath)" class="gallery-img-thumb" alt="Gallery Image" loading="lazy" />
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="gallery-item position-relative overflow-hidden rounded-4 shadow-sm h-100 cursor-pointer"
+                         data-bs-toggle="modal" data-bs-target="#imageModal"
+                         onclick="showImageInModal('@Url.Content(image.FilePath)', '@(image.Caption ?? "")')">
+                        <img src="@Url.Content(image.FilePath)" class="gallery-img w-100 h-100" alt="Gallery Image" loading="lazy" />
+                        <div class="gallery-overlay d-flex align-items-center justify-content-center">
+                            <i class="bi bi-zoom-in text-white fs-2 opacity-0 scale-up"></i>
+                        </div>
+                    </div>
                 </div>
             }
         </div>
     }
 </div>
 
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content bg-transparent border-0 shadow-none">
-            <div class="modal-body p-0 position-relative text-center">
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1056; background-color: rgba(0,0,0,0.5); border-radius: 50%; padding: 10px;"></button>
-
-                <img id="modalImage" src="" class="img-fluid rounded shadow-lg" style="max-height: 90vh;" alt="Preview">
-                <p id="modalCaption" class="text-white mt-2 fs-5 bg-dark d-inline-block px-3 py-1 rounded bg-opacity-75"></p>
+            <div class="modal-body p-0 text-center position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3 bg-dark bg-opacity-50 p-2 rounded-circle" data-bs-dismiss="modal" aria-label="Close"></button>
+                <img id="modalImage" src="" class="img-fluid rounded-4 shadow-lg" style="max-height: 85vh; object-fit: contain;" alt="Preview">
+                <p id="modalCaption" class="text-white mt-3 fs-5 fw-medium bg-dark bg-opacity-75 d-inline-block px-4 py-2 rounded-pill shadow-sm"></p>
             </div>
         </div>
     </div>
@@ -118,7 +92,6 @@
     function showImageInModal(src, caption) {
         document.getElementById('modalImage').src = src;
         var captionElem = document.getElementById('modalCaption');
-
         if (caption) {
             captionElem.innerText = caption;
             captionElem.style.display = 'inline-block';
@@ -127,3 +100,48 @@
         }
     }
 </script>
+
+<style>
+    .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .gallery-item {
+        height: 250px;
+        transition: transform 0.3s ease;
+    }
+
+    .gallery-img {
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .gallery-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.3);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .gallery-item:hover .gallery-overlay {
+        opacity: 1;
+    }
+
+    .gallery-item:hover .gallery-img {
+        transform: scale(1.05);
+    }
+
+    .gallery-item:hover .scale-up {
+        opacity: 1;
+        transform: scale(1.2);
+        transition: all 0.3s ease;
+    }
+</style>
