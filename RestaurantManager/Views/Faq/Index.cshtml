@@ -7,78 +7,134 @@
     var isStaff = ViewBag.IsStaff as bool? ?? false;
     var currentFilter = ViewBag.CurrentFilter as string;
 
-    // Sprawdzamy czy użytkownik to manager, żeby pokazać przycisk "Zarządzaj"
     var role = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
     bool isManager = (role == "Admin" || role == "Manager");
 }
 
-<div class="container mt-4">
+<div class="container mt-5 mb-5">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-0 fw-bold text-primary"><i class="bi bi-question-circle-fill me-2"></i>Baza Wiedzy</h2>
-            <p class="text-muted">Najczęściej zadawane pytania i odpowiedzi.</p>
-        </div>
+    <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold text-dark mb-3">Baza Wiedzy</h2>
+        <p class="text-muted fs-5">Najczęściej zadawane pytania i odpowiedzi.</p>
 
-        <div class="d-flex gap-2">
-            @if (isStaff)
-            {
-                <form method="get" asp-action="Index" class="d-flex align-items-center">
-                    <select name="filter" class="form-select form-select-sm border-secondary" onchange="this.form.submit()" style="min-width: 150px;">
-                        <!option value="all" @(currentFilter == "all" ? "selected" : "")>Wszystkie</!option>
-                        <!option value="public" @(currentFilter == "public" ? "selected" : "")>Publiczne</!option>
-                        <!option value="internal" @(currentFilter == "internal" ? "selected" : "")>Wewnętrzne</!option>
-                    </select>
-                </form>
-            }
-
-            @if (isManager)
-            {
-                <a asp-action="Manage" class="btn btn-outline-dark btn-sm d-flex align-items-center">
-                    <i class="bi bi-gear-fill me-1"></i> Zarządzaj
-                </a>
-            }
-        </div>
-    </div>
-
-    <div class="accordion accordion-flush shadow-sm rounded overflow-hidden mb-5" id="faqAccordion">
-        @if (!Model.Any())
+        @if (isManager)
         {
-            <div class="alert alert-info text-center m-3">
-                <i class="bi bi-info-circle me-2"></i> Brak pytań spełniających kryteria.
+            <div class="mt-3">
+                <a asp-action="Manage" class="btn btn-outline-dark rounded-pill px-4 btn-sm fw-bold">
+                    <i class="bi bi-gear-fill me-2"></i> Zarządzaj FAQ
+                </a>
             </div>
         }
-        else
-        {
-            foreach (var item in Model.Select((value, index) => new { value, index }))
-            {
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="heading-@item.index">
-                        <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@item.index" aria-expanded="false" aria-controls="collapse-@item.index">
-                            @if (!item.value.IsPublic)
+    </div>
+
+    @if (isStaff)
+    {
+        <div class="d-flex justify-content-center mb-4">
+            <form method="get" asp-action="Index" class="d-flex align-items-center bg-light p-2 rounded-pill border">
+                <span class="text-muted small fw-bold text-uppercase ms-3 me-2">Filtr:</span>
+                <select name="filter" class="form-select form-select-sm border-0 bg-transparent fw-bold text-primary" onchange="this.form.submit()" style="min-width: 150px; cursor: pointer;">
+                    <!option value="all" @(currentFilter == "all" ? "selected" : "")>Wszystkie</!option>
+                    <!option value="public" @(currentFilter == "public" ? "selected" : "")>Publiczne</!option>
+                    <!option value="internal" @(currentFilter == "internal" ? "selected" : "")>Wewnętrzne</!option>
+                </select>
+            </form>
+        </div>
+    }
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="accordion accordion-flush shadow-sm rounded-4 overflow-hidden mb-5 border" id="faqAccordion">
+                @if (!Model.Any())
+                {
+                    <div class="alert alert-light text-center m-4 py-4">
+                        <i class="bi bi-search fs-1 text-muted opacity-25 d-block mb-3"></i>
+                        <span class="text-muted fw-medium">Brak pytań spełniających kryteria.</span>
+                    </div>
+                }
+                else
+                {
+                    foreach (var item in Model.Select((value, index) => new { value, index }))
+                    {
+                        <div class="accordion-item border-0 border-bottom">
+                            <h2 class="accordion-header" id="heading-@item.index">
+                                <button class="accordion-button collapsed fw-bold text-dark py-4 px-4 bg-white shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@item.index" aria-expanded="false" aria-controls="collapse-@item.index">
+                                    @if (!item.value.IsPublic)
+                                    {
+                                        <span class="badge bg-warning bg-opacity-25 text-warning border border-warning rounded-pill me-3 small px-2 py-1" title="Widoczne tylko dla personelu">
+                                            <i class="bi bi-lock-fill me-1"></i>Staff
+                                        </span>
+                                    }
+                                    @item.value.Question
+                                </button>
+                            </h2>
+                            <div id="collapse-@item.index" class="accordion-collapse collapse" aria-labelledby="heading-@item.index" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-secondary bg-light bg-opacity-25 px-4 pb-4 pt-2 lh-lg">
+                                    @item.value.Answer
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0 rounded-4 bg-primary text-white overflow-hidden">
+                        <div class="card-body p-4 p-md-5 text-center">
+                            <h3 class="fw-bold mb-3 text-white">
+                                <i class="bi bi-chat-dots-fill me-2"></i>Nie znalazłeś odpowiedzi?
+                            </h3>
+                            <p class="mb-4 text-white text-opacity-75 fs-5">
+                                Skontaktuj się bezpośrednio z naszą obsługą lub managerem. Jesteśmy tu dla Ciebie!
+                            </p>
+
+                            @if (!string.IsNullOrEmpty(role))
                             {
-                                <span class="badge bg-warning text-dark me-2" title="Widoczne tylko dla personelu"><i class="bi bi-lock-fill"></i> Staff</span>
+                                <a asp-controller="Support" asp-action="Create" class="btn btn-light text-primary fw-bold px-5 py-3 rounded-pill shadow-sm hover-scale transition">
+                                    <i class="bi bi-envelope-fill me-2"></i> Napisz do nas
+                                </a>
                             }
-                            @item.value.Question
-                        </button>
-                    </h2>
-                    <div id="collapse-@item.index" class="accordion-collapse collapse" aria-labelledby="heading-@item.index" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body text-secondary bg-light">
-                            @item.value.Answer
+                            else
+                            {
+                                <div class="d-inline-block bg-white bg-opacity-10 rounded-4 px-4 py-3 border border-white border-opacity-25">
+                                    <span class="text-white">Chcesz wysłać zgłoszenie?</span>
+                                    <a asp-controller="Auth" asp-action="Login" class="text-white fw-bold text-decoration-underline ms-1 hover-text-warning">Zaloguj się</a>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
-            }
-        }
-    </div>
+            </div>
 
-    <div class="card border-0 bg-primary text-white rounded-3 overflow-hidden">
-        <div class="card-body p-4 text-center">
-            <h4 class="fw-bold">Nie znalazłeś odpowiedzi?</h4>
-            <p class="mb-3 opacity-75">Skontaktuj się bezpośrednio z naszą obsługą lub managerem.</p>
-            <a asp-controller="Support" asp-action="Create" class="btn btn-light text-primary fw-bold px-4 py-2 rounded-pill">
-                <i class="bi bi-envelope-fill me-2"></i> Napisz do nas
-            </a>
         </div>
     </div>
 </div>
+
+<style>
+    /* Style dla Accordiona */
+    .accordion-button:not(.collapsed) {
+        color: var(--bs-primary) !important;
+        background-color: rgba(var(--bs-primary-rgb), 0.03) !important;
+    }
+
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(0,0,0,.125);
+    }
+
+    /* Efekty dla przycisków */
+    .hover-scale:hover {
+        transform: scale(1.05);
+    }
+
+    .transition {
+        transition: all 0.3s ease;
+    }
+
+    /* Efekt hover dla linku logowania */
+    .hover-text-warning:hover {
+        color: #ffca2c !important;
+        transition: color 0.2s ease-in-out;
+    }
+</style>

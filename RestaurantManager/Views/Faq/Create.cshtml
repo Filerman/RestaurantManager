@@ -3,25 +3,54 @@
     ViewData["Title"] = "Dodaj FAQ";
 }
 
-<div class="container mt-4">
-    <h2>Dodaj Pytanie</h2>
-    <form asp-action="Create">
-        <div class="form-group mb-3">
-            <label asp-for="Question" class="control-label fw-bold"></label>
-            <input asp-for="Question" class="form-control" />
-            <span asp-validation-for="Question" class="text-danger"></span>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h4 class="mb-0 fw-bold text-success"><i class="bi bi-plus-circle me-2"></i>Nowe Pytanie FAQ</h4>
+                </div>
+                <div class="card-body p-4 bg-light bg-opacity-25">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="form-group mb-4">
+                            <label asp-for="Question" class="form-label fw-bold small text-uppercase text-muted ls-1">Pytanie</label>
+                            <input asp-for="Question" class="form-control rounded-3" placeholder="Wpisz treść pytania..." />
+                            <span asp-validation-for="Question" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label asp-for="Answer" class="form-label fw-bold small text-uppercase text-muted ls-1">Odpowiedź</label>
+                            <textarea asp-for="Answer" class="form-control rounded-3" rows="5" placeholder="Wpisz odpowiedź..."></textarea>
+                            <span asp-validation-for="Answer" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-check form-switch mb-4 p-3 bg-white rounded-3 border shadow-sm">
+                            <input class="form-check-input ms-0 me-3" asp-for="IsPublic" style="margin-top: 0.15rem; transform: scale(1.2);" />
+                            <label class="form-check-label fw-bold text-dark" asp-for="IsPublic">
+                                Widoczne publicznie (dla klientów)
+                            </label>
+                            <div class="form-text mt-1 ms-1 text-muted small">
+                                <i class="bi bi-info-circle me-1"></i>Jeśli odznaczone, pytanie będzie widoczne TYLKO dla zalogowanych pracowników (baza wiedzy wewnętrznej).
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end pt-2">
+                            <a asp-action="Manage" class="btn btn-light border rounded-pill px-4 fw-medium">Anuluj</a>
+                            <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm">
+                                <i class="bi bi-check-lg me-1"></i> Zapisz
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="form-group mb-3">
-            <label asp-for="Answer" class="control-label fw-bold"></label>
-            <textarea asp-for="Answer" class="form-control" rows="3"></textarea>
-            <span asp-validation-for="Answer" class="text-danger"></span>
-        </div>
-        <div class="form-group form-check mb-3">
-            <label class="form-check-label">
-                <input class="form-check-input" asp-for="IsPublic" /> @Html.DisplayNameFor(model => model.IsPublic)
-            </label>
-        </div>
-        <button type="submit" class="btn btn-success">Zapisz</button>
-        <a asp-action="Manage" class="btn btn-secondary">Anuluj</a>
-    </form>
+    </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
