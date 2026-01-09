@@ -5,91 +5,115 @@
     var totalLoss = Model.Sum(l => l.EstimatedValue);
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>@ViewData["Title"]</h1>
-    <a asp-action="Report" class="btn btn-danger"><i class="bi bi-plus-lg"></i> Zgłoś nową stratę</a>
-</div>
-
-<div class="card mb-4 bg-light">
-    <div class="card-body py-2">
-        <form asp-action="Index" method="get" class="row g-2 align-items-end">
-            <div class="col-auto">
-                <label class="form-label small fw-bold mb-0">Od daty:</label>
-                <input type="date" name="startDate" value="@ViewBag.StartDate" class="form-control form-control-sm" />
-            </div>
-            <div class="col-auto">
-                <label class="form-label small fw-bold mb-0">Do daty:</label>
-                <input type="date" name="endDate" value="@ViewBag.EndDate" class="form-control form-control-sm" />
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary btn-sm">Filtruj</button>
-                <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Reset</a>
-            </div>
-        </form>
+<div class="container mt-4 mb-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Rejestr Strat</h2>
+            <p class="text-muted small mb-0">Monitorowanie odpadów i uszkodzeń</p>
+        </div>
+        <a asp-action="Report" class="btn btn-danger rounded-pill px-4 shadow-sm fw-bold mt-3 mt-md-0">
+            <i class="bi bi-plus-lg me-2"></i>Zgłoś nową stratę
+        </a>
     </div>
-</div>
 
-<div class="alert alert-warning d-flex justify-content-between align-items-center" role="alert">
-    <span>Suma strat w wybranym okresie:</span>
-    <strong class="fs-5">@totalLoss.ToString("C2")</strong>
-</div>
+    <div class="card shadow-sm border-0 rounded-4 mb-4 bg-white">
+        <div class="card-body p-3">
+            <form asp-action="Index" method="get" class="row g-2 align-items-center justify-content-end">
+                <div class="col-auto">
+                    <label class="col-form-label fw-bold text-muted small text-uppercase me-2">Od:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="date" name="startDate" value="@ViewBag.StartDate" class="form-control form-control-sm border-secondary border-opacity-25 bg-light fw-medium" />
+                </div>
+                <div class="col-auto">
+                    <label class="col-form-label fw-bold text-muted small text-uppercase mx-2">Do:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="date" name="endDate" value="@ViewBag.EndDate" class="form-control form-control-sm border-secondary border-opacity-25 bg-light fw-medium" />
+                </div>
+                <div class="col-auto ms-2">
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold shadow-sm px-3">Filtruj</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm fw-medium ms-1">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
 
-<div class="table-responsive">
-    <table class="table table-striped table-hover align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th>Data</th>
-                <th>Przedmiot</th>
-                <th class="text-center">Ilość</th>
-                <th>Kategoria</th>
-                <th>Opis</th>
-                <th class="text-end">Wartość</th>
-                <th>Zgłosił</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (!Model.Any())
-            {
-                <tr>
-                    <td colspan="8" class="text-center py-4 text-muted">Brak zarejestrowanych strat w tym okresie.</td>
-                </tr>
-            }
+    <div class="alert alert-warning border-0 shadow-sm rounded-4 d-flex justify-content-between align-items-center mb-4 px-4 py-3">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
+            <span class="text-dark fw-medium">Suma strat w wybranym okresie:</span>
+        </div>
+        <strong class="fs-4 text-dark">@totalLoss.ToString("C2")</strong>
+    </div>
 
-            @foreach (var item in Model)
-            {
-                // Ustalanie nazwy do wyświetlenia
-                string itemName = item.MenuItem != null ? item.MenuItem.Name : item.CustomItemName;
-                string itemIcon = item.MenuItem != null ? "🍔" : "🍽️";
-
-                <tr>
-                    <td>@item.DateReported.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td class="fw-bold text-primary">@itemIcon @itemName</td>
-                    <td class="text-center fw-bold">@item.Quantity</td>
-                    <td><span class="badge bg-secondary">@item.LossType</span></td>
-                    <td><small>@item.Description</small></td>
-                    <td class="text-end text-danger fw-bold">@item.EstimatedValue.ToString("C2")</td>
-                    <td>
-                        @if (item.ReportedByUser != null)
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light small text-uppercase text-muted">
+                        <tr>
+                            <th class="ps-4 py-3 fw-bold">Data</th>
+                            <th class="fw-bold">Przedmiot</th>
+                            <th class="text-center fw-bold">Ilość</th>
+                            <th class="fw-bold">Kategoria</th>
+                            <th class="fw-bold">Opis</th>
+                            <th class="text-end fw-bold">Wartość</th>
+                            <th class="fw-bold">Zgłosił</th>
+                            <th class="text-end pe-4 fw-bold">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
                         {
-                            @item.ReportedByUser.Username
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-trash-fill fs-1 d-block mb-2 opacity-25"></i>
+                                    Brak zarejestrowanych strat w tym okresie.
+                                </td>
+                            </tr>
                         }
-                        else
+
+                        @foreach (var item in Model)
                         {
-                            <span class="text-muted">ID: @item.ReportedByUserId</span>
+                            string itemName = item.MenuItem != null ? item.MenuItem.Name : item.CustomItemName;
+                            string itemIcon = item.MenuItem != null ? "bi-basket" : "bi-box-seam";
+
+                            <tr class="border-bottom-0">
+                                <td class="ps-4 text-muted small">
+                                    @item.DateReported.ToString("yyyy-MM-dd")<br />
+                                    @item.DateReported.ToString("HH:mm")
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark d-flex align-items-center">
+                                        <i class="bi @itemIcon me-2 text-secondary"></i> @itemName
+                                    </div>
+                                </td>
+                                <td class="text-center fw-bold text-dark">@item.Quantity</td>
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-10 text-dark border fw-normal px-2 py-1">@item.LossType</span>
+                                </td>
+                                <td class="small text-muted text-truncate" style="max-width: 200px;" title="@item.Description">
+                                    @item.Description
+                                </td>
+                                <td class="text-end fw-bold text-danger">@item.EstimatedValue.ToString("C2")</td>
+                                <td class="small text-muted">
+                                    @(item.ReportedByUser?.Username ?? $"ID: {item.ReportedByUserId}")
+                                </td>
+                                <td class="text-end pe-4">
+                                    <form asp-action="Delete" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć ten wpis?');" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm border-0 rounded-circle p-2" title="Usuń">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
                         }
-                    </td>
-                    <td class="text-end">
-                        <form asp-action="Delete" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć ten wpis?');" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Usuń">
-                                <i class="bi bi-trash"></i> Usuń
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
