@@ -11,211 +11,247 @@
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
 
-<div class="container mt-4">
-    <h2>Zarządzanie Danymi Restauracji</h2>
-    <hr />
+<div class="container mt-4 mb-5 pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Ustawienia Firmy</h2>
+            <p class="text-muted small mb-0">Zarządzaj danymi kontaktowymi i wyglądem</p>
+        </div>
+    </div>
 
     <form asp-action="Edit" method="post" enctype="multipart/form-data" id="editForm">
-        <div class="row">
-            <div class="col-lg-7">
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="bi bi-brush"></i> Branding i Wygląd</h5>
+        <div class="row g-4">
+
+            <div class="col-12">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-brush text-primary me-2"></i>Branding i Wygląd</h5>
                     </div>
-                    <div class="card-body">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="card-body p-4 bg-light bg-opacity-25">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                         <input type="hidden" asp-for="Contact.Id" />
                         <input type="hidden" asp-for="Contact.LogoPath" />
-
                         <input type="hidden" asp-for="CroppedLogoBase64" id="croppedLogoBase64" />
 
-                        <label class="form-label fw-bold mb-2">Co wyświetlać w nagłówku strony?</label>
-                        <div class="d-flex gap-3 mb-4 p-3 bg-light rounded border">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" asp-for="Contact.ShowLogoInHeader" value="false" id="showName" checked="@(Model.Contact.ShowLogoInHeader == false)">
-                                <label class="form-check-label" for="showName">
-                                    <i class="bi bi-fonts"></i> Tylko Nazwa
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" asp-for="Contact.ShowLogoInHeader" value="true" id="showLogo" checked="@(Model.Contact.ShowLogoInHeader == true)">
-                                <label class="form-check-label" for="showLogo">
-                                    <i class="bi bi-image"></i> Logo
-                                </label>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted ls-1">Wygląd nagłówka</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="card p-3 border h-100 cursor-pointer header-option @(!Model.Contact.ShowLogoInHeader ? "border-primary bg-primary bg-opacity-10" : "")">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" asp-for="Contact.ShowLogoInHeader" value="false" onchange="updateHeaderOptions(this)">
+                                            <span class="fw-bold d-block mb-1 text-dark">Tylko Nazwa</span>
+                                            <small class="text-muted">Wyświetla tekstową nazwę restauracji.</small>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="card p-3 border h-100 cursor-pointer header-option @(Model.Contact.ShowLogoInHeader ? "border-primary bg-primary bg-opacity-10" : "")">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" asp-for="Contact.ShowLogoInHeader" value="true" onchange="updateHeaderOptions(this)">
+                                            <span class="fw-bold d-block mb-1 text-dark">Logo</span>
+                                            <small class="text-muted">Wyświetla logo (jeśli wgrane) zamiast tekstu.</small>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label asp-for="Contact.RestaurantName" class="control-label fw-bold"></label>
-                            <input asp-for="Contact.RestaurantName" class="form-control" placeholder="Np. Pizzeria Bella" />
-                            <span asp-validation-for="Contact.RestaurantName" class="text-danger"></span>
+                        <div class="form-floating mb-4">
+                            <input asp-for="Contact.RestaurantName" class="form-control rounded-3" placeholder="Nazwa" />
+                            <label asp-for="Contact.RestaurantName">Nazwa Restauracji</label>
+                            <span asp-validation-for="Contact.RestaurantName" class="text-danger small"></span>
                         </div>
 
-                        <hr class="my-4">
+                        <hr class="my-4 text-muted opacity-25">
 
-                        <h6 class="fw-bold mb-3">Logo Restauracji</h6>
-                        <div class="row align-items-center">
-                            <div class="col-md-4 text-center mb-3 mb-md-0">
-                                <div class="border rounded p-2 bg-light d-flex align-items-center justify-content-center" style="height: 120px; width: 120px; margin: 0 auto;">
+                        <h6 class="fw-bold mb-3 small text-uppercase text-muted ls-1">Logo Restauracji</h6>
+                        <div class="row align-items-center bg-white p-3 rounded-3 border mx-0">
+                            <div class="col-md-3 text-center border-end">
+                                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 100px;">
                                     @if (!string.IsNullOrEmpty(Model.Contact.LogoPath))
                                     {
-                                        <img src="@Model.Contact.LogoPath" alt="Logo" class="img-fluid" style="max-height: 100%; max-width: 100%;" />
+                                        <img src="@Model.Contact.LogoPath" alt="Logo" class="img-fluid p-2" style="max-height: 100%;" />
                                     }
                                     else
                                     {
-                                        <span class="text-muted small">Brak logo</span>
+                                        <span class="text-muted small fst-italic">Brak logo</span>
                                     }
                                 </div>
-
                                 @if (!string.IsNullOrEmpty(Model.Contact.LogoPath))
                                 {
-                                    <button type="submit" asp-action="DeleteLogo" formnovalidate class="btn btn-danger btn-sm mt-2 w-100" onclick="return confirm('Czy na pewno chcesz usunąć logo?');">
-                                        <i class="bi bi-trash"></i> Usuń Logo
+                                    <button type="submit" asp-action="DeleteLogo" formnovalidate class="btn btn-link text-danger btn-sm text-decoration-none p-0 mt-2" onclick="return confirm('Usunąć logo?');">
+                                        <i class="bi bi-trash"></i> Usuń
                                     </button>
                                 }
                             </div>
-                            <div class="col-md-8">
-                                <label class="form-label fw-bold small">Wgraj nowe logo (automatyczne kadrowanie)</label>
+                            <div class="col-md-9 ps-md-4 mt-3 mt-md-0">
+                                <label class="form-label fw-bold small">Wgraj nowe logo</label>
                                 <input type="file" id="logoInput" class="form-control" accept="image/*" />
-                                <div class="form-text small">
-                                    Wybranie pliku otworzy okno edycji. Po zapisaniu zmiany, stare logo zostanie nadpisane.
-                                </div>
+                                <div class="form-text small mt-1">Otworzy się edytor kadrowania.</div>
                                 <div id="previewContainer" class="mt-2" style="display:none;">
-                                    <span class="badge bg-success"><i class="bi bi-check-lg"></i> Obraz gotowy do wysłania</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-check-lg"></i> Obraz gotowy do zapisu</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Adres i Kontakt</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group mb-3">
-                            <label asp-for="Contact.AddressStreet" class="control-label"></label>
-                            <input asp-for="Contact.AddressStreet" class="form-control" />
-                            <span asp-validation-for="Contact.AddressStreet" class="text-danger"></span>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label asp-for="Contact.AddressZipCode" class="control-label"></label>
-                                <input asp-for="Contact.AddressZipCode" class="form-control" />
-                                <span asp-validation-for="Contact.AddressZipCode" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-8 mb-3">
-                                <label asp-for="Contact.AddressCity" class="control-label"></label>
-                                <input asp-for="Contact.AddressCity" class="form-control" />
-                                <span asp-validation-for="Contact.AddressCity" class="text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contact.PhoneNumber" class="control-label"></label>
-                                <input asp-for="Contact.PhoneNumber" class="form-control" />
-                                <span asp-validation-for="Contact.PhoneNumber" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contact.ContactEmail" class="control-label"></label>
-                                <input asp-for="Contact.ContactEmail" class="form-control" />
-                                <span asp-validation-for="Contact.ContactEmail" class="text-danger"></span>
-                            </div>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label asp-for="Contact.EstimatedDeliveryTimeMinutes" class="control-label"></label>
-                            <input asp-for="Contact.EstimatedDeliveryTimeMinutes" class="form-control" />
-                            <span asp-validation-for="Contact.EstimatedDeliveryTimeMinutes" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label asp-for="Contact.GoogleMapsLink" class="control-label"></label>
-                            <input asp-for="Contact.GoogleMapsLink" class="form-control" />
-                            <span asp-validation-for="Contact.GoogleMapsLink" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-5">
-                <div class="card shadow">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0"><i class="bi bi-clock"></i> Godziny Otwarcia</h5>
+            <div class="col-12">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-geo-alt text-primary me-2"></i>Adres i Kontakt</h5>
+                    </div>
+                    <div class="card-body p-4 bg-light bg-opacity-25">
+                        <div class="form-floating mb-3">
+                            <input asp-for="Contact.AddressStreet" class="form-control rounded-3" placeholder="Ulica" />
+                            <label asp-for="Contact.AddressStreet">Ulica i numer</label>
+                            <span asp-validation-for="Contact.AddressStreet" class="text-danger small"></span>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                    <input asp-for="Contact.AddressZipCode" class="form-control rounded-3" placeholder="Kod" />
+                                    <label asp-for="Contact.AddressZipCode">Kod pocztowy</label>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-floating">
+                                    <input asp-for="Contact.AddressCity" class="form-control rounded-3" placeholder="Miasto" />
+                                    <label asp-for="Contact.AddressCity">Miasto</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Contact.PhoneNumber" class="form-control rounded-3" placeholder="Tel" />
+                                    <label asp-for="Contact.PhoneNumber">Telefon</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="Contact.ContactEmail" class="form-control rounded-3" placeholder="Email" />
+                                    <label asp-for="Contact.ContactEmail">Email</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating">
+                            <input asp-for="Contact.EstimatedDeliveryTimeMinutes" class="form-control rounded-3" placeholder="Czas" type="number" />
+                            <label asp-for="Contact.EstimatedDeliveryTimeMinutes">Średni czas dostawy (min)</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-clock text-primary me-2"></i>Godziny Otwarcia</h5>
                     </div>
                     <div class="card-body p-0">
-                        <table class="table table-striped mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Dzień</th>
-                                    <th>Od</th>
-                                    <th>Do</th>
-                                    <th class="text-center">Zamknięte</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (int i = 0; i < Model.OpeningHours.Count; i++)
-                                {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light small text-muted text-uppercase">
                                     <tr>
-                                        <td class="align-middle">
-                                            <input type="hidden" asp-for="OpeningHours[i].Id" />
-                                            <input type="hidden" asp-for="OpeningHours[i].DayOfWeek" />
-                                            <strong>@polishDays[Model.OpeningHours[i].DayOfWeek]</strong>
-                                        </td>
-                                        <td>
-                                            <input type="time" class="form-control form-control-sm" asp-for="OpeningHours[i].OpenTime" />
-                                        </td>
-                                        <td>
-                                            <input type="time" class="form-control form-control-sm" asp-for="OpeningHours[i].CloseTime" />
-                                        </td>
-                                        <td class="text-center align-middle">
-                                            <div class="form-check d-flex justify-content-center">
-                                                <input class="form-check-input" type="checkbox" asp-for="OpeningHours[i].IsClosed" />
-                                            </div>
-                                        </td>
+                                        <th class="ps-4 py-3">Dzień</th>
+                                        <th>Od</th>
+                                        <th>Do</th>
+                                        <th class="text-center pe-3">Status</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.OpeningHours.Count; i++)
+                                    {
+                                        var isClosedId = $"closed_{i}";
+                                        <tr class="border-bottom-0">
+                                            <td class="ps-4 fw-bold text-dark" style="width: 25%;">
+                                                <input type="hidden" asp-for="OpeningHours[i].Id" />
+                                                <input type="hidden" asp-for="OpeningHours[i].DayOfWeek" />
+                                                @polishDays[Model.OpeningHours[i].DayOfWeek]
+                                            </td>
+                                            <td style="width: 25%;">
+                                                <input type="time" class="form-control bg-light border-0" asp-for="OpeningHours[i].OpenTime" />
+                                            </td>
+                                            <td style="width: 25%;">
+                                                <input type="time" class="form-control bg-light border-0" asp-for="OpeningHours[i].CloseTime" />
+                                            </td>
+                                            <td class="text-center pe-3" style="width: 25%;">
+                                                <div class="form-check form-switch d-flex justify-content-center">
+                                                    <input class="form-check-input" type="checkbox" asp-for="OpeningHours[i].IsClosed" id="@isClosedId" style="cursor: pointer;" />
+                                                    <label class="form-check-label ms-2 small text-muted" for="@isClosedId">Zamknięte</label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="fixed-bottom bg-white border-top p-3 text-center shadow-lg" style="z-index: 90;">
-            <div class="container">
-                <button type="submit" class="btn btn-success btn-lg px-5"><i class="bi bi-save"></i> Zapisz Zmiany</button>
-                <a asp-action="Index" class="btn btn-outline-secondary btn-lg ms-2">Anuluj</a>
+        <div class="fixed-bottom bg-white border-top py-3 shadow-lg" style="z-index: 1000;">
+            <div class="container d-flex justify-content-end gap-2">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-light border rounded-pill px-4 fw-medium">Anuluj</a>
+                <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm">
+                    <i class="bi bi-save me-2"></i> Zapisz Zmiany
+                </button>
             </div>
         </div>
-        <div style="height: 80px;"></div>
+        <div style="height: 60px;"></div>
     </form>
 </div>
 
-<div class="modal fade" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="cropModalLabel">Dopasuj Logo</h5>
+                <h5 class="modal-title fw-bold">Dopasuj Logo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-0 bg-dark" style="height: 500px; display: flex; align-items: center; justify-content: center;">
-                <img id="imageToCrop" src="" style="max-width: 100%; max-height: 100%; display: block;">
+            <div class="modal-body p-0 bg-dark text-center" style="height: 500px; display: flex; align-items: center; justify-content: center;">
+                <img id="imageToCrop" src="" style="max-height: 100%; max-width: 100%; display: block;">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <button type="button" class="btn btn-primary" id="cropButton">Przytnij i Zatwierdź</button>
+                <button type="button" class="btn btn-primary fw-bold" id="cropButton">Przytnij i Zatwierdź</button>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .header-option:hover {
+        background-color: rgba(0,0,0,0.02);
+    }
+</style>
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
     <script>
+        // Prosty skrypt do podświetlania wybranej opcji nagłówka
+        function updateHeaderOptions(radio) {
+            document.querySelectorAll('.header-option').forEach(el => {
+                el.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
+            });
+            if(radio.checked) {
+                radio.closest('label').classList.add('border-primary', 'bg-primary', 'bg-opacity-10');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             var avatarInput = document.getElementById('logoInput');
             var image = document.getElementById('imageToCrop');
@@ -226,64 +262,43 @@
             var previewContainer = document.getElementById('previewContainer');
             var cropper;
 
-            // Gdy wybrano plik
             avatarInput.addEventListener('change', function (e) {
                 var files = e.target.files;
-                var done = function (url) {
-                    avatarInput.value = ''; // Reset inputu, aby można było wybrać ten sam plik ponownie
-                    image.src = url;
-                    modal.show();
-                };
-
                 if (files && files.length > 0) {
                     var file = files[0];
-                    if (URL) {
-                        done(URL.createObjectURL(file));
-                    } else if (FileReader) {
-                        var reader = new FileReader();
-                        reader.onload = function (e) {
-                            done(reader.result);
-                        };
-                        reader.readAsDataURL(file);
-                    }
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        avatarInput.value = '';
+                        image.src = e.target.result;
+                        modal.show();
+                    };
+                    reader.readAsDataURL(file);
                 }
             });
 
-            // Gdy modal się otwiera - inicjalizuj croppera
             modalElement.addEventListener('shown.bs.modal', function () {
                 cropper = new Cropper(image, {
-                    aspectRatio: NaN, // Dowolne proporcje (możesz ustawić 1, 16/9 itp.)
-                    viewMode: 1,      // Obraz nie wychodzi poza kontener
+                    aspectRatio: NaN,
+                    viewMode: 1,
                     autoCropArea: 0.8,
                 });
             });
 
-            // Gdy modal się zamyka - zniszcz croppera
             modalElement.addEventListener('hidden.bs.modal', function () {
-                if (cropper) {
-                    cropper.destroy();
-                    cropper = null;
-                }
+                if (cropper) { cropper.destroy(); cropper = null; }
             });
 
-            // Kliknięcie "Przytnij"
             cropButton.addEventListener('click', function () {
                 if (cropper) {
-                    // Pobierz wynik jako canvas -> Base64 (PNG, żeby zachować przezroczystość)
-                    var canvas = cropper.getCroppedCanvas({
-                        height: 200 // Maksymalna wysokość (optymalizacja)
-                    });
-
-                    // Zapisz Base64 do ukrytego pola
-                    var base64data = canvas.toDataURL('image/png');
-                    resultInput.value = base64data;
-
-                    // Pokaż info, że gotowe
+                    var canvas = cropper.getCroppedCanvas({ height: 300 });
+                    resultInput.value = canvas.toDataURL('image/png');
                     previewContainer.style.display = 'block';
-
-                    // Automatycznie zaznacz opcję "Pokaż Logo"
-                    document.getElementById('showLogo').checked = true;
-
+                    // Automatycznie zaznacz opcję z Logo po wgraniu
+                    const logoRadio = document.querySelector('input[name="Contact.ShowLogoInHeader"][value="true"]');
+                    if(logoRadio) {
+                        logoRadio.checked = true;
+                        updateHeaderOptions(logoRadio);
+                    }
                     modal.hide();
                 }
             });

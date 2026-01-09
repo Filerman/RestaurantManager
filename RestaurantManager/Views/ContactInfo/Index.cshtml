@@ -6,7 +6,6 @@
     ViewData["Title"] = "Kontakt";
     var openingHours = ViewBag.OpeningHours as List<RestaurantManager.Models.OpeningHour>;
 
-    // Sprawdzamy czy użytkownik jest zalogowany
     var userId = HttpContextAccessor.HttpContext.Session.GetInt32("UserId");
     var isLogged = userId.HasValue;
 
@@ -17,88 +16,156 @@
     };
 }
 
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <h1 class="display-4 mb-4">@Model.RestaurantName</h1>
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h4 class="card-title mb-3"><i class="bi bi-geo-alt-fill text-primary"></i> Adres</h4>
-                    <p class="card-text fs-5">
-                        @Model.AddressStreet<br />
-                        @Model.AddressZipCode @Model.AddressCity
-                    </p>
-                    <hr />
-                    <h4 class="card-title mb-3"><i class="bi bi-telephone-fill text-primary"></i> Kontakt</h4>
-                    <p class="card-text fs-5">
-                        <strong>Tel:</strong> <a href="tel:@Model.PhoneNumber" class="text-decoration-none">@Model.PhoneNumber</a><br />
-                        <strong>Email:</strong> <a href="mailto:@Model.ContactEmail" class="text-decoration-none">@Model.ContactEmail</a>
-                    </p>
-                    @if (!string.IsNullOrEmpty(Model.GoogleMapsLink))
+<div class="container mt-5 mb-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-dark">@Model.RestaurantName</h1>
+        <p class="text-muted fs-5">Zapraszamy do kontaktu i odwiedzin!</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-geo-alt-fill text-primary me-2"></i> Dane kontaktowe</h5>
+                </div>
+                <div class="card-body p-4 d-flex flex-column justify-content-center">
+
+                    <div class="d-flex align-items-start mb-4">
+                        <div class="icon-wrapper bg-primary-soft text-primary me-3 flex-shrink-0 fs-4" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:12px;">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-uppercase text-muted small ls-1 mb-1">Adres</h6>
+                            <p class="fs-5 mb-0 text-dark">
+                                @Model.AddressStreet<br />
+                                @Model.AddressZipCode @Model.AddressCity
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-start mb-4">
+                        <div class="icon-wrapper bg-success-soft text-success me-3 flex-shrink-0 fs-4" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:12px;">
+                            <i class="bi bi-telephone-fill"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-uppercase text-muted small ls-1 mb-1">Telefon</h6>
+                            <a href="tel:@Model.PhoneNumber" class="text-decoration-none text-dark fs-5 hover-underline fw-bold">@Model.PhoneNumber</a>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-start">
+                        <div class="icon-wrapper bg-warning-soft text-warning me-3 flex-shrink-0 fs-4" style="width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:12px;">
+                            <i class="bi bi-envelope-fill"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-uppercase text-muted small ls-1 mb-1">Email</h6>
+                            <a href="mailto:@Model.ContactEmail" class="text-decoration-none text-dark fs-5 hover-underline">@Model.ContactEmail</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-clock-fill text-secondary me-2"></i> Godziny Otwarcia</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (openingHours != null && openingHours.Any())
                     {
-                        <div class="mt-4">
-                            <a href="@Model.GoogleMapsLink" target="_blank" class="btn btn-outline-primary"><i class="bi bi-map"></i> Zobacz na mapie</a>
+                        <table class="table table-hover align-middle mb-0 h-100">
+                            <tbody>
+                                @foreach (var day in openingHours)
+                                {
+                                    var isToday = DateTime.Now.DayOfWeek == day.DayOfWeek;
+                                    <tr class="@(isToday ? "bg-light" : "")">
+                                        <td class="ps-4 border-bottom-0 py-3 @(isToday ? "fw-bold text-primary" : "text-secondary")">
+                                            @polishDays[day.DayOfWeek]
+                                            @if (isToday)
+                                            {
+                                                <span class="badge bg-primary ms-2 small">Dziś</span>
+                                            }
+                                        </td>
+                                        <td class="text-end pe-4 border-bottom-0 py-3">
+                                            @if (day.IsClosed)
+                                            {
+                                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 fw-normal">Zamknięte</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="fw-bold text-dark">@day.OpenTime.ToString(@"hh\:mm") - @day.CloseTime.ToString(@"hh\:mm")</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center justify-content-center h-100 p-5">
+                            <p class="text-muted mb-0 text-center">Godziny otwarcia nie zostały jeszcze ustalone.</p>
                         </div>
                     }
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-md-6">
-            <div class="card shadow-sm border-0 bg-light mb-4">
-                <div class="card-body p-4">
-                    <h3 class="mb-4"><i class="bi bi-clock text-primary"></i> Godziny Otwarcia</h3>
-                    @if (openingHours != null && openingHours.Any())
-                    {
-                        <ul class="list-group list-group-flush bg-transparent">
-                            @foreach (var day in openingHours)
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent ps-0 pe-0">
-                                    <span class="fw-bold">@polishDays[day.DayOfWeek]</span>
-                                    <span>
-                                        @if (day.IsClosed)
-                                        {
-                                            <span class="badge bg-danger">Zamknięte</span>
-                                        }
-                                        else
-                                        {
-
-                                            <span class="text-dark">@day.OpenTime.ToString(@"hh\:mm") - @day.CloseTime.ToString(@"hh\:mm")</span>
-                                        }
-                                    </span>
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-
-                        <p class="text-muted">Godziny otwarcia nie zostały jeszcze ustalone.</p>
-                    }
-                </div>
-            </div>
-
-            @* --- NOWA SEKCJA KONTAKTOWA (Z FAQ) --- *@
-            <div class="card border-0 bg-primary text-white rounded-3 overflow-hidden shadow-sm">
-                <div class="card-body p-4 text-center">
-                    <h4 class="fw-bold"><i class="bi bi-chat-left-dots me-2"></i>Masz pytania?</h4>
-                    <p class="mb-3 opacity-75">Skontaktuj się bezpośrednio z naszą obsługą lub managerem.</p>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-4 bg-primary text-white overflow-hidden">
+                <div class="card-body p-4 p-md-5 text-center">
+                    <h3 class="fw-bold mb-3 text-white"><i class="bi bi-chat-heart-fill me-2"></i>Masz pytania?</h3>
+                    <p class="mb-4 text-white text-opacity-75 fs-5">Skontaktuj się bezpośrednio z naszą obsługą lub managerem. Jesteśmy tu dla Ciebie!</p>
 
                     @if (isLogged)
                     {
-                        <a asp-controller="Support" asp-action="Create" class="btn btn-light text-primary fw-bold px-4 py-2 rounded-pill">
-                            <i class="bi bi-envelope-fill me-2"></i> Napisz do nas
+                        <a asp-controller="Support" asp-action="Create" class="btn btn-light text-primary fw-bold px-5 py-3 rounded-pill shadow-sm hover-scale transition">
+                            <i class="bi bi-send-fill me-2"></i> Wyślij wiadomość
                         </a>
                     }
                     else
                     {
-                        <div class="bg-white bg-opacity-25 p-2 rounded text-white small">
-                            <a asp-controller="Auth" asp-action="Login" class="text-white fw-bold text-decoration-underline">Zaloguj się</a>, aby wysłać wiadomość.
+                        <div class="d-inline-block bg-white bg-opacity-10 rounded-4 px-4 py-3 border border-white border-opacity-25">
+                            <span class="text-white">Chcesz wysłać zgłoszenie?</span>
+                            <a asp-controller="Auth" asp-action="Login" class="text-white fw-bold text-decoration-underline ms-1 hover-text-warning">Zaloguj się</a>
                         </div>
                     }
                 </div>
             </div>
-            @* --------------------------------------- *@
         </div>
     </div>
 </div>
+
+<style>
+    .bg-primary-soft {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+
+    .bg-warning-soft {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline !important;
+    }
+
+    .hover-scale:hover {
+        transform: scale(1.05);
+    }
+
+    .transition {
+        transition: all 0.3s ease;
+    }
+
+    .hover-text-warning:hover {
+        color: #ffc107 !important;
+    }
+</style>

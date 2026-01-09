@@ -21,7 +21,9 @@
     var brandingInfo = _context.ContactInfos.AsNoTracking().FirstOrDefault();
     string restaurantName = brandingInfo?.RestaurantName ?? "Bistro Manager";
     string? logoUrl = brandingInfo?.LogoPath;
-    bool showLogo = brandingInfo?.ShowLogoInHeader ?? false;
+
+    // Logika wyświetlania logo:
+    bool showLogo = (brandingInfo?.ShowLogoInHeader ?? false) && !string.IsNullOrEmpty(logoUrl);
 
     // Koszyk
     var cart = Context.Session.GetObject<List<CartItemViewModel>>("Cart");
@@ -48,13 +50,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - @restaurantName</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/pl.min.js"></script>
 </head>
@@ -62,18 +61,16 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm py-2">
             <div class="container-fluid px-4">
+
                 <a class="navbar-brand d-flex align-items-center fw-bold text-dark" asp-controller="Home" asp-action="Index">
-                    @if (showLogo && !string.IsNullOrEmpty(logoUrl))
+                    @if (showLogo)
                     {
-                        <img src="@logoUrl" alt="@restaurantName" class="me-2" style="height: 40px; width: auto;" />
+                        <img src="@logoUrl" alt="@restaurantName" style="height: 40px; width: auto;" />
                     }
                     else
                     {
-                        <div class="brand-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
-                            <i class="bi bi-egg-fried fs-5"></i>
-                        </div>
+                        <span class="tracking-tight">@restaurantName</span>
                     }
-                    <span class="tracking-tight d-none d-sm-inline">@restaurantName</span>
                 </a>
 
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -95,15 +92,12 @@
                     </ul>
 
                     <ul class="navbar-nav align-items-center gap-2">
-
                         <li class="nav-item">
                             <a class="btn btn-outline-dark border-0 position-relative rounded-pill px-3" asp-controller="Cart" asp-action="Index" title="Twój koszyk">
                                 <i class="bi bi-bag fs-5"></i>
                                 @if (cartCount > 0)
                                 {
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark border border-white">
-                                        @cartCount
-                                    </span>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark border border-white">@cartCount</span>
                                 }
                             </a>
                         </li>
@@ -139,33 +133,27 @@
                                     <i class="bi bi-shield-lock me-1"></i> Zarządzanie
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end border-0 shadow rounded-3 p-2" style="min-width: 260px; max-height: 80vh; overflow-y: auto;">
-
                                     <li><h6 class="dropdown-header text-uppercase smaller fw-bold ls-1 text-primary bg-light rounded px-2 py-1 mb-1">Restauracja</h6></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="Menu" asp-action="Index">Menu & Produkty</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="Tables" asp-action="Index">Stoliki</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="DeliveryZones" asp-action="Index">Dostawy</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="OpeningHours" asp-action="Index">Godziny Otwarcia</a></li>
                                     <li><a class="dropdown-item rounded-2 text-danger" asp-controller="LossLogs" asp-action="Index"><i class="bi bi-trash me-2"></i>Rejestr Strat</a></li>
-
                                     <li><hr class="dropdown-divider"></li>
-
                                     <li><h6 class="dropdown-header text-uppercase smaller fw-bold ls-1 text-primary bg-light rounded px-2 py-1 mb-1">Treść & Marketing</h6></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="Content" asp-action="ManageHome">Edycja Strony Głównej</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="Announcements" asp-action="Manage">Aktualności</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="Gallery" asp-action="Manage">Galeria Zdjęć</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="Faq" asp-action="Manage">Sekcja FAQ</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="ContactInfo" asp-action="Edit">Dane Firmy & Logo</a></li>
-
                                     <li><hr class="dropdown-divider"></li>
-
                                     <li><h6 class="dropdown-header text-uppercase smaller fw-bold ls-1 text-primary bg-light rounded px-2 py-1 mb-1">HR & Personel</h6></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="Employees" asp-action="Index">Lista Pracowników</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="Schedules" asp-action="Index">Grafiki Pracy</a></li>
-                                    <li><a class="dropdown-item rounded-2" asp-controller="Availability" asp-action="Manage">Dyspozycyjność (Zgłoszenia)</a></li>
+                                    <li><a class="dropdown-item rounded-2" asp-controller="Availability" asp-action="Manage">Dyspozycyjność</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="PositionTags" asp-action="Index">Tagi Stanowisk</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="Employees" asp-action="Payroll">Lista Płac</a></li>
                                     <li><a class="dropdown-item rounded-2" asp-controller="Users" asp-action="Index">Użytkownicy Systemu</a></li>
-
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item rounded-2 d-flex justify-content-between align-items-center fw-bold" asp-controller="Support" asp-action="Manage">
