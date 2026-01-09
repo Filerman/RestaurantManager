@@ -4,38 +4,28 @@
     ViewData["Title"] = "Usuń Strefę Dostaw";
 }
 
-<div class="container mt-4">
+<div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card border-danger shadow">
-                <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0">Potwierdź usunięcie</h4>
-                </div>
-                <div class="card-body">
-                    <p class="lead">Czy na pewno chcesz usunąć tę strefę dostaw?</p>
-                    <hr />
-                    <dl class="row">
-                        <dt class="col-sm-4">
-                            @Html.DisplayNameFor(model => model.CityName)
-                        </dt>
-                        <dd class="col-sm-8 fw-bold">
-                            @Html.DisplayFor(model => model.CityName)
-                        </dd>
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-3 text-danger">
+                        <i class="bi bi-exclamation-circle" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title fw-bold mb-3">Usuwasz strefę</h4>
+                    <p class="text-muted mb-4">Czy na pewno chcesz bezpowrotnie usunąć strefę <strong>"@Model.CityName"</strong>?</p>
 
-                        <dt class="col-sm-4">
-                            @Html.DisplayNameFor(model => model.DeliveryFee)
-                        </dt>
-                        <dd class="col-sm-8">
-                            @Model.DeliveryFee.ToString("C")
-                        </dd>
-                    </dl>
-
-                    <form asp-action="Delete">
-                        <input type="hidden" asp-for="Id" />
-                        <div class="d-flex justify-content-end">
-                            <a asp-action="Index" class="btn btn-secondary me-2">Anuluj</a>
-                            <input type="submit" value="Usuń" class="btn btn-danger" />
+                    <div class="bg-light p-3 rounded-3 mb-4 text-start small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Opłata za dowóz:</span>
+                            <span class="fw-bold">@Model.DeliveryFee.ToString("C")</span>
                         </div>
+                    </div>
+
+                    <form asp-action="Delete" class="d-flex justify-content-center gap-2">
+                        <input type="hidden" asp-for="Id" />
+                        <a asp-action="Index" class="btn btn-light border px-4">Anuluj</a>
+                        <button type="submit" class="btn btn-danger fw-bold px-4 shadow-sm">Tak, usuń</button>
                     </form>
                 </div>
             </div>
