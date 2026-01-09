@@ -2,30 +2,54 @@
 
 @{
     ViewData["Title"] = "Zarządzanie Dyspozycyjnością";
-    var nextMonthName = new DateTime(Model.NextMonthYear, Model.NextMonth, 1).ToString("MMMM yyyy", new System.Globalization.CultureInfo("pl-PL"));
+    var selectedDate = new DateTime(Model.NextMonthYear, Model.NextMonth, 1);
+    var nextMonthName = selectedDate.ToString("MMMM yyyy", new System.Globalization.CultureInfo("pl-PL"));
     int currentDeadline = ViewBag.DeadlineDays ?? 7;
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2><i class="bi bi-calendar-check text-primary"></i> Dyspozycyjność na: @nextMonthName</h2>
+<div class="container mt-4 mb-5">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 p-3 bg-white rounded-4 shadow-sm border">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Dyspozycyjność</h2>
+            <p class="text-muted small mb-0">Przegląd zgłoszeń pracowników</p>
+        </div>
+
+        <form method="get" class="d-flex align-items-center gap-2 mt-3 mt-md-0">
+            <input type="hidden" name="year" value="@Model.NextMonthYear" />
+            <input type="hidden" name="month" value="@Model.NextMonth" />
+
+            <div class="btn-group rounded-pill shadow-sm" role="group">
+                <button type="submit" name="direction" value="prev" class="btn btn-light border border-end-0 rounded-start-pill px-3">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+
+                <button type="button" class="btn btn-light border-top border-bottom px-4 fw-bold text-primary disabled" style="min-width: 160px; opacity: 1;">
+                    @nextMonthName.ToUpper()
+                </button>
+
+                <button type="submit" name="direction" value="next" class="btn btn-light border border-start-0 rounded-end-pill px-3">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </form>
     </div>
 
-    <div class="card shadow-sm mb-4 border-light bg-light">
-        <div class="card-body">
-            <h5 class="card-title text-muted mb-3"><i class="bi bi-gear-fill"></i> Konfiguracja</h5>
-            <form asp-action="UpdateDeadline" method="post" class="row row-cols-lg-auto g-3 align-items-center">
-                <div class="col-12">
-                    <label class="form-label mb-0" for="deadlineDays">
-                        Wymagane wyprzedzenie zgłoszeń (dni przed końcem miesiąca):
-                    </label>
-                </div>
-                <div class="col-12">
+    <div class="card shadow-sm border-0 rounded-4 mb-4 bg-white">
+        <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+
+            <div class="badge bg-light text-dark border p-2 rounded-pill px-3">
+                <i class="bi bi-calendar-event me-2 text-primary"></i> Termin zgłoszeń: @currentDeadline dni przed końcem miesiąca
+            </div>
+
+            <form asp-action="UpdateDeadline" method="post" class="d-flex align-items-center gap-2 me-auto">
+                <label class="form-label mb-0 text-muted small fw-bold text-uppercase me-1" for="deadlineDays">
+                    Zmień:
+                </label>
+                <div class="input-group input-group-sm">
                     <input type="number" class="form-control" id="deadlineDays" name="deadlineDays"
-                           value="@currentDeadline" min="1" max="31" style="width: 80px;" required />
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary btn-sm">Zapisz ustawienie</button>
+                           value="@currentDeadline" min="1" max="31" style="width: 60px;" required />
+                    <button type="submit" class="btn btn-outline-primary">Zapisz</button>
                 </div>
             </form>
         </div>
@@ -33,62 +57,78 @@
 
     @if (Model.IsUrgent)
     {
-        <div class="alert alert-warning border-start border-warning border-4">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            <strong>Uwaga!</strong> Do końca miesiąca zostało mniej niż @currentDeadline dni.
-            Pracownicy oznaczeni na czerwono nie uzupełnili jeszcze dyspozycyjności.
+        <div class="alert alert-warning border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+            <i class="bi bi-exclamation-triangle-fill fs-3 me-3 text-warning"></i>
+            <div>
+                <strong>Uwaga! Kończy się czas.</strong>
+                <span>Do końca miesiąca zostało mniej niż @currentDeadline dni. Pracownicy oznaczeni na czerwono nie uzupełnili jeszcze dyspozycyjności na ten miesiąc.</span>
+            </div>
         </div>
     }
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom-0">
+            <h5 class="fw-bold text-dark mb-0">Status pracowników: <span class="text-primary">@nextMonthName</span></h5>
+        </div>
         <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Pracownik</th>
-                        <th>Kontakt</th>
-                        <th class="text-center">Status</th>
-                        <th class="text-end">Akcje</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var emp in Model.EmployeesStatus)
-                    {
-                        string rowClass = "";
-                        if (!emp.HasProvidedAvailability)
-                        {
-                            rowClass = Model.IsUrgent ? "table-danger" : "table-warning";
-                        }
-
-                        <tr class="@rowClass">
-                            <td>
-                                <strong>@emp.FullName</strong>
-                            </td>
-                            <td>
-                                <div class="small"><i class="bi bi-envelope"></i> @emp.Email</div>
-                                <div class="small text-muted"><i class="bi bi-telephone"></i> @emp.Phone</div>
-                            </td>
-                            <td class="text-center">
-                                @if (emp.HasProvidedAvailability)
-                                {
-                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Uzupełniono</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Brak danych</span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                @* TERAZ PRZYCISK PODGLĄDU JEST DOSTĘPNY ZAWSZE *@
-                                <a asp-action="Index" asp-route-targetUserId="@emp.UserId"
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i> Podgląd
-                                </a>
-                            </td>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-uppercase small text-muted">
+                        <tr>
+                            <th class="ps-4 py-3 fw-bold">Pracownik</th>
+                            <th class="fw-bold">Kontakt</th>
+                            <th class="text-center fw-bold">Status</th>
+                            <th class="text-end pe-4 fw-bold">Akcje</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var emp in Model.EmployeesStatus)
+                        {
+                            string rowClass = "";
+                            if (!emp.HasProvidedAvailability && Model.IsUrgent)
+                            {
+                                rowClass = "bg-danger bg-opacity-10";
+                            }
+
+                            <tr class="@rowClass border-bottom-0">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-placeholder rounded-circle bg-secondary bg-opacity-10 text-secondary d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 40px; height: 40px;">
+                                            @(emp.FullName.Length > 0 ? emp.FullName[0].ToString() : "?")
+                                        </div>
+                                        <strong>@emp.FullName</strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="small"><i class="bi bi-envelope me-1 text-muted"></i> @emp.Email</div>
+                                    <div class="small text-muted"><i class="bi bi-telephone me-1"></i> @emp.Phone</div>
+                                </td>
+                                <td class="text-center">
+                                    @if (emp.HasProvidedAvailability)
+                                    {
+                                        <span class="badge bg-success-soft text-success rounded-pill border border-success px-2 fw-medium">
+                                            <i class="bi bi-check-circle me-1"></i> Gotowe
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-soft text-danger rounded-pill border border-danger px-2 fw-medium">
+                                            <i class="bi bi-x-circle me-1"></i> Brak danych
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a asp-action="Index"
+                                       asp-route-targetUserId="@emp.UserId"
+                                       class="btn btn-sm btn-secondary rounded-pill px-3 fw-medium">
+                                        <i class="bi bi-eye me-1"></i> Podgląd
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

@@ -2,60 +2,70 @@
     ViewData["Title"] = "Logowanie";
 }
 
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="row justify-content-center">
         <div class="col-md-5 col-lg-4">
-            <div class="card shadow-lg border-0 rounded-3">
-                <div class="card-header bg-primary bg-gradient text-white text-center py-4 rounded-top-3">
-                    <h3 class="mb-0 fw-bold"><i class="bi bi-door-open-fill"></i> Logowanie</h3>
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-primary text-white text-center py-4 border-0">
+                    <div class="mb-2"><i class="bi bi-person-circle display-4"></i></div>
+                    <h3 class="mb-0 fw-bold ls-1">Witaj ponownie!</h3>
                 </div>
-                <div class="card-body p-4 bg-light">
+
+                <div class="card-body p-4 p-lg-5 bg-white">
                     @if (TempData["Error"] != null)
                     {
-                        <div class="alert alert-danger alert-dismissible fade show shadow-sm">
-                            <i class="bi bi-exclamation-circle-fill me-2"></i> @TempData["Error"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+                            <i class="bi bi-exclamation-circle-fill fs-4 me-3"></i>
+                            <div>@TempData["Error"]</div>
                         </div>
                     }
                     @if (TempData["Success"] != null)
                     {
-                        <div class="alert alert-success alert-dismissible fade show shadow-sm">
-                            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+                            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+                            <div>@TempData["Success"]</div>
                         </div>
                     }
 
                     <form method="post">
                         <div class="form-floating mb-3">
-                            <input type="text" name="login" class="form-control" id="floatingInput" placeholder="Login lub Email" required />
-                            <label for="floatingInput">Login lub Email</label>
+                            <input type="text" name="login" class="form-control rounded-3" id="loginInput" placeholder="Login" required />
+                            <label for="loginInput" class="text-muted">Login lub Email</label>
                         </div>
                         <div class="form-floating mb-4">
-                            <input type="password" name="password" class="form-control" id="floatingPassword" placeholder="Hasło" required />
-                            <label for="floatingPassword">Hasło</label>
+                            <input type="password" name="password" class="form-control rounded-3" id="passwordInput" placeholder="Hasło" required />
+                            <label for="passwordInput" class="text-muted">Hasło</label>
                         </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg bg-gradient shadow-sm">
-                                <i class="bi bi-box-arrow-in-right"></i> Zaloguj się
+                        <div class="d-grid gap-2 mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm transition-hover">
+                                Zaloguj się
                             </button>
                         </div>
-                    </form>
 
-                    <div class="text-center mt-3">
-                        <a asp-action="Register" class="text-decoration-none">Nie masz konta? Zarejestruj się</a>
-                    </div>
+                        <div class="text-center">
+                            <a asp-action="ForgotPassword" class="text-decoration-none small text-muted hover-underline">
+                                Nie pamiętasz hasła?
+                            </a>
+                        </div>
+                    </form>
                 </div>
 
-                <div class="card-footer bg-white text-center py-3 border-top-0">
-                    <a asp-action="ForgotPassword" class="btn btn-link text-decoration-none p-0">
-                        <i class="bi bi-question-circle"></i> Zapomniałem hasła / Resetuj PIN-em
-                    </a>
-                    <div class="mt-2 small text-muted">
-                        Jeśli zapomniałeś PIN-u, skontaktuj się z Managerem.
-                    </div>
+                <div class="card-footer bg-light text-center py-3 border-0">
+                    <span class="text-muted small">Nie masz konta?</span>
+                    <a asp-action="Register" class="text-primary fw-bold text-decoration-none ms-1 hover-underline">Zarejestruj się</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .transition-hover:hover {
+        transform: translateY(-2px);
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline !important;
+    }
+</style>

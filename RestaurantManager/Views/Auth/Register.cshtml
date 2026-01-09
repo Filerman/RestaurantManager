@@ -2,51 +2,70 @@
     ViewData["Title"] = "Rejestracja";
 }
 
-<div class="card mx-auto shadow-sm" style="max-width:500px; margin-top:50px;">
-    <div class="card-header bg-success text-white">
-        <h4 class="mb-0">Zarejestruj się</h4>
-    </div>
-    <div class="card-body">
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-success text-white text-center py-4 border-0">
+                    <div class="mb-2"><i class="bi bi-person-plus-fill display-4"></i></div>
+                    <h3 class="mb-0 fw-bold">Dołącz do nas</h3>
+                </div>
+                <div class="card-body p-4 p-lg-5 bg-white">
 
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">@TempData["Error"]</div>
-        }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+                        </div>
+                    }
 
-        <form method="post">
-            <div class="mb-3">
-                <label for="username" class="form-label fw-bold">Nazwa użytkownika</label>
-                <input type="text" name="username" class="form-control" required placeholder="Wybierz unikalny login" />
-            </div>
-            <div class="mb-3">
-                <label for="email" class="form-label fw-bold">Adres Email</label>
-                <input type="email" name="email" class="form-control" required placeholder="np. jan@example.com" />
-            </div>
+                    <form method="post">
+                        <div class="form-floating mb-3">
+                            <input type="text" name="username" class="form-control rounded-3" id="regUser" placeholder="Login" required />
+                            <label for="regUser">Nazwa użytkownika</label>
+                        </div>
 
-            @* NOWE POLE: TELEFON *@
-            <div class="mb-3">
-                <label for="phone" class="form-label fw-bold">Numer telefonu (opcjonalnie)</label>
-                <input type="text" name="phone" class="form-control" placeholder="Ułatwi kontakt przy zamówieniach" />
-            </div>
+                        <div class="form-floating mb-3">
+                            <input type="email" name="email" class="form-control rounded-3" id="regEmail" placeholder="Email" required />
+                            <label for="regEmail">Adres Email</label>
+                        </div>
 
-            @* NOWE POLE: PIN RATUNKOWY *@
-            <div class="mb-3">
-                <label for="recoveryPin" class="form-label fw-bold">PIN Ratunkowy (do odzyskiwania hasła)</label>
-                <input type="text" name="recoveryPin" class="form-control" placeholder="4-6 cyfr, np. 1234" pattern="\d{4,6}" title="4 do 6 cyfr" required />
-                <div class="form-text">Zapamiętaj ten PIN. Pozwoli Ci zresetować hasło bez kontaktu z Adminem.</div>
-            </div>
+                        <div class="form-floating mb-3">
+                            <input type="tel" name="phone" class="form-control rounded-3" id="regPhone" placeholder="Telefon" />
+                            <label for="regPhone">Numer telefonu (opcjonalnie)</label>
+                        </div>
 
-            <div class="mb-3">
-                <label for="password" class="form-label fw-bold">Hasło</label>
-                <input type="password" name="password" class="form-control" required />
-            </div>
+                        <div class="form-floating mb-3 position-relative">
+                            <input type="text" name="recoveryPin" class="form-control rounded-3" id="regPin" placeholder="PIN" pattern="\d{4,6}" required />
+                            <label for="regPin">PIN Ratunkowy (4-6 cyfr)</label>
+                            <div class="form-text text-muted small ms-1">
+                                <i class="bi bi-info-circle me-1"></i>Służy do odzyskiwania hasła.
+                            </div>
+                        </div>
 
-            <div class="d-grid mt-4">
-                <button type="submit" class="btn btn-success">Zarejestruj</button>
+                        <div class="form-floating mb-4">
+                            <input type="password" name="password" class="form-control rounded-3" id="regPass" placeholder="Hasło" required />
+                            <label for="regPass">Hasło</label>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill fw-bold shadow-sm transition-hover">
+                                Utwórz konto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light text-center py-3 border-0">
+                    <span class="text-muted small">Masz już konto?</span>
+                    <a asp-action="Login" class="text-success fw-bold text-decoration-none ms-1 hover-underline">Zaloguj się</a>
+                </div>
             </div>
-        </form>
-    </div>
-    <div class="card-footer text-center">
-        Masz już konto? <a asp-action="Login" class="text-decoration-none">Zaloguj się</a>
+        </div>
     </div>
 </div>
+
+<style>
+    .transition-hover:hover {
+        transform: translateY(-2px);
+    }
+</style>

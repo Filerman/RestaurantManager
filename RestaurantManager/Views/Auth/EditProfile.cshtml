@@ -4,77 +4,96 @@
     ViewData["Title"] = "Edytuj Profil";
 }
 
-<div class="card mx-auto shadow-sm" style="max-width:600px; margin-top: 50px;">
-    <div class="card-header bg-primary text-white">
-        <h4 class="mb-0"><i class="bi bi-pencil-square"></i> Edytuj Profil</h4>
-    </div>
-    <div class="card-body">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-person-gear me-2"></i>Edytuj Profil</h4>
+                </div>
 
-        <form asp-action="EditProfile" asp-controller="Auth" method="post" enctype="multipart/form-data">
+                <div class="card-body p-4 bg-light bg-opacity-25">
+                    <form asp-action="EditProfile" asp-controller="Auth" method="post" enctype="multipart/form-data">
+                        <input asp-for="Username" type="hidden" />
 
-            <input asp-for="Username" type="hidden" />
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
-
-            <div class="row mb-4 align-items-center">
-                <div class="col-md-4 text-center">
-                    <div class="mb-2">
-                        @if (!string.IsNullOrEmpty(Model.ProfilePicturePath))
+                        @if (!ViewData.ModelState.IsValid)
                         {
-                            <img src="@Model.ProfilePicturePath" class="img-thumbnail rounded-circle shadow-sm" style="width:120px; height:120px; object-fit:cover;" />
+                            <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-4">
+                                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            </div>
                         }
-                        else
-                        {
-                            <img src="/images/profiles/default.png" class="img-thumbnail rounded-circle shadow-sm" style="width:120px; height:120px; object-fit:cover;" />
-                        }
-                    </div>
+
+                        <div class="bg-white p-3 rounded-3 shadow-sm mb-4 border">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    @if (!string.IsNullOrEmpty(Model.ProfilePicturePath))
+                                    {
+                                        <img src="@Model.ProfilePicturePath" class="rounded-circle" style="width:80px; height:80px; object-fit:cover;" />
+                                    }
+                                    else
+                                    {
+                                        <img src="/images/profiles/default.png" class="rounded-circle" style="width:80px; height:80px; object-fit:cover;" />
+                                    }
+                                </div>
+                                <div class="col">
+                                    <label asp-for="ProfileImage" class="form-label fw-bold small text-uppercase ls-1">Zmień zdjęcie</label>
+                                    <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" />
+                                    <span asp-validation-for="ProfileImage" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Email" class="form-control" placeholder="name@example.com" />
+                            <label asp-for="Email">Adres Email</label>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="Telefon" />
+                            <label asp-for="PhoneNumber">Telefon kontaktowy</label>
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="accordion mb-4" id="passwordAccordion">
+                            <div class="accordion-item border-0 shadow-sm rounded-3 overflow-hidden">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-bold text-muted bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePassword">
+                                        <i class="bi bi-shield-lock me-2"></i> Zmiana hasła (opcjonalnie)
+                                    </button>
+                                </h2>
+                                <div id="collapsePassword" class="accordion-collapse collapse" data-bs-parent="#passwordAccordion">
+                                    <div class="accordion-body bg-white">
+                                        <div class="mb-3">
+                                            <label asp-for="OldPassword" class="form-label small fw-bold">Obecne hasło</label>
+                                            <input asp-for="OldPassword" class="form-control" type="password" />
+                                            <span asp-validation-for="OldPassword" class="text-danger small"></span>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-md-6">
+                                                <label asp-for="NewPassword" class="form-label small fw-bold">Nowe hasło</label>
+                                                <input asp-for="NewPassword" class="form-control" type="password" />
+                                                <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label asp-for="ConfirmPassword" class="form-label small fw-bold">Powtórz nowe</label>
+                                                <input asp-for="ConfirmPassword" class="form-control" type="password" />
+                                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Profile" class="btn btn-light border px-4 fw-medium">Anuluj</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">Zapisz zmiany</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-md-8">
-                    <label asp-for="ProfileImage" class="form-label fw-bold">Wybierz nowe zdjęcie</label>
-                    <input asp-for="ProfileImage" class="form-control" type="file" accept="image/*" />
-                    <span asp-validation-for="ProfileImage" class="text-danger small"></span>
-                </div>
             </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="Email" class="form-label fw-bold"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            @* NOWE POLE EDYCJI TELEFONU *@
-            <div class="form-group mb-3">
-                <label asp-for="PhoneNumber" class="form-label fw-bold"></label>
-                <input asp-for="PhoneNumber" class="form-control" placeholder="Numer kontaktowy dla zamówień" />
-                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-            </div>
-
-            <hr class="my-4" />
-            <h5 class="text-muted mb-3"><i class="bi bi-lock"></i> Zmiana hasła (opcjonalne)</h5>
-
-            <div class="form-group mb-3">
-                <label asp-for="OldPassword" class="form-label"></label>
-                <input asp-for="OldPassword" class="form-control" placeholder="Obecne hasło" />
-                <span asp-validation-for="OldPassword" class="text-danger"></span>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 form-group mb-3">
-                    <label asp-for="NewPassword" class="form-label"></label>
-                    <input asp-for="NewPassword" class="form-control" />
-                    <span asp-validation-for="NewPassword" class="text-danger"></span>
-                </div>
-                <div class="col-md-6 form-group mb-3">
-                    <label asp-for="ConfirmPassword" class="form-label"></label>
-                    <input asp-for="ConfirmPassword" class="form-control" />
-                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
-                <a asp-action="Profile" class="btn btn-secondary me-md-2">Anuluj</a>
-                <button type="submit" class="btn btn-success px-4">Zapisz zmiany</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 

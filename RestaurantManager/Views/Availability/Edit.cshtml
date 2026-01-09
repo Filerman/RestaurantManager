@@ -3,36 +3,52 @@
     ViewData["Title"] = "Edytuj Dostępność";
 }
 
-<h2>@ViewData["Title"]</h2>
-<h4>Dla daty: @Model.Date.ToString("yyyy-MM-dd")</h4>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-header bg-white py-3 border-bottom-0 text-center">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="bi bi-pencil-square me-2"></i>Edycja terminu
+                    </h5>
+                    <small class="text-muted">@Model.Date.ToString("dd.MM.yyyy") (@Model.Date.ToString("dddd", new System.Globalization.CultureInfo("pl-PL")))</small>
+                </div>
 
-@* Komunikat błędu z TempData lub walidacji *@
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-}
-<div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                <div class="card-body p-4 bg-light bg-opacity-25">
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger border-0 shadow-sm rounded-3">@TempData["ErrorMessage"]</div>
+                    }
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="w-50">
-    @Html.AntiForgeryToken() @* Token *@
-    <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="UserId" />
-    <input type="hidden" asp-for="Date" /> @* Data jest przekazywana, ale nieedytowalna *@
+                    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="UserId" />
+                        <input type="hidden" asp-for="Date" />
 
-    <div class="mb-3">
-        <label asp-for="StartTime" class="form-label"></label> @* Nazwa z modelu *@
-        <input asp-for="StartTime" type="time" class="form-control" />
-        <span asp-validation-for="StartTime" class="text-danger"></span>
+                        <div class="form-floating mb-3">
+                            <input asp-for="StartTime" type="time" class="form-control rounded-3" id="startInput" />
+                            <label for="startInput">Godzina rozpoczęcia</label>
+                            <span asp-validation-for="StartTime" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input asp-for="EndTime" type="time" class="form-control rounded-3" id="endInput" />
+                            <label for="endInput">Godzina zakończenia</label>
+                            <span asp-validation-for="EndTime" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">Zapisz Zmiany</button>
+                            <a asp-action="Index" class="btn btn-light border rounded-pill fw-medium">Anuluj</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="mb-3">
-        <label asp-for="EndTime" class="form-label"></label> @* Nazwa z modelu *@
-        <input asp-for="EndTime" type="time" class="form-control" />
-        <span asp-validation-for="EndTime" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Zapisz Zmiany</button>
-    <a asp-action="Index" class="btn btn-secondary">Anuluj</a>
-</form>
+</div>
 
 @section Scripts {
     @{

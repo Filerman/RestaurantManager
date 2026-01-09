@@ -388,30 +388,50 @@ namespace RestaurantManager.Controllers
 
         // GET: Availability/Manage
         [RoleAuthorize("Admin", "Manager")]
-        public async Task<IActionResult> Manage()
+        public async Task<IActionResult> Manage(int? year, int? month, string direction)
         {
+            // 1. Ustalanie daty bazowej (domyślnie: następny miesiąc od dzisiaj)
             var today = DateTime.Today;
-            var targetDate = today.AddMonths(1);
-            int targetMonth = targetDate.Month;
-            int targetYear = targetDate.Year;
+            int targetYear = year ?? today.AddMonths(1).Year;
+            int targetMonth = month ?? today.AddMonths(1).Month;
 
-            // Pobranie ustawienia terminu z ContactInfo
+            // 2. Obsługa nawigacji (jeśli kliknięto strzałkę)
+            if (!string.IsNullOrEmpty(direction))
+            {
+                var currentSelection = new DateTime(targetYear, targetMonth, 1);
+                if (direction == "prev") currentSelection = currentSelection.AddMonths(-1);
+                else if (direction == "next") currentSelection = currentSelection.AddMonths(1);
+
+                targetYear = currentSelection.Year;
+                targetMonth = currentSelection.Month;
+
+                // Przekierowanie, aby wyczyścić parametry w URL (opcjonalne, ale ładniejsze)
+                return RedirectToAction("Manage", new { year = targetYear, month = targetMonth });
+            }
+
+            // 3. Pobranie ustawienia terminu (dla alertów)
             var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
             int deadlineDays = contactInfo?.AvailabilityDeadlineDays ?? 7;
             ViewBag.DeadlineDays = deadlineDays;
 
-            int daysInCurrentMonth = DateTime.DaysInMonth(today.Year, today.Month);
-            // Obliczamy ile dni zostało do końca miesiąca
-            int daysRemaining = daysInCurrentMonth - today.Day;
+            // 4. Logika "Pilne" ma sens tylko dla NASTĘPNEGO miesiąca względem DZIŚ
+            bool isNextMonthRelativeToToday = (targetYear == today.AddMonths(1).Year && targetMonth == today.AddMonths(1).Month);
+            bool isUrgent = false;
 
-            // "Pilne" jeśli zostało mniej lub tyle samo dni co w ustawieniu
-            bool isUrgent = daysRemaining <= deadlineDays;
+            if (isNextMonthRelativeToToday)
+            {
+                int daysInCurrentMonth = DateTime.DaysInMonth(today.Year, today.Month);
+                int daysRemaining = daysInCurrentMonth - today.Day;
+                isUrgent = daysRemaining <= deadlineDays;
+            }
 
+            // 5. Pobranie pracowników
             var employees = await _context.Users
                 .Where(u => u.Role == "Employee")
                 .Include(u => u.Employee)
                 .ToListAsync();
 
+            // 6. Sprawdzenie, kto zgłosił dostępność w WYBRANYM miesiącu
             var employeesWithAvailability = await _context.Availabilities
                 .Where(a => a.Date.Month == targetMonth && a.Date.Year == targetYear)
                 .Select(a => a.UserId)
@@ -431,7 +451,7 @@ namespace RestaurantManager.Controllers
             {
                 NextMonth = targetMonth,
                 NextMonthYear = targetYear,
-                IsUrgent = isUrgent,
+                IsUrgent = isUrgent, // Będzie true tylko jeśli przeglądamy ten "krytyczny" miesiąc
                 EmployeesStatus = statusList
             };
 
