@@ -3,70 +3,101 @@
 @{
     ViewData["Title"] = "Edytuj profil pracownika";
     var email = ViewData["EmployeeEmail"] as string;
-
-    // Pobieramy dane przygotowane w kontrolerze
     var allTags = ViewData["AllTags"] as List<PositionTag> ?? new List<PositionTag>();
     var selectedTagIds = ViewData["SelectedTagIds"] as HashSet<int> ?? new HashSet<int>();
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                            <i class="bi bi-person-gear fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-0">Edycja Profilu</h5>
+                            <small class="text-muted">Pracownik: <strong>@email</strong></small>
+                        </div>
+                    </div>
+                </div>
 
-<h4>Pracownik: @email</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="card-body p-4 bg-light bg-opacity-25">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+                        <input type="hidden" asp-for="UserId" />
 
-            <input type="hidden" asp-for="UserId" />
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="FullName" class="form-label fw-bold small text-uppercase text-muted ls-1">Imię i Nazwisko</label>
+                                <input asp-for="FullName" class="form-control rounded-3" placeholder="Wpisz dane..." />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Phone" class="form-label fw-bold small text-uppercase text-muted ls-1">Telefon</label>
+                                <input asp-for="Phone" class="form-control rounded-3" placeholder="Nr telefonu..." />
+                                <span asp-validation-for="Phone" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="HireDate" class="form-label fw-bold small text-uppercase text-muted ls-1">Data zatrudnienia</label>
+                                <input asp-for="HireDate" class="form-control rounded-3" type="date" />
+                                <span asp-validation-for="HireDate" class="text-danger small"></span>
+                            </div>
+                        </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="FullName" class="control-label"></label>
-                <input asp-for="FullName" class="form-control" />
-                <span asp-validation-for="FullName" class="text-danger"></span>
-            </div>
-            <div class="form-group mb-3">
-                <label asp-for="Phone" class="control-label"></label>
-                <input asp-for="Phone" class="form-control" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
+                        <hr class="my-4 text-muted opacity-25">
 
-            @* --- NOWA SEKCJA: DATA ZATRUDNIENIA --- *@
-            <div class="form-group mb-3">
-                <label asp-for="HireDate" class="control-label fw-bold"></label>
-                <input asp-for="HireDate" class="form-control" type="date" />
-                <span asp-validation-for="HireDate" class="text-danger"></span>
-            </div>
-            @* ------------------------------------- *@
+                        <h6 class="fw-bold text-dark mb-3">Przypisz Stanowiska (Tagi)</h6>
+                        <div class="card border-0 bg-white shadow-sm rounded-3">
+                            <div class="card-body p-0">
+                                @if (allTags.Any())
+                                {
+                                    <div class="list-group list-group-flush rounded-3">
+                                        @foreach (var tag in allTags)
+                                        {
+                                            <label class="list-group-item d-flex justify-content-between align-items-center py-3 cursor-pointer hover-bg-light">
+                                                <div class="d-flex align-items-center">
+                                                    <input type="checkbox" class="form-check-input me-3 shadow-none border-secondary"
+                                                           style="transform: scale(1.2);"
+                                                           name="selectedTagIds" value="@tag.Id"
+                                                           @(selectedTagIds.Contains(tag.Id) ? "checked" : "") />
+                                                    <span class="fw-medium text-dark">@tag.Name</span>
+                                                </div>
+                                                <span class="badge bg-light text-success border border-success fw-normal">
+                                                    @tag.HourlyRate.ToString("F2") zł/h
+                                                </span>
+                                            </label>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="p-3 text-center text-muted small">Brak zdefiniowanych stanowisk.</div>
+                                }
+                            </div>
+                        </div>
 
-            <div class="form-group mt-3">
-                <label class="control-label fw-bold mb-2">Tagi / Stanowiska</label>
-                <div class="list-group">
-                    @foreach (var tag in allTags)
-                    {
-                        <label class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>
-                                <input type="checkbox"
-                                       class="form-check-input me-2"
-                                       name="selectedTagIds"
-                                       value="@tag.Id"
-                                       @(selectedTagIds.Contains(tag.Id) ? "checked" : "") />
-                                @tag.Name
-                            </span>
-                            @* Wyświetlamy stawkę przypisaną do stanowiska dla informacji *@
-                            <span class="badge bg-secondary rounded-pill">@tag.HourlyRate.ToString("F2") zł/h</span>
-                        </label>
-                    }
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Index" class="btn btn-light border rounded-pill px-4 fw-medium">Anuluj</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">Zapisz zmiany</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <div class="form-group mt-3">
-                <input type="submit" value="Zapisz" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">Powrót do listy</a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
+
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .hover-bg-light:hover {
+        background-color: #f8f9fa;
+    }
+</style>
 
 @section Scripts {
     @{

@@ -4,37 +4,38 @@
     ViewData["Title"] = "Usuń pracownika";
 }
 
-<h1>Usuń</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-3 text-danger">
+                        <i class="bi bi-person-x-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title fw-bold mb-2">Usuwasz użytkownika</h4>
+                    <p class="text-muted mb-4 small">
+                        Czy na pewno chcesz usunąć konto <strong>@Model.Username</strong>?<br />
+                        <span class="text-danger fw-bold">Ta operacja usunie również profil pracownika i historię logowania.</span>
+                    </p>
 
-<h3>Czy na pewno chcesz usunąć tego pracownika?</h3>
-<h4 class="text-danger">Spowoduje to usunięcie zarówno profilu pracownika, jak i jego konta użytkownika.</h4>
-<div>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            Nazwa użytkownika
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Username)
-        </dd>
-        <dt class="col-sm-2">
-            Imię i nazwisko
-        </dt>
-        <dd class="col-sm-10">
-            @if (Model.Employee != null)
-            {
-                @Html.DisplayFor(model => model.Employee.FullName)
-            }
-            else
-            {
-                <span>-</span>
-            }
-        </dd>
-    </dl>
+                    <div class="bg-light p-3 rounded-3 mb-4 text-start small border">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Pracownik:</span>
+                            <span class="fw-bold">@(Model.Employee?.FullName ?? "-")</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Email:</span>
+                            <span class="fw-bold">@Model.Email</span>
+                        </div>
+                    </div>
 
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Usuń" class="btn btn-danger" />
-        <a asp-action="Index" class="btn btn-secondary">Powrót do listy</a>
-    </form>
+                    <form asp-action="Delete" class="d-flex justify-content-center gap-2">
+                        <input type="hidden" asp-for="Id" />
+                        <a asp-action="Index" class="btn btn-light border px-4 rounded-pill fw-medium">Anuluj</a>
+                        <button type="submit" class="btn btn-danger px-4 rounded-pill fw-bold shadow-sm">Tak, usuń</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

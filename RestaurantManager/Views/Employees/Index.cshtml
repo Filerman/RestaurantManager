@@ -4,66 +4,101 @@
     ViewData["Title"] = "Pracownicy";
 }
 
-<h1>Pracownicy</h1>
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Zespół</h2>
+            <p class="text-muted small mb-0">Zarządzaj kontami i profilami pracowników</p>
+        </div>
+    </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                Nazwa użytkownika (Login)
-            </th>
-            <th>
-                Imię i nazwisko (Profil)
-            </th>
-            <th>
-                Tagi / Stanowiska
-            </th>
-            <th>
-                Telefon
-            </th>
-            @* USUNIĘTO KOLUMNĘ STAWKI *@
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model)
-        {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => user.Username)
-                </td>
-                <td>
-                    @if (user.Employee != null)
-                    {
-                        @Html.DisplayFor(modelItem => user.Employee.FullName)
-                    }
-                    else
-                    {
-                        <span class="text-danger">Profil nieuzupełniony</span>
-                    }
-                </td>
-                <td>
-                    @if (user.Employee != null && user.Employee.PositionTags.Any())
-                    {
-                        @string.Join(", ", user.Employee.PositionTags.Select(t => t.Name))
-                    }
-                    else
-                    {
-                        <span class="text-muted">---</span>
-                    }
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => user.Employee.Phone)
-                </td>
-                @* USUNIĘTO KOMÓRKĘ STAWKI *@
-                <td>
-                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-primary">
-                        @(user.Employee == null ? "Uzupełnij profil" : "Edytuj")
-                    </a> |
-                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-outline-info">Szczegóły</a> |
-                    <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-sm btn-outline-danger">Usuń</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light small text-uppercase text-muted">
+                        <tr>
+                            <th class="ps-4 py-3 fw-bold">Użytkownik</th>
+                            <th class="fw-bold">Rola</th>
+                            <th class="fw-bold">Stanowiska</th>
+                            <th class="fw-bold">Kontakt</th>
+                            <th class="text-end pe-4 fw-bold">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr class="border-bottom-0">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-placeholder rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3 fw-bold fs-5" style="width: 45px; height: 45px;">
+                                            @(user.Employee?.FullName?.FirstOrDefault() ?? user.Username.FirstOrDefault())
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">
+                                                @(user.Employee?.FullName ?? user.Username)
+                                            </div>
+                                            <div class="small text-muted">@user.Email</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (user.Role == "Admin")
+                                    {
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1">Administrator</span>
+                                    }
+                                    else if (user.Role == "Manager")
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1">Manager</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1">Pracownik</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.Employee != null && user.Employee.PositionTags.Any())
+                                    {
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach (var tag in user.Employee.PositionTags)
+                                            {
+                                                <span class="badge bg-light text-dark border fw-normal">@tag.Name</span>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small fst-italic">Brak</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.Employee != null && !string.IsNullOrEmpty(user.Employee.Phone))
+                                    {
+                                        <span class="text-dark small"><i class="bi bi-telephone me-1 text-muted"></i> @user.Employee.Phone</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">-</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-outline-primary rounded-start-pill fw-medium" title="Edytuj profil">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-outline-secondary fw-medium" title="Szczegóły">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-sm btn-outline-danger rounded-end-pill fw-medium" title="Usuń">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

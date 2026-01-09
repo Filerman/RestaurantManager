@@ -4,83 +4,75 @@
     ViewData["Title"] = "Szczegóły pracownika";
 }
 
-<h1>Szczegóły</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0">Karta Pracownika</h5>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2 rounded-pill">@Model.Role</span>
+                </div>
 
-<div>
-    <h4>Konto Użytkownika</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            Nazwa użytkownika
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Username)
-        </dd>
-        <dt class="col-sm-2">
-            Email
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Email)
-        </dd>
-        <dt class="col-sm-2">
-            Rola
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Role)
-        </dd>
-    </dl>
-</div>
+                <div class="card-body p-0">
+                    <div class="p-4 bg-light border-bottom">
+                        <div class="row mb-2">
+                            <div class="col-sm-4 text-muted small text-uppercase fw-bold">Login</div>
+                            <div class="col-sm-8 fw-bold text-dark">@Model.Username</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4 text-muted small text-uppercase fw-bold">Email</div>
+                            <div class="col-sm-8 text-dark">@Model.Email</div>
+                        </div>
+                    </div>
 
-@if (Model.Employee != null)
-{
-    <div class="mt-4">
-        <h4>Profil Pracownika</h4>
-        <hr />
-        <dl class="row">
-            <dt class="col-sm-2">
-                @Html.DisplayNameFor(model => model.Employee.FullName)
-            </dt>
-            <dd class="col-sm-10">
-                @Html.DisplayFor(model => model.Employee.FullName)
-            </dd>
-            <dt class="col-sm-2">
-                @Html.DisplayNameFor(model => model.Employee.Phone)
-            </dt>
-            <dd class="col-sm-10">
-                @Html.DisplayFor(model => model.Employee.Phone)
-            </dd>
-
-            @* USUNIĘTO WYŚWIETLANIE HOURLY RATE *@
-
-            <dt class="col-sm-2">
-                Tagi / Stanowiska
-            </dt>
-            <dd class="col-sm-10">
-                @if (Model.Employee.PositionTags.Any())
-                {
-                    <ul class="list-unstyled mb-0">
-                        @foreach (var tag in Model.Employee.PositionTags)
+                    <div class="p-4">
+                        @if (Model.Employee != null)
                         {
-                            <li>@tag.Name <small class="text-muted">(@tag.HourlyRate.ToString("C")/h)</small></li>
-                        }
-                    </ul>
-                }
-                else
-                {
-                    <span class="text-muted">Brak tagów</span>
-                }
-            </dd>
-        </dl>
-    </div>
-}
-else
-{
-    <div class="alert alert-warning mt-4">
-        Ten użytkownik nie ma jeszcze uzupełnionego profilu pracownika.
-    </div>
-}
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted small text-uppercase fw-bold">Imię i Nazwisko</div>
+                                <div class="col-sm-8 fs-5 fw-bold text-dark">@Model.Employee.FullName</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-4 text-muted small text-uppercase fw-bold">Telefon</div>
+                                <div class="col-sm-8">@Model.Employee.Phone</div>
+                            </div>
 
-<div class="mt-3">
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edytuj profil</a>
-    <a asp-action="Index" class="btn btn-secondary">Powrót do listy</a>
+                            <hr class="text-muted opacity-25 my-4">
+
+                            <h6 class="text-muted small text-uppercase fw-bold mb-3">Stanowiska i stawki</h6>
+                            @if (Model.Employee.PositionTags.Any())
+                            {
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var tag in Model.Employee.PositionTags)
+                                    {
+                                        <div class="badge bg-white text-dark border p-2 fw-normal shadow-sm">
+                                            @tag.Name <span class="ms-2 text-success fw-bold border-start ps-2">@tag.HourlyRate.ToString("C")/h</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted small fst-italic">Brak przypisanych stanowisk.</span>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning border-0 shadow-sm rounded-3 d-flex align-items-center mb-0">
+                                <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                                <div>Profil pracownika nie został jeszcze uzupełniony.</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white p-3 border-top-0 d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-light border rounded-pill px-4 fw-medium">Wróć</a>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">
+                        <i class="bi bi-pencil-square me-2"></i>Edytuj
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
