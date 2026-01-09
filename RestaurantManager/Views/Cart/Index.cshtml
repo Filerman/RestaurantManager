@@ -5,68 +5,124 @@
     decimal total = Model.Sum(x => x.TotalPrice);
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4"><i class="bi bi-cart3"></i> Twój Koszyk</h2>
+<div class="container mt-4 mb-5">
+
+    <div class="d-flex align-items-center mb-4">
+        <div class="icon-wrapper bg-primary-soft text-primary me-3 fs-4" style="width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-basket2-fill"></i>
+        </div>
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Twój Koszyk</h2>
+            <p class="text-muted small mb-0">Sprawdź zamówienie przed realizacją</p>
+        </div>
+    </div>
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info text-center">
-            Twój koszyk jest pusty. <a asp-controller="Menu" asp-action="Index">Przejdź do menu i zamów coś pysznego!</a>
+        <div class="card shadow-sm border-0 rounded-4 py-5">
+            <div class="card-body text-center">
+                <div class="mb-4 text-muted opacity-25">
+                    <i class="bi bi-cart-x" style="font-size: 5rem;"></i>
+                </div>
+                <h4 class="fw-bold text-dark">Twój koszyk jest pusty</h4>
+                <p class="text-muted mb-4">Wygląda na to, że nie dodałeś jeszcze żadnych dań.</p>
+                <a asp-controller="Menu" asp-action="Index" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm transition-hover">
+                    <i class="bi bi-book-half me-2"></i>Przejdź do Menu
+                </a>
+            </div>
         </div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Danie</th>
-                        <th>Cena</th>
-                        <th style="width: 150px;">Ilość</th>
-                        <th>Razem</th>
-                        <th>Akcje</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-uppercase small text-muted">
                         <tr>
-                            <td><strong>@item.MenuItemName</strong></td>
-                            <td>@item.Price.ToString("C")</td>
-                            <td>
-                                <form asp-action="UpdateQuantity" class="d-flex">
-                                    <input type="hidden" name="id" value="@item.MenuItemId" />
-                                    <input type="number" name="quantity" value="@item.Quantity" min="1" max="50" class="form-control form-control-sm me-2" onchange="this.form.submit()" />
-                                </form>
-                            </td>
-                            <td>@item.TotalPrice.ToString("C")</td>
-                            <td>
-                                <form asp-action="Remove" method="post">
-                                    <input type="hidden" name="id" value="@item.MenuItemId" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                </form>
-                            </td>
+                            <th class="ps-4 py-3 fw-bold">Danie</th>
+                            <th class="fw-bold">Cena jedn.</th>
+                            <th class="fw-bold text-center" style="width: 140px;">Ilość</th>
+                            <th class="fw-bold text-end">Wartość</th>
+                            <th class="text-end pe-4 fw-bold">Usuń</th>
                         </tr>
-                    }
-                </tbody>
-                <tfoot class="table-light">
-                    <tr>
-                        <td colspan="3" class="text-end fw-bold fs-5">Suma:</td>
-                        <td colspan="2" class="fw-bold fs-5 text-primary">@total.ToString("C")</td>
-                    </tr>
-                </tfoot>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-placeholder rounded bg-light text-secondary d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-egg-fried"></i>
+                                        </div>
+                                        <strong class="text-dark">@item.MenuItemName</strong>
+                                    </div>
+                                </td>
+                                <td class="text-muted">@item.Price.ToString("C")</td>
+                                <td>
+                                    <form asp-action="UpdateQuantity" class="d-flex justify-content-center">
+                                        <input type="hidden" name="id" value="@item.MenuItemId" />
+                                        <input type="number" name="quantity" value="@item.Quantity" min="1" max="50"
+                                               class="form-control form-control-sm text-center border-secondary border-opacity-25 rounded-3"
+                                               style="width: 70px;"
+                                               onchange="this.form.submit()" />
+                                    </form>
+                                </td>
+                                <td class="text-end fw-bold text-primary">@item.TotalPrice.ToString("C")</td>
+                                <td class="text-end pe-4">
+                                    <form asp-action="Remove" method="post">
+                                        <input type="hidden" name="id" value="@item.MenuItemId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle p-2" title="Usuń z koszyka">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer bg-light p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-6 d-none d-md-block">
+                        <a asp-controller="Menu" asp-action="Index" class="text-decoration-none text-muted fw-medium small hover-underline">
+                            <i class="bi bi-arrow-left me-1"></i> Kontynuuj zakupy
+                        </a>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="d-flex justify-content-between justify-content-md-end align-items-center mb-3">
+                            <span class="text-muted me-3">Suma zamówienia:</span>
+                            <span class="display-6 fw-bold text-dark">@total.ToString("C")</span>
+                        </div>
+                        <div class="d-grid d-md-block">
+                            <a asp-controller="Orders" asp-action="Checkout" class="btn btn-success rounded-pill px-5 py-2 fw-bold shadow-sm transition-hover">
+                                Przejdź do kasy <i class="bi bi-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="d-flex justify-content-between mt-4">
-            <a asp-controller="Menu" asp-action="Index" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Wróć do Menu
-            </a>
-
-            @* Przycisk "Dalej" przekieruje nas do formularza zamówienia (Krok 3) *@
-            <a asp-controller="Orders" asp-action="Checkout" class="btn btn-success btn-lg">
-                Dalej - Dostawa i Płatność <i class="bi bi-arrow-right"></i>
+        <div class="d-md-none text-center mt-3">
+            <a asp-controller="Menu" asp-action="Index" class="text-decoration-none text-muted fw-medium">
+                <i class="bi bi-arrow-left me-1"></i> Wróć do Menu
             </a>
         </div>
     }
 </div>
+
+<style>
+    .bg-primary-soft {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .transition-hover:hover {
+        transform: translateY(-2px);
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline !important;
+    }
+</style>
