@@ -1,89 +1,103 @@
-﻿@model IEnumerable<RestaurantManager.Models.Order>
+﻿@using RestaurantManager.Models
+@model IEnumerable<RestaurantManager.Models.Order>
 @{
     ViewData["Title"] = "Moja Historia Zamówień";
 }
 
-<div class="container mt-4">
-    <h2><i class="bi bi-clock-history"></i> Moja Historia Zamówień</h2>
-    <hr />
+<div class="container mt-4 mb-5">
+    <h2 class="fw-bold text-dark mb-4"><i class="bi bi-clock-history me-2 text-primary"></i>Moja Historia</h2>
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info text-center py-4">
-            <h4>Nie złożyłeś jeszcze żadnych zamówień.</h4>
-            <p>Zgłodniałeś?</p>
-            <a asp-controller="Menu" asp-action="Index" class="btn btn-primary mt-2">Przejdź do menu</a>
+        <div class="alert alert-light text-center py-5 rounded-4 shadow-sm border">
+            <i class="bi bi-basket fs-1 text-muted opacity-25 d-block mb-3"></i>
+            <h4 class="fw-bold text-dark">Nie masz jeszcze zamówień.</h4>
+            <p class="text-muted mb-4">Głodny? Sprawdź co dobrego przygotowaliśmy!</p>
+            <a asp-controller="Menu" asp-action="Index" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Przejdź do menu</a>
         </div>
     }
     else
     {
-        <div class="row">
+        <div class="row g-4">
             @foreach (var order in Model)
             {
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <span class="fw-bold">Zamówienie #@order.Id</span>
-                            <span class="badge bg-secondary">@order.Type</span>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm border-0 rounded-4 h-100 overflow-hidden">
+                        <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center border-bottom-0">
+                            <span class="fw-bold text-dark">#@order.Id</span>
+                            @if (order.Type == OrderType.DineIn)
+                            {
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-2 text-dark">Lokal</span>
+                            }
+                            else if (order.Type == OrderType.Delivery)
+                            {
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-2 text-dark">Dostawa</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill px-2 text-dark">Wynos</span>
+                            }
                         </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Data złożenia:</span>
-                                <span class="text-muted">@order.OrderDate.ToString("dd.MM.yyyy")</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Planowane na:</span>
-                                <strong class="text-primary">@order.ScheduledDate.ToString("dd.MM HH:mm")</strong>
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted small">Data złożenia:</span>
+                                <span class="fw-medium">@order.OrderDate.ToString("dd.MM.yyyy")</span>
                             </div>
                             <div class="d-flex justify-content-between mb-3">
-                                <span>Kwota:</span>
-                                <strong class="fs-5">@order.TotalAmount.ToString("C")</strong>
+                                <span class="text-muted small">Na godzinę:</span>
+                                <span class="fw-bold text-primary">@order.ScheduledDate.ToString("HH:mm")</span>
                             </div>
 
-                            <hr class="my-2" />
-                            <p class="mb-1 small text-muted">Pozycje:</p>
-                            <ul class="list-unstyled small mb-0">
-                                @foreach (var item in order.OrderItems.Take(3))
-                                {
-                                    <li>@item.Quantity x @(item.MenuItem?.Name ?? "Produkt usunięty")</li>
-                                }
-                                @if (order.OrderItems.Count > 3)
-                                {
-                                    <li><em>...i więcej</em></li>
-                                }
-                            </ul>
+                            <hr class="border-secondary opacity-10 my-3">
+
+                            <div class="mb-3">
+                                <ul class="list-unstyled mb-0 small text-dark">
+                                    @foreach (var item in order.OrderItems.Take(3))
+                                    {
+                                        <li class="d-flex justify-content-between mb-1">
+                                            <span><span class="fw-bold me-1">@item.Quantity x</span> @(item.MenuItem?.Name ?? "Produkt")</span>
+                                        </li>
+                                    }
+                                    @if (order.OrderItems.Count > 3)
+                                    {
+                                        <li class="text-muted fst-italic mt-1">+ @(order.OrderItems.Count - 3) więcej...</li>
+                                    }
+                                </ul>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-end mt-auto">
+                                <div>
+                                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Status</small>
+                                    @switch (order.Status)
+                                    {
+                                        case OrderStatus.Created:
+                                            <span class="badge bg-warning text-dark rounded-pill">Oczekuje</span>
+                                            break;
+                                        case OrderStatus.Accepted:
+                                            <span class="badge bg-info text-dark rounded-pill">Przyjęte</span>
+                                            break;
+                                        case OrderStatus.InKitchen:
+                                            <span class="badge bg-primary rounded-pill">W kuchni</span>
+                                            break;
+                                        case OrderStatus.Ready:
+                                            <span class="badge bg-success rounded-pill">Gotowe</span>
+                                            break;
+                                        case OrderStatus.Completed:
+                                            <span class="badge bg-dark rounded-pill">Zakończone</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary rounded-pill">@order.Status</span>
+                                            break;
+                                    }
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Suma</small>
+                                    <span class="fs-5 fw-bold text-success">@order.TotalAmount.ToString("C")</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-                            <div>
-                                Status:
-                                @switch (order.Status)
-                                {
-                                    case RestaurantManager.Models.OrderStatus.Created:
-                                        <span class="badge bg-warning text-dark">Oczekuje</span>
-                                        ; break;
-                                    case RestaurantManager.Models.OrderStatus.Accepted:
-
-                                        <span class="badge bg-info text-dark">Przyjęte</span>
-                                        ; break;
-                                    case RestaurantManager.Models.OrderStatus.InKitchen:
-
-                                        <span class="badge bg-primary">W kuchni</span>
-                                        ; break;
-                                    case RestaurantManager.Models.OrderStatus.Ready:
-
-                                        <span class="badge bg-success">Gotowe</span>
-                                        ; break;
-                                    case RestaurantManager.Models.OrderStatus.Completed:
-
-                                        <span class="badge bg-dark">Zakończone</span>
-                                        ; break;
-                                    default:
-
-                                        <span class="badge bg-secondary">@order.Status</span>
-                                        ; break;
-                                }
-                            </div>
-                            <a asp-action="Confirmation" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">Szczegóły</a>
+                        <div class="card-footer bg-white border-top-0 pb-3 text-center">
+                            <a asp-action="Confirmation" asp-route-id="@order.Id" class="btn btn-outline-primary btn-sm rounded-pill w-100 fw-medium">Szczegóły</a>
                         </div>
                     </div>
                 </div>

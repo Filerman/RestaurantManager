@@ -4,34 +4,26 @@
     ViewData["Title"] = "Finalizacja Zamówienia";
     decimal cartTotal = Model.TotalAmount;
 
-    // Pobieramy godziny z ViewBag
     var todayHours = ViewBag.TodayOpeningHours as RestaurantManager.Models.OpeningHour;
     int estimatedTime = ViewBag.EstimatedTime != null ? (int)ViewBag.EstimatedTime : 45;
 }
 
-<div class="container mt-4">
-    <h2>Finalizacja Zamówienia</h2>
-    <hr />
+<div class="container mt-5 mb-5">
+    <div class="row g-5">
+        <div class="col-lg-7">
+            <h2 class="fw-bold text-dark mb-4">Finalizacja Zamówienia</h2>
 
-    <div class="row">
-        <div class="col-md-7">
-            @* DODANO method="post" dla pewności *@
             <form asp-action="Checkout" method="post">
+                <div asp-validation-summary="All" class="alert alert-danger border-0 shadow-sm rounded-3 mb-4 small" role="alert"></div>
 
-                @* Wyświetlamy WSZYSTKIE błędy na górze *@
-                <div asp-validation-summary="All" class="alert alert-danger" role="alert">
-                    <strong>Wystąpiły błędy w formularzu:</strong>
-                </div>
-
-                @* INFO O GODZINACH OTWARCIA *@
-                <div class="alert alert-info d-flex align-items-center">
-                    <i class="bi bi-clock-history fs-4 me-3"></i>
-                    <div>
+                <div class="alert alert-primary bg-primary bg-opacity-10 border-0 shadow-sm rounded-4 d-flex align-items-center mb-4 p-3">
+                    <i class="bi bi-info-circle-fill fs-4 me-3 text-primary"></i>
+                    <div class="small text-dark">
                         @if (todayHours != null && !todayHours.IsClosed)
                         {
                             <span>
-                                Dzisiaj jesteśmy otwarci: <strong>@todayHours.OpenTime.ToString(@"hh\:mm") - @todayHours.CloseTime.ToString(@"hh\:mm")</strong>.<br />
-                                Średni czas oczekiwania na dostawę: <strong>ok. @estimatedTime min</strong>.
+                                Dzisiaj otwarte: <strong>@todayHours.OpenTime.ToString(@"hh\:mm") - @todayHours.CloseTime.ToString(@"hh\:mm")</strong>.<br />
+                                Średni czas oczekiwania: <strong>ok. @estimatedTime min</strong>.
                             </span>
                         }
                         else
@@ -41,165 +33,203 @@
                     </div>
                 </div>
 
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-header bg-light fw-bold">Dane Kontaktowe</div>
-                    <div class="card-body">
-                        <div class="form-group mb-3">
-                            <label asp-for="CustomerName" class="form-label"></label>
-                            <input asp-for="CustomerName" class="form-control" placeholder="Wpisz imię i nazwisko" />
-                            <span asp-validation-for="CustomerName" class="text-danger"></span>
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-person-lines-fill me-2 text-secondary"></i>Dane Kontaktowe</h5>
+                    </div>
+                    <div class="card-body p-4 bg-light bg-opacity-25">
+                        <div class="form-floating mb-3">
+                            <input asp-for="CustomerName" class="form-control rounded-3" placeholder="Imię" />
+                            <label asp-for="CustomerName">Imię i nazwisko</label>
+                            <span asp-validation-for="CustomerName" class="text-danger small"></span>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 form-group mb-3">
-                                <label asp-for="CustomerPhone" class="form-label"></label>
-                                <input asp-for="CustomerPhone" class="form-control" />
-                                <span asp-validation-for="CustomerPhone" class="text-danger"></span>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="CustomerPhone" class="form-control rounded-3" placeholder="Tel" />
+                                    <label asp-for="CustomerPhone">Telefon</label>
+                                    <span asp-validation-for="CustomerPhone" class="text-danger small"></span>
+                                </div>
                             </div>
-                            <div class="col-md-6 form-group mb-3">
-                                <label asp-for="CustomerEmail" class="form-label"></label>
-                                <input asp-for="CustomerEmail" class="form-control" />
-                                <span asp-validation-for="CustomerEmail" class="text-danger"></span>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="CustomerEmail" class="form-control rounded-3" placeholder="Email" />
+                                    <label asp-for="CustomerEmail">Email</label>
+                                    <span asp-validation-for="CustomerEmail" class="text-danger small"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-header bg-light fw-bold">Realizacja</div>
-                    <div class="card-body">
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-truck me-2 text-secondary"></i>Realizacja</h5>
+                    </div>
+                    <div class="card-body p-4 bg-light bg-opacity-25">
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold d-block">Kiedy?</label>
-
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" asp-for="IsAsap" value="true" id="timeAsap" onchange="toggleTimeInput()">
-                                <label class="form-check-label" for="timeAsap">
-                                    <i class="bi bi-lightning-fill text-warning"></i> Jak najszybciej (ok. @estimatedTime min)
+                        <label class="form-label fw-bold small text-uppercase text-muted ls-1 mb-2">Kiedy?</label>
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="form-check custom-radio-btn flex-grow-1">
+                                <input class="form-check-input" type="radio" asp-for="IsAsap" value="true" id="timeAsap" onchange="toggleTimeInput()" checked>
+                                <label class="form-check-label w-100 p-3 border rounded-3 text-center cursor-pointer bg-white" for="timeAsap">
+                                    <i class="bi bi-lightning-fill text-warning d-block fs-4 mb-1"></i>
+                                    <span class="fw-bold d-block">Jak najszybciej</span>
+                                    <small class="text-muted">ok. @estimatedTime min</small>
                                 </label>
                             </div>
-                            <div class="form-check form-check-inline">
+                            <div class="form-check custom-radio-btn flex-grow-1">
                                 <input class="form-check-input" type="radio" asp-for="IsAsap" value="false" id="timeScheduled" onchange="toggleTimeInput()">
-                                <label class="form-check-label" for="timeScheduled">
-                                    <i class="bi bi-calendar-event"></i> Zaplanuj na później
+                                <label class="form-check-label w-100 p-3 border rounded-3 text-center cursor-pointer bg-white" for="timeScheduled">
+                                    <i class="bi bi-calendar-event text-primary d-block fs-4 mb-1"></i>
+                                    <span class="fw-bold d-block">Zaplanuj</span>
+                                    <small class="text-muted">Na później</small>
                                 </label>
                             </div>
                         </div>
 
-                        <div class="form-group mb-4" id="scheduledTimeGroup" style="display:none;">
-                            <label asp-for="ScheduledDate" class="form-label fw-bold text-primary">Wybierz godzinę:</label>
-                            @* Atrybut min blokuje daty przeszłe w kalendarzu *@
-                            <input asp-for="ScheduledDate" class="form-control" type="datetime-local"
+                        <div class="form-floating mb-4" id="scheduledTimeGroup" style="display:none;">
+                            <input asp-for="ScheduledDate" class="form-control rounded-3" type="datetime-local"
                                    value="@Model.ScheduledDate.ToString("yyyy-MM-ddTHH:mm")"
                                    min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
-                            <div class="form-text">System nie pozwoli złożyć zamówienia poza godzinami otwarcia.</div>
-                            <span asp-validation-for="ScheduledDate" class="text-danger"></span>
+                            <label asp-for="ScheduledDate">Wybierz datę i godzinę</label>
+                            <span asp-validation-for="ScheduledDate" class="text-danger small"></span>
                         </div>
 
-                        <hr class="my-4" />
+                        <hr class="my-4 text-muted opacity-25">
 
-                        <div class="form-group mb-4">
-                            <label asp-for="OrderType" class="form-label fw-bold">Sposób odbioru:</label>
+                        <div class="form-floating mb-3">
                             @{
                                 var allowedOrderTypes = Html.GetEnumSelectList<RestaurantManager.Models.OrderType>()
                                 .Where(x => x.Value != ((int)RestaurantManager.Models.OrderType.DineIn).ToString());
                             }
-                            <select asp-for="OrderType" class="form-select" id="orderTypeSelect" asp-items="allowedOrderTypes" onchange="toggleAddressFields()">
-                            </select>
-                            <span asp-validation-for="OrderType" class="text-danger"></span>
-                        </div>>
+                            <select asp-for="OrderType" class="form-select rounded-3" id="orderTypeSelect" asp-items="allowedOrderTypes" onchange="toggleAddressFields()"></select>
+                            <label asp-for="OrderType">Sposób odbioru</label>
+                            <span asp-validation-for="OrderType" class="text-danger small"></span>
+                        </div>
 
-                        <div id="addressFields" style="display:none;">
-                            <h6 class="text-muted mb-3">Adres dostawy:</h6>
-                            <div class="form-group mb-3">
-                                <label asp-for="DeliveryStreet" class="form-label"></label>
-                                <input asp-for="DeliveryStreet" class="form-control" placeholder="Ulica i numer" />
-                                <span asp-validation-for="DeliveryStreet" class="text-danger"></span>
+                        <div id="addressFields" style="display:none;" class="p-3 bg-white rounded-3 border mb-3">
+                            <h6 class="text-muted small fw-bold text-uppercase mb-3">Adres dostawy</h6>
+                            <div class="form-floating mb-3">
+                                <input asp-for="DeliveryStreet" class="form-control rounded-3" placeholder="Ulica" />
+                                <label asp-for="DeliveryStreet">Ulica i numer</label>
+                                <span asp-validation-for="DeliveryStreet" class="text-danger small"></span>
                             </div>
-                            <div class="row">
-                                <div class="col-md-4 form-group mb-3">
-                                    <label asp-for="DeliveryZipCode" class="form-label"></label>
-                                    <input asp-for="DeliveryZipCode" class="form-control" placeholder="XX-XXX" />
-                                    <span asp-validation-for="DeliveryZipCode" class="text-danger"></span>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <div class="form-floating">
+                                        <input asp-for="DeliveryZipCode" class="form-control rounded-3" placeholder="Kod" />
+                                        <label asp-for="DeliveryZipCode">Kod</label>
+                                        <span asp-validation-for="DeliveryZipCode" class="text-danger small"></span>
+                                    </div>
                                 </div>
-                                <div class="col-md-8 form-group mb-3">
-                                    <label asp-for="DeliveryCity" class="form-label fw-bold text-primary">Miejscowość:</label>
-                                    <select asp-for="DeliveryCity" class="form-select" id="citySelect" asp-items="ViewBag.CityList" onchange="updateTotal()">
-                                    </select>
-                                    <span asp-validation-for="DeliveryCity" class="text-danger"></span>
+                                <div class="col-8">
+                                    <div class="form-floating">
+                                        <select asp-for="DeliveryCity" class="form-select rounded-3" id="citySelect" asp-items="ViewBag.CityList" onchange="updateTotal()"></select>
+                                        <label asp-for="DeliveryCity">Miejscowość</label>
+                                        <span asp-validation-for="DeliveryCity" class="text-danger small"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="form-group mb-2">
-                            <label asp-for="Notes" class="form-label">Uwagi (opcjonalne)</label>
-                            <textarea asp-for="Notes" class="form-control" rows="2" placeholder="Np. kod do domofonu..."></textarea>
+                        <div class="form-floating">
+                            <textarea asp-for="Notes" class="form-control rounded-3" style="height: 100px" placeholder="Uwagi"></textarea>
+                            <label asp-for="Notes">Uwagi do zamówienia (opcjonalne)</label>
                         </div>
                     </div>
                 </div>
 
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-header bg-light fw-bold">Płatność</div>
-                    <div class="card-body">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="@PaymentMethod.Cash" id="paymentCash" checked>
-                            <label class="form-check-label fw-bold" for="paymentCash">
-                                <i class="bi bi-cash-coin text-success me-2"></i> Gotówka (przy odbiorze)
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom-0">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-credit-card me-2 text-secondary"></i>Płatność</h5>
+                    </div>
+                    <div class="card-body p-4 bg-light bg-opacity-25">
+                        <div class="d-flex flex-column gap-2">
+                            <label class="card p-3 border cursor-pointer payment-option">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="@PaymentMethod.Cash" id="paymentCash" checked>
+                                    <span class="fw-bold ms-2"><i class="bi bi-cash-coin text-success me-2"></i>Gotówka (przy odbiorze)</span>
+                                </div>
+                            </label>
+                            <label class="card p-3 border cursor-pointer payment-option">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="@PaymentMethod.Card" id="paymentCard">
+                                    <span class="fw-bold ms-2"><i class="bi bi-credit-card-2-front text-primary me-2"></i>Karta (terminal)</span>
+                                </div>
                             </label>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" asp-for="PaymentMethod" value="@PaymentMethod.Card" id="paymentCard">
-                            <label class="form-check-label fw-bold" for="paymentCard">
-                                <i class="bi bi-credit-card-2-front text-primary me-2"></i> Karta Płatnicza (terminal u dostawcy)
-                            </label>
-                        </div>
-                        <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                        <span asp-validation-for="PaymentMethod" class="text-danger small"></span>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-success btn-lg w-100 py-3">
-                    Zamawiam i Płacę (<span id="totalButtonAmount">@cartTotal.ToString("F2")</span> zł)
+                <button type="submit" class="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm d-md-none">
+                    Zamawiam (<span id="totalButtonAmount">@cartTotal.ToString("F2")</span> zł)
                 </button>
             </form>
         </div>
 
-        <div class="col-md-5">
-            <div class="card bg-light border-0 sticky-top" style="top: 20px;">
-                <div class="card-body">
-                    <h4 class="card-title">Podsumowanie</h4>
-                    <hr>
+        <div class="col-lg-5">
+            <div class="card shadow border-0 rounded-4 bg-white sticky-top" style="top: 100px; z-index: 100;">
+                <div class="card-header bg-light py-3 border-bottom-0">
+                    <h5 class="fw-bold text-dark mb-0">Podsumowanie</h5>
+                </div>
+                <div class="card-body p-4">
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Koszyk:</span>
+                        <span class="text-muted">Koszyk:</span>
                         <span class="fw-bold">@cartTotal.ToString("F2") zł</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-2 text-muted" id="deliveryRow" style="display:none;">
-                        <span>Dostawa:</span>
+                    <div class="d-flex justify-content-between mb-3 text-muted small" id="deliveryRow" style="display:none;">
+                        <span><i class="bi bi-truck me-1"></i>Dostawa:</span>
                         <span id="deliveryCostDisplay">0,00 zł</span>
                     </div>
-                    <hr>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <strong>Razem:</strong>
-                        <h2 class="text-primary mb-0"><span id="totalDisplay">@cartTotal.ToString("F2")</span> zł</h2>
+                    <hr class="border-secondary opacity-10">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="fs-5 fw-bold text-dark">Razem:</span>
+                        <span class="fs-3 fw-bold text-primary"><span id="totalDisplay">@cartTotal.ToString("F2")</span> zł</span>
                     </div>
+
+                    <button type="submit" form="paymentForm" class="btn btn-success w-100 py-3 rounded-pill fw-bold shadow-sm d-none d-md-block" onclick="document.querySelector('form').submit()">
+                        <i class="bi bi-check-lg me-2"></i> Zamawiam i Płacę
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .custom-radio-btn .form-check-input {
+        display: none;
+    }
+
+    .custom-radio-btn .form-check-label {
+        transition: all 0.2s;
+    }
+
+    .custom-radio-btn .form-check-input:checked + .form-check-label {
+        border-color: var(--bs-primary) !important;
+        background-color: rgba(13, 110, 253, 0.05) !important;
+        box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
+    }
+
+    .payment-option:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
 <script>
-    // Pobieramy dane o opłatach z ViewBag (bezpiecznie sformatowane jako JSON)
     var cityFees = @Html.Raw(ViewBag.CityFeesJson ?? "{}");
-    // Używamy InvariantCulture dla liczb w JS (kropka zamiast przecinka)
     var baseTotal = @cartTotal.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     function toggleTimeInput() {
         var isScheduled = document.getElementById('timeScheduled').checked;
         var timeGroup = document.getElementById('scheduledTimeGroup');
-        if (isScheduled) {
-            timeGroup.style.display = 'block';
-        } else {
-            timeGroup.style.display = 'none';
-        }
+        timeGroup.style.display = isScheduled ? 'block' : 'none';
     }
 
     function toggleAddressFields() {
@@ -207,8 +237,6 @@
         var addressDiv = document.getElementById('addressFields');
         var deliveryRow = document.getElementById('deliveryRow');
 
-        // Sprawdzamy wartość enum. W C# Delivery to 0 (jeśli to pierwszy element enuma)
-        // Wartość "0" powinna odpowiadać Delivery.
         var isDelivery = (select.value == '0');
 
         if (isDelivery) {
@@ -224,7 +252,6 @@
     function updateTotal() {
         var select = document.getElementById('orderTypeSelect');
         var citySelect = document.getElementById('citySelect');
-
         var deliveryFee = 0;
         var isDelivery = (select.value == '0');
 
@@ -236,13 +263,13 @@
         }
 
         var finalTotal = baseTotal + deliveryFee;
-
-        // Wyświetlanie (z przecinkiem dla polskiego oka)
         document.getElementById('deliveryCostDisplay').innerText = deliveryFee.toFixed(2).replace('.', ',') + " zł";
 
         var formattedTotal = finalTotal.toFixed(2).replace('.', ',');
         document.getElementById('totalDisplay').innerText = formattedTotal;
-        document.getElementById('totalButtonAmount').innerText = formattedTotal;
+
+        var btnAmount = document.getElementById('totalButtonAmount');
+        if(btnAmount) btnAmount.innerText = formattedTotal;
     }
 
     document.addEventListener("DOMContentLoaded", function() {
