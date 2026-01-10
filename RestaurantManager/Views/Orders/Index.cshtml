@@ -9,69 +9,109 @@
     var dineInOrders = Model.Where(o => o.Type == OrderType.DineIn);
 }
 
-<div class="container-fluid mt-3">
+<div class="container-fluid mt-3 px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Aktywne Zamówienia (POS)</h2>
         <div>
-            <a asp-action="Archive" class="btn btn-outline-secondary btn-lg me-2"><i class="bi bi-archive"></i> Archiwum</a>
-            <a asp-action="Tables" class="btn btn-primary btn-lg"><i class="bi bi-grid-3x3-gap"></i> Mapa Stolików (Nowe Zamówienie)</a>
+            <h2 class="fw-bold text-dark mb-0">Panel POS</h2>
+            <p class="text-muted small mb-0">Zarządzanie bieżącymi zamówieniami</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Archive" class="btn btn-outline-dark rounded-pill px-4 shadow-sm fw-medium">
+                <i class="bi bi-archive me-2"></i> Archiwum
+            </a>
+            <a asp-action="Tables" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+                <i class="bi bi-grid-3x3-gap me-2"></i> Mapa Stolików
+            </a>
         </div>
     </div>
 
-    <ul class="nav nav-tabs mb-3" id="ordersTab" role="tablist">
+    <ul class="nav nav-pills mb-4 gap-2" id="ordersTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link @(activeTab == "online" ? "active" : "")" id="online-tab" data-bs-toggle="tab" data-bs-target="#online" type="button" role="tab" aria-controls="online" aria-selected="@(activeTab == "online" ? "true" : "false")">
-                Dostawa / Wynos <span class="badge bg-danger">@onlineOrders.Count()</span>
+            <button class="nav-link rounded-pill px-4 py-2 border @(activeTab == "online" ? "active" : "")" id="online-tab" data-bs-toggle="tab" data-bs-target="#online" type="button" role="tab">
+                <i class="bi bi-globe me-2"></i>Dostawa / Wynos
+                <span class="badge bg-white text-primary ms-2 rounded-pill shadow-sm">@onlineOrders.Count()</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link @(activeTab == "dinein" ? "active" : "")" id="dinein-tab" data-bs-toggle="tab" data-bs-target="#dinein" type="button" role="tab" aria-controls="dinein" aria-selected="@(activeTab == "dinein" ? "true" : "false")">
-                Sala (Stoliki) <span class="badge bg-info text-dark">@dineInOrders.Count()</span>
+            <button class="nav-link rounded-pill px-4 py-2 border @(activeTab == "dinein" ? "active" : "")" id="dinein-tab" data-bs-toggle="tab" data-bs-target="#dinein" type="button" role="tab">
+                <i class="bi bi-shop me-2"></i>Sala
+                <span class="badge bg-white text-primary ms-2 rounded-pill shadow-sm">@dineInOrders.Count()</span>
             </button>
         </li>
     </ul>
 
     <div class="tab-content" id="ordersTabContent">
-        <div class="tab-pane fade @(activeTab == "online" ? "show active" : "")" id="online" role="tabpanel" aria-labelledby="online-tab">
-            <div class="row">
+
+        <div class="tab-pane fade @(activeTab == "online" ? "show active" : "")" id="online" role="tabpanel">
+            <div class="row g-4">
                 @if (!onlineOrders.Any())
                 {
-                    <div class="col-12 text-muted">Brak aktywnych zamówień online.</div>
+                    <div class="col-12">
+                        <div class="alert alert-light text-center py-5 border rounded-4 shadow-sm">
+                            <i class="bi bi-inbox fs-1 text-muted opacity-25 d-block mb-3"></i>
+                            <span class="text-muted fw-medium">Brak aktywnych zamówień online.</span>
+                        </div>
+                    </div>
                 }
                 @foreach (var order in onlineOrders)
                 {
                     var timeLeft = order.ScheduledDate - DateTime.Now;
-                    var cardClass = timeLeft.TotalMinutes < 15 ? "border-danger" : (timeLeft.TotalMinutes < 60 ? "border-warning" : "border-info");
-                    if (order.Status == OrderStatus.Ready) { cardClass = "border-success"; }
+                    var borderClass = timeLeft.TotalMinutes < 15 ? "border-danger border-2" : (timeLeft.TotalMinutes < 60 ? "border-warning border-2" : "border-info border-2");
+                    var bgHeader = timeLeft.TotalMinutes < 15 ? "bg-danger text-white" : (timeLeft.TotalMinutes < 60 ? "bg-warning text-dark" : "bg-light text-dark");
 
-                    <div class="col-md-4 col-lg-3 mb-4">
-                        <div class="card @cardClass shadow h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center bg-light">
-                                <strong>#@order.Id</strong>
-                                <span class="badge bg-secondary">@order.Type</span>
+                    if (order.Status == OrderStatus.Ready)
+                    {
+                        borderClass = "border-success border-2";
+                        bgHeader = "bg-success text-white";
+                    }
+
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card shadow-sm h-100 rounded-4 overflow-hidden @borderClass">
+                            <div class="card-header d-flex justify-content-between align-items-center py-2 px-3 @bgHeader border-bottom-0">
+                                <span class="fw-bold">#@order.Id</span>
+                                <span class="badge bg-white bg-opacity-25 border border-white border-opacity-50 text-reset fw-normal">
+                                    @(order.Type == OrderType.Delivery ? "Dostawa" : "Wynos")
+                                </span>
                             </div>
-                            <div class="card-body">
-                                <h5 class="card-title">@order.ScheduledDate.ToString("HH:mm") <small class="text-muted">(@order.ScheduledDate.ToString("dd.MM"))</small></h5>
-                                <p class="card-text mb-1"><strong>@order.CustomerName</strong></p>
-                                <p class="card-text mb-2"><small>@order.CustomerPhone</small></p>
+                            <div class="card-body p-3 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h4 class="mb-0 fw-bold">@order.ScheduledDate.ToString("HH:mm")</h4>
+                                        <small class="text-muted">@order.ScheduledDate.ToString("dd.MM")</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-truncate" style="max-width: 120px;" title="@order.CustomerName">@order.CustomerName</div>
+                                        <small class="text-muted d-block">@order.CustomerPhone</small>
+                                    </div>
+                                </div>
 
                                 @if (!string.IsNullOrEmpty(order.DeliveryAddress))
                                 {
-                                    <div class="alert alert-light p-1 border mb-2 small"><i class="bi bi-truck"></i> @order.DeliveryAddress</div>
+                                    <div class="bg-light p-2 rounded-3 border mb-3 small d-flex align-items-start">
+                                        <i class="bi bi-geo-alt-fill text-danger me-2 mt-1"></i>
+                                        <span class="text-break">@order.DeliveryAddress</span>
+                                    </div>
                                 }
-                                <hr class="my-2" />
-                                <ul class="list-unstyled small mb-3">
+
+                                <hr class="my-2 text-muted opacity-25" />
+
+                                <ul class="list-unstyled small mb-3 flex-grow-1 overflow-auto" style="max-height: 150px;">
                                     @foreach (var item in order.OrderItems)
                                     {
-                                        <li><strong>@item.Quantity x</strong> @item.MenuItem.Name</li>
+                                        <li class="mb-1 d-flex justify-content-between">
+                                            <span><span class="fw-bold text-primary">@item.Quantity x</span> @item.MenuItem.Name</span>
+                                        </li>
                                     }
                                 </ul>
+
                                 @if (!string.IsNullOrEmpty(order.Notes))
                                 {
-                                    <p class="text-danger small"><strong>Uwagi:</strong> @order.Notes</p>
+                                    <div class="alert alert-warning p-2 small mb-3 border-0 rounded-3">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Uwagi:</strong> @order.Notes
+                                    </div>
                                 }
                             </div>
-                            <div class="card-footer bg-white text-center">
+                            <div class="card-footer bg-white border-top-0 pt-0 pb-3 px-3">
                                 @await Html.PartialAsync("_OrderStatusButtons", order, new ViewDataDictionary(ViewData) { { "Tab", "online" } })
                             </div>
                         </div>
@@ -80,41 +120,56 @@
             </div>
         </div>
 
-        <div class="tab-pane fade @(activeTab == "dinein" ? "show active" : "")" id="dinein" role="tabpanel" aria-labelledby="dinein-tab">
-            <div class="row">
+        <div class="tab-pane fade @(activeTab == "dinein" ? "show active" : "")" id="dinein" role="tabpanel">
+            <div class="row g-4">
                 @if (!dineInOrders.Any())
                 {
-                    <div class="col-12 text-muted">Brak otwartych rachunków na sali.</div>
+                    <div class="col-12">
+                        <div class="alert alert-light text-center py-5 border rounded-4 shadow-sm">
+                            <i class="bi bi-shop fs-1 text-muted opacity-25 d-block mb-3"></i>
+                            <span class="text-muted fw-medium">Brak otwartych rachunków na sali.</span>
+                        </div>
+                    </div>
                 }
                 @foreach (var order in dineInOrders)
                 {
-                    <div class="col-md-4 col-lg-3 mb-4">
-                        <div class="card border-primary shadow h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
-                                <strong>@(order.Table != null ? order.Table.Name : "Stolik nieznany")</strong>
-                                <span class="badge bg-light text-primary">#@order.Id</span>
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card border-0 shadow-sm h-100 rounded-4 overflow-hidden ring-hover">
+                            <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white py-3 border-bottom-0">
+                                <h5 class="mb-0 fw-bold"><i class="bi bi-shop-window me-2"></i>@(order.Table != null ? order.Table.Name : "Nieznany")</h5>
+                                <span class="badge bg-white text-primary rounded-pill shadow-sm">#@order.Id</span>
                             </div>
-                            <div class="card-body">
-                                <h5 class="card-title text-center">Kwota: @order.TotalAmount.ToString("C")</h5>
-                                <hr class="my-2" />
-                                <ul class="list-unstyled small mb-3">
+                            <div class="card-body p-3 d-flex flex-column">
+                                <div class="text-center mb-3">
+                                    <small class="text-muted text-uppercase fw-bold ls-1">Aktualna kwota</small>
+                                    <h3 class="fw-bold text-success mb-0">@order.TotalAmount.ToString("C")</h3>
+                                </div>
+
+                                <hr class="my-2 opacity-10" />
+
+                                <ul class="list-unstyled small mb-3 flex-grow-1 overflow-auto custom-scrollbar" style="max-height: 180px;">
                                     @foreach (var item in order.OrderItems)
                                     {
                                         if (item.IsServed)
                                         {
-                                            <li class="text-decoration-line-through text-muted"><i class="bi bi-check-circle-fill text-success"></i> <strong>@item.Quantity x</strong> @item.MenuItem.Name</li>
+                                            <li class="d-flex justify-content-between align-items-center mb-1 text-muted text-decoration-line-through opacity-75">
+                                                <span><i class="bi bi-check-circle-fill text-success me-1"></i> <strong>@item.Quantity x</strong> @item.MenuItem.Name</span>
+                                            </li>
                                         }
                                         else
                                         {
-                                            <li><i class="bi bi-hourglass-split text-warning"></i> <strong>@item.Quantity x</strong> @item.MenuItem.Name</li>
+                                            <li class="d-flex justify-content-between align-items-center mb-1 fw-medium bg-warning bg-opacity-10 p-1 rounded">
+                                                <span><i class="bi bi-hourglass-split text-warning me-1"></i> <strong>@item.Quantity x</strong> @item.MenuItem.Name</span>
+                                            </li>
                                         }
                                     }
                                 </ul>
-                                <div class="d-grid gap-2">
-                                    <a asp-action="ManageTable" asp-route-id="@order.TableId" class="btn btn-outline-primary btn-sm">Edytuj / Dodaj</a>
-                                </div>
+
+                                <a asp-action="ManageTable" asp-route-id="@order.TableId" class="btn btn-outline-primary w-100 rounded-pill fw-medium mb-3">
+                                    <i class="bi bi-pencil-square me-1"></i> Edytuj zamówienie
+                                </a>
                             </div>
-                            <div class="card-footer bg-white text-center">
+                            <div class="card-footer bg-white border-top-0 pt-0 pb-3 px-3 text-center">
                                 @await Html.PartialAsync("_OrderStatusButtons", order, new ViewDataDictionary(ViewData) { { "Tab", "dinein" } })
                             </div>
                         </div>
@@ -124,3 +179,30 @@
         </div>
     </div>
 </div>
+
+<style>
+    .nav-pills .nav-link.active {
+        background-color: var(--bs-primary);
+        color: white !important;
+        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+    }
+
+    .nav-pills .nav-link {
+        color: #495057;
+        background-color: #f8f9fa;
+    }
+
+    .ring-hover:hover {
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25) !important;
+        transition: box-shadow 0.2s;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #dee2e6;
+        border-radius: 4px;
+    }
+</style>

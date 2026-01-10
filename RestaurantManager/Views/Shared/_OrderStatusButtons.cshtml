@@ -2,30 +2,51 @@
 @model RestaurantManager.Models.Order
 
 @{
-    // Pobieramy informację o zakładce z ViewData (przekazaną z Index.cshtml)
     string currentTab = ViewData["Tab"] as string ?? "online";
+    string statusText = "";
+    switch (Model.Status)
+    {
+        case OrderStatus.Created: statusText = "Oczekuje"; break;
+        case OrderStatus.Accepted: statusText = "Przyjęte"; break;
+        case OrderStatus.InKitchen: statusText = "W kuchni"; break;
+        case OrderStatus.Ready: statusText = "Gotowe"; break;
+        case OrderStatus.Completed: statusText = "Zakończone"; break;
+        default: statusText = Model.Status.ToString(); break;
+    }
 }
 
-<p class="fw-bold">Status: <span class="text-primary">@Model.Status</span></p>
+<div class="d-flex align-items-center justify-content-between mb-2">
+    <span class="fw-bold small text-uppercase text-muted">Status:</span>
+    <span class="fw-bold text-primary">@statusText</span>
+</div>
 
-<form asp-controller="Orders" asp-action="UpdateStatus" method="post">
+<form asp-controller="Orders" asp-action="UpdateStatus" method="post" class="d-flex gap-2">
     <input type="hidden" name="id" value="@Model.Id" />
     <input type="hidden" name="returnTab" value="@currentTab" />
 
-    @if (Model.Status == OrderStatus.Created)
+    @if (Model.Status != OrderStatus.Created)
     {
-        <button type="submit" name="status" value="@OrderStatus.Accepted" class="btn btn-warning btn-sm w-100">Zatwierdź</button>
+        <button type="submit" name="direction" value="back" class="btn btn-outline-secondary btn-sm px-2" title="Cofnij status">
+            <i class="bi bi-arrow-left"></i>
+        </button>
     }
-    else if (Model.Status == OrderStatus.Accepted)
-    {
-        <button type="submit" name="status" value="@OrderStatus.InKitchen" class="btn btn-info btn-sm w-100">Na Kuchnię</button>
-    }
-    else if (Model.Status == OrderStatus.InKitchen)
-    {
-        <button type="submit" name="status" value="@OrderStatus.Ready" class="btn btn-success btn-sm w-100">Gotowe</button>
-    }
-    else if (Model.Status == OrderStatus.Ready)
-    {
-        <button type="submit" name="status" value="@OrderStatus.Completed" class="btn btn-outline-dark btn-sm w-100">Zakończ</button>
-    }
+
+    <div class="flex-grow-1">
+        @if (Model.Status == OrderStatus.Created)
+        {
+            <button type="submit" name="status" value="@OrderStatus.Accepted" class="btn btn-warning btn-sm w-100 fw-bold">Zatwierdź</button>
+        }
+        else if (Model.Status == OrderStatus.Accepted)
+        {
+            <button type="submit" name="status" value="@OrderStatus.InKitchen" class="btn btn-info btn-sm w-100 fw-bold text-white">Na Kuchnię</button>
+        }
+        else if (Model.Status == OrderStatus.InKitchen)
+        {
+            <button type="submit" name="status" value="@OrderStatus.Ready" class="btn btn-success btn-sm w-100 fw-bold">Gotowe</button>
+        }
+        else if (Model.Status == OrderStatus.Ready)
+        {
+            <button type="submit" name="status" value="@OrderStatus.Completed" class="btn btn-dark btn-sm w-100 fw-bold">Zakończ</button>
+        }
+    </div>
 </form>

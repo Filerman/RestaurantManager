@@ -17,19 +17,21 @@
             font-family: 'Space Mono', monospace;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
+            align-items: center; 
             min-height: 100vh;
-            padding-top: 40px;
+            padding: 20px;
+            color: #000;
+            margin: 0;
         }
 
         .receipt {
-            width: 360px;
+            width: 320px; 
             background: #fff;
-            padding: 25px;
+            padding: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             position: relative;
         }
-            /* Efekt "zygzaka" na dole */
+
             .receipt::after {
                 content: "";
                 position: absolute;
@@ -43,53 +45,58 @@
             }
 
         h2 {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 700;
             text-align: center;
             margin-bottom: 5px;
             text-transform: uppercase;
         }
 
-        .text-center p {
+        .info p {
             margin: 0;
-            font-size: 0.85rem;
-            color: #555;
+            font-size: 0.75rem;
+            color: #333;
+            text-align: center;
         }
 
         .divider {
-            border-bottom: 1px dashed #ccc;
-            margin: 15px 0;
+            border-bottom: 1px dashed #000;
+            margin: 10px 0;
+            opacity: 0.5;
         }
 
         .item-row td {
-            padding: 4px 0;
+            padding: 2px 0;
             vertical-align: top;
+            font-size: 0.85rem;
         }
 
         .total-section {
             font-size: 1.1rem;
             font-weight: 700;
-            margin-top: 15px;
+            margin-top: 10px;
         }
 
         @@media print {
-            body
+            body {
+                background: #fff;
+                padding: 0;
+                display: block;
+            }
 
-        {
-            background: #fff;
-            padding: 0;
-            display: block;
-        }
+            .receipt {
+                width: 100%;
+                box-shadow: none;
+                padding: 0;
+            }
 
-        .receipt {
-            width: 100%;
-            box-shadow: none;
-        }
+                .receipt::after {
+                    display: none;
+                }
 
-        .d-print-none {
-            display: none !important;
-        }
-
+            .d-print-none {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -97,13 +104,12 @@
 
     <div class="receipt">
         <h2>@ViewBag.RestaurantName</h2>
-        <div class="text-center">
+        <div class="info">
             <p>@ViewBag.Address</p>
             @if (ViewBag.Phone != null)
             {
                 <p>Tel: @ViewBag.Phone</p>
             }
-            <p>NIP: 000-000-00-00</p>
         </div>
 
         <div class="divider"></div>
@@ -117,13 +123,14 @@
             <span>#@Model.Id</span>
         </div>
 
-        <div class="text-center fw-bold mt-2 py-1 bg-light border rounded">
+        <div class="text-center fw-bold mt-2 py-1 border border-dark rounded-0 small">
             @if (Model.Table != null)
             {
                 <span>STOLIK: @Model.Table.Name</span>
             }
             else
             {
+
                 <span>@(Model.Type == RestaurantManager.Models.OrderType.Delivery ? "DOSTAWA" : "WYNOS")</span>
             }
         </div>
@@ -136,13 +143,13 @@
                 {
                     <tr class="item-row">
                         <td class="ps-0">
-                            @item.MenuItem.Name
+                            <span class="fw-bold">@item.MenuItem.Name</span>
                             @if (item.Quantity > 1)
                             {
-                                <div class="text-muted small">@item.Quantity x @item.UnitPrice.ToString("F2")</div>
+                                <div class="text-muted small ps-2">@item.Quantity x @item.UnitPrice.ToString("F2")</div>
                             }
                         </td>
-                        <td class="text-end pe-0 fw-bold">@((item.Quantity * item.UnitPrice).ToString("F2"))</td>
+                        <td class="text-end pe-0">@((item.Quantity * item.UnitPrice).ToString("F2"))</td>
                     </tr>
                 }
             </tbody>
@@ -154,23 +161,27 @@
             <span>SUMA PLN</span>
             <span>@Model.TotalAmount.ToString("F2")</span>
         </div>
-        <div class="d-flex justify-content-between small text-muted mt-2">
-            <span>Metoda płatności:</span>
-            <span class="text-uppercase">@Model.PaymentMethod</span>
+        <div class="d-flex justify-content-between small text-muted mt-1">
+            <span>Płatność:</span>
+            <span class="text-uppercase fw-bold">@Model.PaymentMethod</span>
         </div>
 
         <div class="divider"></div>
 
-        <div class="text-center mt-3">
-            <p>Dziękujemy za wizytę!</p>
-            <p class="small">Zapraszamy ponownie</p>
+        <div class="text-center mt-3 mb-2">
+            <p class="fw-bold small">Dziękujemy!</p>
         </div>
 
-        <div class="d-print-none mt-4">
-            <button onclick="window.print()" class="btn btn-dark w-100 mb-2 py-2">DRUKUJ</button>
-            <button onclick="window.close()" class="btn btn-light border w-100 py-2">Zamknij okno</button>
+        <div class="d-print-none mt-3">
+            <button onclick="window.print()" class="btn btn-dark w-100 mb-2 py-2 fw-bold text-uppercase rounded-0 btn-sm">Drukuj</button>
+            <button onclick="window.close()" class="btn btn-light border w-100 py-2 rounded-0 btn-sm">Zamknij</button>
         </div>
     </div>
 
+    <script>
+        window.onload = function() {
+            try { window.resizeTo(400, 600); } catch(e) {}
+        };
+    </script>
 </body>
 </html>
