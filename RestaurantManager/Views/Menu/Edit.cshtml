@@ -3,80 +3,77 @@
     ViewData["Title"] = "Edytuj Danie";
 }
 
-<h2>@ViewData["Title"]</h2>
-
-<div class="container mt-4">
+<div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-warning text-dark">
-                    <h4 class="mb-0">Edytuj pozycję: @Model.Name</h4>
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-pencil-square me-2"></i>Edycja pozycji</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4 bg-light bg-opacity-25">
                     <form asp-action="Edit" method="post" enctype="multipart/form-data">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                         <input type="hidden" asp-for="Id" />
                         <input type="hidden" asp-for="ImagePath" />
 
-                        <div class="mb-3">
-                            <label asp-for="Name" class="form-label fw-bold"></label>
-                            <input asp-for="Name" class="form-control" />
-                            <span asp-validation-for="Name" class="text-danger"></span>
+                        <div class="form-group mb-3">
+                            <label asp-for="Name" class="form-label fw-bold small text-uppercase text-muted ls-1">Nazwa dania</label>
+                            <input asp-for="Name" class="form-control rounded-3" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Category" class="form-label fw-bold"></label>
-                            <input asp-for="Category" class="form-control" placeholder="Wybierz lub wpisz nową..." list="categoryList" autocomplete="off" />
-
+                        <div class="form-group mb-3">
+                            <label asp-for="Category" class="form-label fw-bold small text-uppercase text-muted ls-1">Kategoria</label>
+                            <input asp-for="Category" class="form-control rounded-3" list="categoryList" />
                             <datalist id="categoryList">
                                 @if (ViewBag.Categories != null)
                                 {
-                                    foreach (var cat in (System.Collections.Generic.List<string>)ViewBag.Categories)
+                                    foreach (var cat in (List<string>)ViewBag.Categories)
                                     {
                                         <option value="@cat" />
                                     }
                                 }
                             </datalist>
-                            <div class="form-text text-muted small">
-                                <i class="bi bi-info-circle"></i> Zmień nazwę, aby przenieść do innej kategorii lub utwórz nową.
-                            </div>
-                            <span asp-validation-for="Category" class="text-danger"></span>
+                            <span asp-validation-for="Category" class="text-danger small"></span>
                         </div>
-                        <div class="mb-3">
-                            <label asp-for="Price" class="form-label fw-bold"></label>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Price" class="form-label fw-bold small text-uppercase text-muted ls-1">Cena</label>
                             <div class="input-group">
-                                <input asp-for="Price" class="form-control" type="number" step="0.01" />
-                                <span class="input-group-text">PLN</span>
+                                <input asp-for="Price" class="form-control rounded-start-3" type="number" step="0.01" />
+                                <span class="input-group-text bg-white border-start-0 rounded-end-3">PLN</span>
                             </div>
-                            <span asp-validation-for="Price" class="text-danger"></span>
+                            <span asp-validation-for="Price" class="text-danger small"></span>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Description" class="form-label fw-bold"></label>
-                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="form-label fw-bold small text-uppercase text-muted ls-1">Opis</label>
+                            <textarea asp-for="Description" class="form-control rounded-3" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Zmień Zdjęcie</label>
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted ls-1">Zmień zdjęcie</label>
                             @if (!string.IsNullOrEmpty(Model.ImagePath))
                             {
-                                <div class="mb-2 p-2 border rounded bg-light text-center">
-                                    <img src="@Model.ImagePath" style="max-height: 150px; max-width: 100%; border-radius: 8px;" />
-                                    <div class="text-muted small mt-1">Obecne zdjęcie</div>
+                                <div class="mb-2 p-2 bg-white rounded border d-inline-block">
+                                    <img src="@Model.ImagePath" style="height: 60px; border-radius: 4px;" />
+                                    <span class="ms-2 text-muted small">Aktualne</span>
                                 </div>
                             }
-                            <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                            <input type="file" name="imageFile" class="form-control rounded-3" accept="image/*" />
                         </div>
 
-                        <div class="mb-3 form-check bg-light p-2 rounded border">
-                            <input asp-for="IsAvailable" class="form-check-input ms-0 me-2" style="margin-top: 0.3rem;" />
-                            <label class="form-check-label fw-bold" asp-for="IsAvailable">Produkt jest dostępny w sprzedaży</label>
+                        <div class="form-check form-switch mb-4 p-3 bg-white rounded-3 border shadow-sm">
+                            <input asp-for="IsAvailable" class="form-check-input ms-0 me-3" style="margin-top: 0.15rem; transform: scale(1.2);" />
+                            <label class="form-check-label fw-bold text-dark" asp-for="IsAvailable">Produkt dostępny w sprzedaży</label>
                         </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-warning btn-lg"><i class="bi bi-save"></i> Zapisz zmiany</button>
-                            <a asp-action="Index" class="btn btn-outline-secondary">Powrót do listy</a>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-light border rounded-pill px-4 fw-medium">Anuluj</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                                <i class="bi bi-save me-1"></i> Zapisz
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -84,3 +81,9 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -13,26 +13,29 @@
     var canManage = (role == "Employee" || role == "Manager" || role == "Admin");
 }
 
-<div class="container mt-4">
+<div class="container mt-4 mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary fw-bold"><i class="bi bi-journal-richtext me-2"></i>Nasze Menu</h2>
+        <h2 class="fw-bold text-dark"><i class="bi bi-journal-richtext me-2 text-primary"></i>Nasze Menu</h2>
         @if (canManage)
         {
-            <a asp-action="Create" class="btn btn-success rounded-pill">
-                <i class="bi bi-plus-lg"></i> Dodaj pozycję
+            <a asp-action="Create" class="btn btn-success rounded-pill shadow-sm px-4 fw-bold">
+                <i class="bi bi-plus-lg me-1"></i> Dodaj pozycję
             </a>
         }
     </div>
 
     @if (!Model.Any())
     {
-        <div class="alert alert-info text-center">Menu jest aktualnie puste. Zapraszamy wkrótce!</div>
+        <div class="alert alert-info text-center border-0 shadow-sm rounded-4 py-4">
+            <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+            Menu jest aktualnie puste. Zapraszamy wkrótce!
+        </div>
     }
     else
     {
-        <ul class="nav nav-pills mb-4 justify-content-center" id="menuTabs" role="tablist">
+        <ul class="nav nav-pills mb-5 justify-content-center gap-2" id="menuTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active rounded-pill px-4" id="all-tab" data-bs-toggle="pill" data-bs-target="#pills-all" type="button" role="tab">
+                <button class="nav-link active rounded-pill px-4 py-2 border" id="all-tab" data-bs-toggle="pill" data-bs-target="#pills-all" type="button" role="tab">
                     Wszystkie
                 </button>
             </li>
@@ -40,7 +43,7 @@
             {
                 var safeId = group.Key?.Replace(" ", "") ?? "Other";
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link rounded-pill px-4" id="@safeId-tab" data-bs-toggle="pill" data-bs-target="#pills-@safeId" type="button" role="tab">
+                    <button class="nav-link rounded-pill px-4 py-2 border" id="@safeId-tab" data-bs-toggle="pill" data-bs-target="#pills-@safeId" type="button" role="tab">
                         @group.Key
                     </button>
                 </li>
@@ -48,16 +51,84 @@
         </ul>
 
         <div class="tab-content" id="menuTabsContent">
-
             <div class="tab-pane fade show active" id="pills-all" role="tabpanel">
                 @foreach (var group in categories)
                 {
-                    <h3 class="mt-4 mb-3 border-bottom pb-2 text-primary">@group.Key</h3>
+                    <h4 class="mt-4 mb-3 border-start border-4 border-primary ps-3 text-dark fw-bold">@group.Key</h4>
                     <div class="row g-4">
                         @foreach (var item in group)
                         {
                             <div class="col-md-6 col-lg-4 col-xl-3">
-                                <partial name="_MenuItemCard" model="item" />
+                                <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-menu bg-white">
+                                    <div class="position-relative">
+                                        @if (!string.IsNullOrEmpty(item.ImagePath))
+                                        {
+                                            <img src="@item.ImagePath" class="card-img-top menu-card-img" alt="@item.Name">
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light d-flex align-items-center justify-content-center menu-card-img text-muted">
+                                                <i class="bi bi-image fs-1"></i>
+                                            </div>
+                                        }
+
+                                        <div class="price-tag">
+                                            @item.Price.ToString("C")
+                                        </div>
+
+                                        @if (canManage)
+                                        {
+                                            <div class="position-absolute top-0 start-0 m-3">
+                                                @if (item.IsAvailable)
+                                                {
+                                                    <span class="badge bg-success shadow-sm border border-white"><i class="bi bi-check-circle me-1"></i>Dostępne</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger shadow-sm border border-white"><i class="bi bi-x-circle me-1"></i>Niedostępne</span>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="card-body d-flex flex-column p-4">
+                                        <h5 class="card-title fw-bold text-dark">@item.Name</h5>
+                                        <p class="card-text text-muted small flex-grow-1 text-truncate-2">@item.Description</p>
+
+                                        <div class="d-flex gap-2 mt-3 pt-3 border-top">
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary rounded-pill shadow-sm d-flex align-items-center justify-content-center px-3" title="Zobacz szczegóły">
+                                                <i class="bi bi-info-circle"></i>
+                                            </a>
+
+                                            @if (item.IsAvailable)
+                                            {
+                                                <form asp-controller="Cart" asp-action="Add" method="post" class="flex-grow-1">
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm fw-bold py-2">
+                                                        <i class="bi bi-cart-plus me-2"></i> Do koszyka
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-secondary flex-grow-1 rounded-pill shadow-sm fw-bold disabled" disabled>
+                                                    Niedostępne
+                                                </button>
+                                            }
+                                        </div>
+
+                                        @if (canManage)
+                                        {
+                                            <div class="d-flex gap-2 mt-2">
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary flex-fill rounded-pill fw-medium d-flex flex-column align-items-center py-2">
+                                                    <i class="bi bi-pencil-square mb-1"></i> Edytuj
+                                                </a>
+                                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger flex-fill rounded-pill fw-medium d-flex flex-column align-items-center py-2">
+                                                    <i class="bi bi-trash mb-1"></i> Usuń
+                                                </a>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
                             </div>
                         }
                     </div>
@@ -68,12 +139,81 @@
             {
                 var safeId = group.Key?.Replace(" ", "") ?? "Other";
                 <div class="tab-pane fade" id="pills-@safeId" role="tabpanel">
-                    <h3 class="mt-4 mb-3 text-primary">@group.Key</h3>
+                    <h4 class="mt-4 mb-3 text-dark fw-bold border-start border-4 border-primary ps-3">@group.Key</h4>
                     <div class="row g-4">
                         @foreach (var item in group)
                         {
                             <div class="col-md-6 col-lg-4 col-xl-3">
-                                <partial name="_MenuItemCard" model="item" />
+                                <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-menu bg-white">
+                                    <div class="position-relative">
+                                        @if (!string.IsNullOrEmpty(item.ImagePath))
+                                        {
+                                            <img src="@item.ImagePath" class="card-img-top menu-card-img" alt="@item.Name">
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light d-flex align-items-center justify-content-center menu-card-img text-muted">
+                                                <i class="bi bi-image fs-1"></i>
+                                            </div>
+                                        }
+
+                                        <div class="price-tag">
+                                            @item.Price.ToString("C")
+                                        </div>
+
+                                        @if (canManage)
+                                        {
+                                            <div class="position-absolute top-0 start-0 m-3">
+                                                @if (item.IsAvailable)
+                                                {
+                                                    <span class="badge bg-success shadow-sm border border-white"><i class="bi bi-check-circle me-1"></i>Dostępne</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger shadow-sm border border-white"><i class="bi bi-x-circle me-1"></i>Niedostępne</span>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="card-body d-flex flex-column p-4">
+                                        <h5 class="card-title fw-bold text-dark">@item.Name</h5>
+                                        <p class="card-text text-muted small flex-grow-1 text-truncate-2">@item.Description</p>
+
+                                        <div class="d-flex gap-2 mt-3 pt-3 border-top">
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-secondary rounded-pill shadow-sm d-flex align-items-center justify-content-center px-3" title="Zobacz szczegóły">
+                                                <i class="bi bi-info-circle"></i>
+                                            </a>
+
+                                            @if (item.IsAvailable)
+                                            {
+                                                <form asp-controller="Cart" asp-action="Add" method="post" class="flex-grow-1">
+                                                    <input type="hidden" name="id" value="@item.Id" />
+                                                    <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm fw-bold py-2">
+                                                        <i class="bi bi-cart-plus me-2"></i> Do koszyka
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-secondary flex-grow-1 rounded-pill shadow-sm fw-bold disabled" disabled>
+                                                    Niedostępne
+                                                </button>
+                                            }
+                                        </div>
+
+                                        @if (canManage)
+                                        {
+                                            <div class="d-flex gap-2 mt-2">
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary flex-fill rounded-pill fw-medium d-flex flex-column align-items-center py-2">
+                                                    <i class="bi bi-pencil-square mb-1"></i> Edytuj
+                                                </a>
+                                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger flex-fill rounded-pill fw-medium d-flex flex-column align-items-center py-2">
+                                                    <i class="bi bi-trash mb-1"></i> Usuń
+                                                </a>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
                             </div>
                         }
                     </div>
@@ -85,27 +225,29 @@
 
 <style>
     .nav-pills .nav-link.active {
-        color: #fff !important; 
-        background: var(--main-gradient);
+        color: #fff !important;
+        background: var(--bs-primary) !important;
+        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.4);
     }
 
     .menu-card-img {
         height: 200px;
         object-fit: cover;
         width: 100%;
-        border-bottom: 1px solid #eee;
+        transition: transform 0.5s ease;
+    }
+
+    .card-menu:hover .menu-card-img {
+        transform: scale(1.05);
     }
 
     .card-menu {
         transition: transform 0.3s, box-shadow 0.3s;
-        border: none;
-        border-radius: 12px;
-        overflow: hidden;
     }
 
         .card-menu:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
         }
 
     .price-tag {
@@ -114,9 +256,17 @@
         right: 15px;
         background-color: rgba(255, 255, 255, 0.95);
         color: #198754;
-        font-weight: bold;
-        padding: 5px 12px;
+        font-weight: 800;
+        padding: 5px 15px;
         border-radius: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        font-size: 0.95rem;
+    }
+
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 </style>

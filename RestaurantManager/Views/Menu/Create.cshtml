@@ -3,73 +3,68 @@
     ViewData["Title"] = "Dodaj Nowe Danie";
 }
 
-<h2>@ViewData["Title"]</h2>
-
-<div class="container mt-4">
+<div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Dodaj nową pozycję</h4>
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h4 class="mb-0 fw-bold text-success"><i class="bi bi-plus-circle me-2"></i>Dodaj pozycję menu</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4 bg-light bg-opacity-25">
                     <form asp-action="Create" method="post" enctype="multipart/form-data">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                        <div class="mb-3">
-                            <label asp-for="Name" class="form-label fw-bold"></label>
-                            <input asp-for="Name" class="form-control" placeholder="Wpisz nazwę dania" />
-                            <span asp-validation-for="Name" class="text-danger"></span>
+                        <div class="form-group mb-3">
+                            <label asp-for="Name" class="form-label fw-bold small text-uppercase text-muted ls-1">Nazwa dania</label>
+                            <input asp-for="Name" class="form-control rounded-3" placeholder="Wpisz nazwę..." />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Category" class="form-label fw-bold"></label>
-
-                            <input asp-for="Category" class="form-control" placeholder="Wybierz lub wpisz nową..." list="categoryList" autocomplete="off" />
-
+                        <div class="form-group mb-3">
+                            <label asp-for="Category" class="form-label fw-bold small text-uppercase text-muted ls-1">Kategoria</label>
+                            <input asp-for="Category" class="form-control rounded-3" list="categoryList" placeholder="Wybierz lub wpisz nową..." autocomplete="off" />
                             <datalist id="categoryList">
                                 @if (ViewBag.Categories != null)
                                 {
-                                    foreach (var cat in (System.Collections.Generic.List<string>)ViewBag.Categories)
+                                    foreach (var cat in (List<string>)ViewBag.Categories)
                                     {
                                         <option value="@cat" />
                                     }
                                 }
                             </datalist>
-
-                            <div class="form-text text-muted small">
-                                <i class="bi bi-info-circle"></i> Aby utworzyć <strong>nową kategorię</strong>, po prostu wpisz jej nazwę. Aby przypisać do istniejącej, wybierz ją z listy.
-                            </div>
-                            <span asp-validation-for="Category" class="text-danger"></span>
+                            <span asp-validation-for="Category" class="text-danger small"></span>
                         </div>
-                        <div class="mb-3">
-                            <label asp-for="Price" class="form-label fw-bold"></label>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Price" class="form-label fw-bold small text-uppercase text-muted ls-1">Cena</label>
                             <div class="input-group">
-                                <input asp-for="Price" class="form-control" type="number" step="0.01" />
-                                <span class="input-group-text">PLN</span>
+                                <input asp-for="Price" class="form-control rounded-start-3" type="number" step="0.01" />
+                                <span class="input-group-text bg-white border-start-0 rounded-end-3">PLN</span>
                             </div>
-                            <span asp-validation-for="Price" class="text-danger"></span>
+                            <span asp-validation-for="Price" class="text-danger small"></span>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Description" class="form-label fw-bold"></label>
-                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Opis składników, alergeny itp."></textarea>
-                            <span asp-validation-for="Description" class="text-danger"></span>
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="form-label fw-bold small text-uppercase text-muted ls-1">Opis</label>
+                            <textarea asp-for="Description" class="form-control rounded-3" rows="3" placeholder="Składniki, alergeny..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Zdjęcie</label>
-                            <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold small text-uppercase text-muted ls-1">Zdjęcie</label>
+                            <input type="file" name="imageFile" class="form-control rounded-3" accept="image/*" />
                         </div>
 
-                        <div class="mb-3 form-check bg-light p-2 rounded border">
-                            <input asp-for="IsAvailable" class="form-check-input ms-0 me-2" style="margin-top: 0.3rem;" />
-                            <label class="form-check-label fw-bold" asp-for="IsAvailable">Produkt jest dostępny w sprzedaży</label>
+                        <div class="form-check form-switch mb-4 p-3 bg-white rounded-3 border shadow-sm">
+                            <input asp-for="IsAvailable" class="form-check-input ms-0 me-3" style="margin-top: 0.15rem; transform: scale(1.2);" />
+                            <label class="form-check-label fw-bold text-dark" asp-for="IsAvailable">Produkt dostępny w sprzedaży</label>
                         </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-check-circle"></i> Zapisz</button>
-                            <a asp-action="Index" class="btn btn-outline-secondary">Powrót do listy</a>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-light border rounded-pill px-4 fw-medium">Anuluj</a>
+                            <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm">
+                                <i class="bi bi-check-lg me-1"></i> Dodaj
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -77,3 +72,9 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

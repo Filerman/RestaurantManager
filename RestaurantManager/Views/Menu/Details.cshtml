@@ -8,74 +8,73 @@
     bool hasImage = !string.IsNullOrEmpty(Model.ImagePath);
 }
 
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="card shadow-lg border-0 overflow-hidden rounded-4">
         <div class="row g-0">
             @if (hasImage)
             {
-                <div class="col-md-6 bg-light d-flex align-items-center justify-content-center" style="min-height: 400px; background-color: #f8f9fa;">
-                    <img src="@Model.ImagePath" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover;" alt="@Model.Name">
+                <div class="col-md-6 bg-light position-relative" style="min-height: 400px;">
+                    <img src="@Model.ImagePath" class="img-fluid w-100 h-100 object-fit-cover" alt="@Model.Name">
                 </div>
             }
 
             <div class="@(hasImage ? "col-md-6" : "col-12")">
-                <div class="card-body p-5 d-flex flex-column h-100">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <span class="badge bg-secondary text-uppercase mb-2">@Model.Category</span>
+                <div class="card-body p-5 d-flex flex-column h-100 justify-content-center">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 text-uppercase ls-1">@Model.Category</span>
                         @if (Model.IsAvailable)
                         {
-                            <span class="badge bg-success">Dostępne</span>
+                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill"><i class="bi bi-check-circle me-1"></i>Dostępne</span>
                         }
                         else
                         {
-                            <span class="badge bg-danger">Niedostępne</span>
+                            <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill"><i class="bi bi-x-circle me-1"></i>Niedostępne</span>
                         }
                     </div>
 
-                    <h1 class="card-title fw-bold display-5 text-dark mb-3">@Model.Name</h1>
+                    <h1 class="card-title fw-bold display-5 text-dark mb-2">@Model.Name</h1>
+                    <h2 class="text-success fw-bold mb-4">@Model.Price.ToString("F2") zł</h2>
 
-                    <h3 class="text-success fw-bold mb-4">@Model.Price.ToString("F2") zł</h3>
+                    <p class="card-text text-muted fs-5 mb-5 lh-lg">
+                        @(string.IsNullOrEmpty(Model.Description) ? "Brak opisu dla tego dania." : Model.Description)
+                    </p>
 
-                    <div class="card-text text-muted fs-5 mb-4 flex-grow-1">
-                        @if (!string.IsNullOrEmpty(Model.Description))
-                        {
-                            @Model.Description
-                        }
-                        else
-                        {
-                            <span class="fst-italic opacity-50">Brak opisu dla tego dania.</span>
-                        }
-                    </div>
-
-                    <div class="d-grid gap-2">
+                    <div class="mt-auto">
                         @if (Model.IsAvailable)
                         {
-                            <form asp-controller="Cart" asp-action="Add" method="post">
+                            <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2">
                                 <input type="hidden" name="id" value="@Model.Id" />
                                 <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text">Ilość</span>
-                                    <input type="number" name="quantity" class="form-control text-center" value="1" min="1" max="10">
-                                    <button type="submit" class="btn btn-primary btn-lg px-4 w-50">
-                                        <i class="bi bi-cart-plus me-2"></i> Dodaj do zamówienia
-                                    </button>
+
+                                <div class="input-group" style="max-width: 140px;">
+                                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-x"></i></span>
+                                    <input type="number" name="quantity" class="form-control text-center border-start-0 ps-0 fw-bold" value="1" min="1" max="10">
                                 </div>
+                                <button type="submit" class="btn btn-primary btn-lg px-4 flex-grow-1 rounded-pill shadow-sm fw-bold">
+                                    <i class="bi bi-cart-plus me-2"></i> Dodaj do zamówienia
+                                </button>
                             </form>
                         }
                         else
                         {
-                            <button class="btn btn-secondary btn-lg disabled">Produkt tymczasowo niedostępny</button>
+                            <button class="btn btn-light text-muted border w-100 py-3 rounded-pill fw-bold disabled" disabled>
+                                Produkt tymczasowo niedostępny
+                            </button>
                         }
 
-                        <a asp-action="Index" class="btn btn-outline-secondary">Wróć do menu</a>
+                        <div class="text-center mt-4">
+                            <a asp-action="Index" class="text-decoration-none text-muted fw-medium small hover-underline">
+                                <i class="bi bi-arrow-left me-1"></i> Wróć do menu
+                            </a>
+                        </div>
 
                         @if (canManage)
                         {
-                            <hr />
-                            <div class="d-flex justify-content-between">
-                                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning"><i class="bi bi-pencil"></i> Edytuj</a>
+                            <hr class="my-4 opacity-25" />
+                            <div class="d-flex justify-content-center gap-3">
+                                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary rounded-pill px-4 fw-medium">Edytuj</a>
                                 <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Czy na pewno usunąć to danie?');">
-                                    <button type="submit" class="btn btn-danger"><i class="bi bi-trash"></i> Usuń</button>
+                                    <button type="submit" class="btn btn-outline-danger rounded-pill px-4 fw-medium">Usuń</button>
                                 </form>
                             </div>
                         }
@@ -85,3 +84,13 @@
         </div>
     </div>
 </div>
+
+<style>
+    .object-fit-cover {
+        object-fit: cover;
+    }
+
+    .hover-underline:hover {
+        text-decoration: underline !important;
+    }
+</style>

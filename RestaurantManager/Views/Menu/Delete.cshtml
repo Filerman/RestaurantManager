@@ -1,19 +1,41 @@
 ﻿@model RestaurantManager.Models.MenuItem
 @{
-    ViewData["Title"] = "Delete Dish";
+    ViewData["Title"] = "Usuń Danie";
 }
 
-<h2>Are you sure you want to delete this dish?</h2>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-3 text-danger">
+                        <i class="bi bi-trash3-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title fw-bold mb-3">Usuwasz danie</h4>
+                    <p class="text-muted mb-4">Czy na pewno chcesz usunąć tę pozycję z menu?</p>
 
-<div>
-    <h4>@Model.Name</h4>
-    <p>@Model.Description</p>
-    <p>Price: @Model.Price.ToString("C")</p>
-    <p>Category: @Model.Category</p>
+                    <div class="bg-light p-3 rounded-3 mb-4 text-start small border">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Nazwa:</span>
+                            <span class="fw-bold text-dark">@Model.Name</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Kategoria:</span>
+                            <span class="fw-bold text-dark">@Model.Category</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Cena:</span>
+                            <span class="fw-bold text-success">@Model.Price.ToString("C")</span>
+                        </div>
+                    </div>
 
-    <form asp-action="Delete" method="post">
-        <input type="hidden" asp-for="Id" />
-        <button type="submit" class="btn btn-danger">Delete</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </form>
+                    <form asp-action="Delete" method="post" class="d-flex justify-content-center gap-2">
+                        <input type="hidden" asp-for="Id" />
+                        <a asp-action="Index" class="btn btn-light border px-4 rounded-pill fw-medium">Anuluj</a>
+                        <button type="submit" class="btn btn-danger px-4 rounded-pill fw-bold shadow-sm">Tak, usuń</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
