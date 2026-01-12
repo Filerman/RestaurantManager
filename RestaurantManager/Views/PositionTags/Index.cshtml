@@ -4,37 +4,66 @@
     ViewData["Title"] = "Stanowiska i Stawki";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Stanowiska i Stawki</h2>
-        <a asp-action="Create" class="btn btn-success"><i class="bi bi-plus-circle"></i> Dodaj Stanowisko</a>
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Stanowiska i Stawki</h2>
+            <p class="text-muted small mb-0">Zarządzaj rolami pracowników i ich wynagrodzeniem</p>
+        </div>
+        <a asp-action="Create" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold">
+            <i class="bi bi-plus-lg me-2"></i>Dodaj Stanowisko
+        </a>
     </div>
 
-    <table class="table table-striped align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th>Nazwa Stanowiska</th>
-                <th>Stawka Godzinowa</th>
-                <th>Akcje</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td class="fw-bold">@Html.DisplayFor(modelItem => item.Name)</td>
-                    <td>
-                        <span class="badge bg-primary fs-6">
-                            @item.HourlyRate.ToString("C") / h
-                        </span>
-                    </td>
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edytuj</a>
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Szczegóły</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Usuń</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light small text-uppercase text-muted">
+                        <tr>
+                            <th class="ps-4 py-3 fw-bold">Nazwa Stanowiska</th>
+                            <th class="fw-bold">Stawka Godzinowa</th>
+                            <th class="text-end pe-4 fw-bold">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center py-5 text-muted">
+                                    <i class="bi bi-person-badge fs-1 d-block mb-2 opacity-25"></i>
+                                    Brak zdefiniowanych stanowisk.
+                                </td>
+                            </tr>
+                        }
+
+                        @foreach (var item in Model)
+                        {
+                            <tr class="border-bottom-0">
+                                <td class="ps-4 fw-bold text-dark">@item.Name</td>
+                                <td>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2 rounded-pill fs-6 fw-bold">
+                                        @item.HourlyRate.ToString("C") / h
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary border-0 rounded-2 me-1" title="Edytuj">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary border-0 rounded-2 me-1" title="Szczegóły">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger border-0 rounded-2" title="Usuń">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>

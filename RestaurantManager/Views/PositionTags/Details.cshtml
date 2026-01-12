@@ -1,24 +1,36 @@
 ﻿@model RestaurantManager.Models.PositionTag
 
 @{
-    ViewData["Title"] = "Szczegóły";
+    ViewData["Title"] = "Szczegóły Stanowiska";
 }
 
-<h1>Szczegóły</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0">Karta Stanowiska</h5>
+                    <i class="bi bi-person-badge text-primary fs-4"></i>
+                </div>
 
-<div>
-    <h4>Tag Stanowiska</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edytuj</a>
-    <a asp-action="Index" class="btn btn-secondary">Powrót do listy</a>
+                <div class="card-body p-4 bg-light bg-opacity-25">
+                    <div class="mb-4 text-center">
+                        <h2 class="fw-bold text-dark mb-1">@Model.Name</h2>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2 rounded-pill fs-5 mt-2">
+                            @Model.HourlyRate.ToString("C") / h
+                        </span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary rounded-pill fw-bold shadow-sm">
+                            <i class="bi bi-pencil-square me-2"></i>Edytuj
+                        </a>
+                        <a asp-action="Index" class="btn btn-light border rounded-pill fw-medium">
+                            Wróć do listy
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
