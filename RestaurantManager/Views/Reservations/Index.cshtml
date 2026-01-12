@@ -5,77 +5,126 @@
 @{
     ViewData["Title"] = "Rezerwacje";
     var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
+    bool canManage = (userRole == "Admin" || userRole == "Manager" || userRole == "Employee");
 }
 
-<div class="container mt-4">
-    <h2>Rezerwacje</h2>
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Rezerwacje</h2>
+            <p class="text-muted small mb-0">Zarządzaj rezerwacjami stolików</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+            <i class="bi bi-calendar-plus me-2"></i>Nowa Rezerwacja
+        </a>
+    </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+            <i class="bi bi-check-circle-fill me-3 fs-4 text-success"></i>
+            <div>@TempData["SuccessMessage"]</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
     }
 
-    <p>
-        <a asp-action="Create" class="btn btn-primary">Złóż nową rezerwację</a>
-    </p>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light small text-uppercase text-muted">
+                        <tr>
+                            <th class="ps-4 py-3 fw-bold">Data i Godzina</th>
+                            <th class="fw-bold">Klient</th>
+                            <th class="fw-bold">Kontakt</th>
+                            <th class="fw-bold">Stolik</th>
+                            <th class="fw-bold">Status</th>
+                            <th class="text-end pe-4 fw-bold">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-25"></i>
+                                    Brak rezerwacji w systemie.
+                                </td>
+                            </tr>
+                        }
 
-    <table class="table table-striped table-hover">
-        <thead class="thead-dark">
-            <tr>
-                <th>Data</th>
-                <th>Klient</th>
-                <th>Telefon</th>
-                <th>Email</th>
-                <th>Stolik</th>
-                <th>Status</th>
-                <th>Akcje</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.DateTime.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td>@item.CustomerName</td>
-                    <td>@item.CustomerPhone</td>
-                    <td>@item.CustomerEmail</td>
-                    <td>
-                        @if (item.Table != null)
+                        @foreach (var item in Model)
                         {
-                            <span>@item.Table.Name (@item.Table.Capacity os.)</span>
+                            <tr class="border-bottom-0">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded p-2 me-3 text-center" style="min-width: 50px;">
+                                            <div class="fw-bold text-dark">@item.DateTime.ToString("dd")</div>
+                                            <div class="small text-uppercase text-muted" style="font-size: 0.65rem;">@item.DateTime.ToString("MMM")</div>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@item.DateTime.ToString("HH:mm")</div>
+                                            <div class="small text-muted">@item.DateTime.ToString("yyyy")</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@item.CustomerName</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column small">
+                                        <span class="text-muted"><i class="bi bi-telephone me-1"></i> @item.CustomerPhone</span>
+                                        <span class="text-muted"><i class="bi bi-envelope me-1"></i> @item.CustomerEmail</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (item.Table != null)
+                                    {
+                                        <span class="badge bg-light text-dark border fw-normal">
+                                            <i class="bi bi-grid-3x3-gap me-1 text-secondary"></i> @item.Table.Name (@item.Table.Capacity os.)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small fst-italic">Nieprzypisany</span>
+                                    }
+                                </td>
+                                <td>
+                                    @switch (item.Status)
+                                    {
+                                        case RestaurantManager.Models.ReservationStatus.Pending:
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-2 fw-normal text-dark">Oczekująca</span>
+                                            break;
+                                        case RestaurantManager.Models.ReservationStatus.Confirmed:
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-2 fw-normal">Zatwierdzona</span>
+                                            break;
+                                        case RestaurantManager.Models.ReservationStatus.Rejected:
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-2 fw-normal">Odrzucona</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    @if (canManage)
+                                    {
+                                        <div class="btn-group">
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary border-0 rounded-2 me-1" title="Edytuj">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger border-0 rounded-2" title="Usuń">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Brak uprawnień</span>
+                                    }
+                                </td>
+                            </tr>
                         }
-                        else
-                        {
-                            <span class="text-muted">Brak</span>
-                        }
-                    </td>
-                    <td>
-                        @switch (item.Status)
-                        {
-                            case RestaurantManager.Models.ReservationStatus.Pending:
-                                <span class="badge bg-warning text-dark">Oczekująca</span>
-                                break;
-                            case RestaurantManager.Models.ReservationStatus.Confirmed:
-                                <span class="badge bg-success">Zatwierdzona</span>
-                                break;
-                            case RestaurantManager.Models.ReservationStatus.Rejected:
-                                <span class="badge bg-danger">Odrzucona</span>
-                                break;
-                        }
-                    </td>
-                    <td>
-                        @if (userRole == "Admin" || userRole == "Manager" || userRole == "Employee")
-                        {
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-info">Zarządzaj</a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Usuń</a>
-                        }
-                        else
-                        {
-                            <span class="text-muted small">Brak akcji</span>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>

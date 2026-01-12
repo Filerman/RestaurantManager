@@ -4,57 +4,73 @@
     ViewData["Title"] = "Edytuj Rezerwację";
 }
 
-<div class="container mt-4">
-    <h2>Zarządzanie Rezerwacją</h2>
-    <hr />
-    <div class="row">
-        <div class="col-md-6">
-            <form asp-action="Edit">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <input type="hidden" asp-for="Id" />
-                @* UserId nie przesyłamy w inpucie, kontroler pobierze go z bazy *@
-
-                <div class="form-group mb-3">
-                    <label asp-for="Status" class="control-label fw-bold"></label>
-                    <select asp-for="Status" class="form-control" asp-items="Html.GetEnumSelectList<RestaurantManager.Models.ReservationStatus>()"></select>
-                    <span asp-validation-for="Status" class="text-danger"></span>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>Edycja Rezerwacji</h4>
                 </div>
+                <div class="card-body p-4 bg-light bg-opacity-25">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <input type="hidden" asp-for="Id" />
 
-                <div class="form-group mb-3">
-                    <label asp-for="DateTime" class="control-label"></label>
-                    <input asp-for="DateTime" class="form-control" />
-                    <span asp-validation-for="DateTime" class="text-danger"></span>
-                </div>
+                        <div class="form-floating mb-3">
+                            <select asp-for="Status" class="form-select rounded-3" asp-items="Html.GetEnumSelectList<RestaurantManager.Models.ReservationStatus>()"></select>
+                            <label asp-for="Status" class="fw-bold text-primary">Status Rezerwacji</label>
+                            <span asp-validation-for="Status" class="text-danger small"></span>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="CustomerName" class="control-label"></label>
-                    <input asp-for="CustomerName" class="form-control" />
-                    <span asp-validation-for="CustomerName" class="text-danger"></span>
-                </div>
+                        <hr class="my-4 text-muted opacity-25">
 
-                <div class="form-group mb-3">
-                    <label asp-for="CustomerPhone" class="control-label"></label>
-                    <input asp-for="CustomerPhone" class="form-control" />
-                    <span asp-validation-for="CustomerPhone" class="text-danger"></span>
-                </div>
+                        <div class="form-floating mb-3">
+                            <input asp-for="DateTime" class="form-control rounded-3" type="datetime-local"
+                                   value="@Model.DateTime.ToString("yyyy-MM-ddTHH:mm")" />
+                            <label asp-for="DateTime">Data i godzina</label>
+                            <span asp-validation-for="DateTime" class="text-danger small"></span>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="CustomerEmail" class="control-label"></label>
-                    <input asp-for="CustomerEmail" class="form-control" />
-                    <span asp-validation-for="CustomerEmail" class="text-danger"></span>
-                </div>
+                        <div class="form-floating mb-3">
+                            <input asp-for="CustomerName" class="form-control rounded-3" placeholder="Imię" />
+                            <label asp-for="CustomerName">Imię i nazwisko</label>
+                            <span asp-validation-for="CustomerName" class="text-danger small"></span>
+                        </div>
 
-                <div class="form-group mb-3">
-                    <label asp-for="TableId" class="control-label">Przydzielony Stolik</label>
-                    <select asp-for="TableId" class="form-control" asp-items="ViewBag.TableId"></select>
-                    <span asp-validation-for="TableId" class="text-danger"></span>
-                </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="CustomerPhone" class="form-control rounded-3" placeholder="Telefon" />
+                                    <label asp-for="CustomerPhone">Telefon</label>
+                                    <span asp-validation-for="CustomerPhone" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input asp-for="CustomerEmail" class="form-control rounded-3" placeholder="Email" />
+                                    <label asp-for="CustomerEmail">Email</label>
+                                    <span asp-validation-for="CustomerEmail" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="form-group">
-                    <input type="submit" value="Zapisz zmiany" class="btn btn-primary" />
-                    <a asp-action="Index" class="btn btn-secondary">Powrót</a>
+                        <div class="form-floating mb-4">
+                            <select asp-for="TableId" class="form-select rounded-3" asp-items="ViewBag.TableId">
+                                <option value="">-- Nieprzypisany --</option>
+                            </select>
+                            <label asp-for="TableId">Przydzielony Stolik</label>
+                            <span asp-validation-for="TableId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end pt-2">
+                            <a asp-action="Index" class="btn btn-light border rounded-pill px-4 fw-medium">Anuluj</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                                <i class="bi bi-save me-1"></i> Zapisz
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
