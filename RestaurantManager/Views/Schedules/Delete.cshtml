@@ -4,23 +4,36 @@
     ViewData["Title"] = "Usuń Grafik";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-3 text-danger">
+                        <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title fw-bold mb-3">Usuwasz grafik</h4>
+                    <p class="text-danger fw-bold mb-2">Uwaga!</p>
+                    <p class="text-muted small mb-4">Spowoduje to trwałe usunięcie grafiku oraz wszystkich przypisanych do niego zmian.</p>
 
-<h3 class="text-danger">Czy na pewno chcesz usunąć ten grafik?</h3>
-<p class="text-danger">Spowoduje to usunięcie wszystkich przypisanych do niego zmian.</p>
-<div>
-    <h4>Grafik</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">Okres</dt>
-        <dd class="col-sm-10">@Model.StartDate.ToString("yyyy-MM-dd") - @Model.EndDate.ToString("yyyy-MM-dd")</dd>
-        <dt class="col-sm-2">Status</dt>
-        <dd class="col-sm-10">@(Model.IsPublished ? "Opublikowany" : "Roboczy")</dd>
-    </dl>
+                    <div class="bg-light p-3 rounded-3 mb-4 text-start small border">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Okres:</span>
+                            <span class="fw-bold text-dark">@Model.StartDate.ToString("yyyy-MM-dd") - @Model.EndDate.ToString("yyyy-MM-dd")</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Status:</span>
+                            <span class="fw-bold text-primary">@(Model.IsPublished ? "Opublikowany" : "Roboczy")</span>
+                        </div>
+                    </div>
 
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Usuń" class="btn btn-danger" />
-        <a asp-action="Index" class="btn btn-secondary">Anuluj</a>
-    </form>
+                    <form asp-action="Delete" class="d-flex justify-content-center gap-2">
+                        <input type="hidden" asp-for="Id" />
+                        <a asp-action="Index" class="btn btn-light border px-4 rounded-pill fw-medium">Anuluj</a>
+                        <button type="submit" class="btn btn-danger px-4 rounded-pill fw-bold shadow-sm">Tak, usuń</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

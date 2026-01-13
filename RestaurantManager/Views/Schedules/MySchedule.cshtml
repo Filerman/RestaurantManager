@@ -6,77 +6,80 @@
     int currentYear = ViewBag.CurrentYear;
     int currentMonth = ViewBag.CurrentMonth;
     string monthName = ViewBag.MonthName;
-    string viewType = ViewBag.ViewType as string ?? "calendar"; // "calendar" lub "list"
+    string viewType = ViewBag.ViewType as string ?? "calendar";
 
-    // Helper do nawigacji (utrzymuje viewType)
     string GetRoute(int y, int m) => Url.Action("MySchedule", new { year = y, month = m, viewType = viewType });
 }
 
-<div class="container mt-4">
+<div class="container mt-4 mb-5">
 
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm">
-        <h2 class="mb-2 mb-md-0 text-primary fw-bold"><i class="bi bi-calendar3 me-2"></i> Mój Grafik</h2>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 p-3 bg-white rounded-4 shadow-sm border">
+        <h2 class="mb-2 mb-md-0 text-dark fw-bold h4"><i class="bi bi-calendar-check me-2 text-primary"></i>Mój Grafik</h2>
 
-        <div class="btn-group me-3" role="group">
-            <a asp-action="MySchedule" asp-route-year="@currentYear" asp-route-month="@currentMonth" asp-route-viewType="calendar"
-               class="btn btn-outline-primary @(viewType == "calendar" ? "active" : "")">
-                <i class="bi bi-grid-3x3"></i> Kalendarz
-            </a>
-            <a asp-action="MySchedule" asp-route-year="@currentYear" asp-route-month="@currentMonth" asp-route-viewType="list"
-               class="btn btn-outline-primary @(viewType == "list" ? "active" : "")">
-                <i class="bi bi-list-ul"></i> Lista
-            </a>
-        </div>
+        <div class="d-flex gap-3 align-items-center">
+            <div class="btn-group shadow-sm rounded-pill overflow-hidden" role="group">
+                <a asp-action="MySchedule" asp-route-year="@currentYear" asp-route-month="@currentMonth" asp-route-viewType="calendar"
+                   class="btn btn-outline-primary border-0 @(viewType == "calendar" ? "active fw-bold" : "")">
+                    <i class="bi bi-grid-3x3 me-1"></i> Kalendarz
+                </a>
+                <a asp-action="MySchedule" asp-route-year="@currentYear" asp-route-month="@currentMonth" asp-route-viewType="list"
+                   class="btn btn-outline-primary border-0 @(viewType == "list" ? "active fw-bold" : "")">
+                    <i class="bi bi-list-ul me-1"></i> Lista
+                </a>
+            </div>
 
-        <div class="btn-group" role="group">
-            <a href="@GetRoute(currentMonth == 1 ? currentYear - 1 : currentYear, currentMonth == 1 ? 12 : currentMonth - 1)"
-               class="btn btn-outline-secondary">
-                <i class="bi bi-chevron-left"></i>
-            </a>
-            <button type="button" class="btn btn-secondary active px-4" style="min-width: 180px;" disabled>
-                <strong>@monthName</strong>
-            </button>
-            <a href="@GetRoute(currentMonth == 12 ? currentYear + 1 : currentYear, currentMonth == 12 ? 1 : currentMonth + 1)"
-               class="btn btn-outline-secondary">
-                <i class="bi bi-chevron-right"></i>
-            </a>
+            <div class="btn-group shadow-sm rounded-pill overflow-hidden" role="group">
+                <a href="@GetRoute(currentMonth == 1 ? currentYear - 1 : currentYear, currentMonth == 1 ? 12 : currentMonth - 1)"
+                   class="btn btn-light border-0 text-muted hover-dark">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                <button type="button" class="btn btn-light border-0 px-4 fw-bold text-dark" style="min-width: 160px;" disabled>
+                    @monthName @currentYear
+                </button>
+                <a href="@GetRoute(currentMonth == 12 ? currentYear + 1 : currentYear, currentMonth == 12 ? 1 : currentMonth + 1)"
+                   class="btn btn-light border-0 text-muted hover-dark">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
         </div>
     </div>
 
     @if (viewType == "list")
     {
-        // --- WIDOK LISTY ---
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
             <div class="card-body p-0">
                 @if (!Model.Any())
                 {
-                    <div class="p-5 text-center text-muted">Brak zmian w tym miesiącu.</div>
+                    <div class="p-5 text-center text-muted">
+                        <i class="bi bi-calendar-x fs-1 d-block mb-3 opacity-25"></i>
+                        Brak zmian w tym miesiącu.
+                    </div>
                 }
                 else
                 {
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="bg-light small text-uppercase text-muted">
                                 <tr>
-                                    <th>Dzień</th>
+                                    <th class="ps-4 py-3">Dzień</th>
                                     <th>Data</th>
                                     <th>Stanowisko</th>
                                     <th>Godziny</th>
-                                    <th>Czas</th>
+                                    <th class="pe-4 text-end">Czas</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var shift in Model)
+                                @foreach (var shift in Model.OrderBy(s => s.Date).ThenBy(s => s.StartTime))
                                 {
                                     var duration = (shift.EndTime - shift.StartTime).TotalHours;
                                     var isToday = shift.Date.Date == DateTime.Today;
-                                    <tr class="@(isToday ? "table-info" : "")">
-                                        <td>@shift.Date.ToString("dddd", new System.Globalization.CultureInfo("pl-PL"))</td>
+                                    <tr class="@(isToday ? "bg-primary bg-opacity-10" : "") border-bottom-0">
+                                        <td class="ps-4">@shift.Date.ToString("dddd", new System.Globalization.CultureInfo("pl-PL"))</td>
                                         <td class="fw-bold">@shift.Date.ToString("dd.MM.yyyy")</td>
                                         <td>
                                             @if (shift.ShiftPositionTag != null)
                                             {
-                                                <span class="badge bg-primary">@shift.ShiftPositionTag.Name</span>
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill fw-normal">@shift.ShiftPositionTag.Name</span>
                                             }
                                             else
                                             {
@@ -85,9 +88,10 @@
                                             }
                                         </td>
                                         <td>
+                                            <i class="bi bi-clock me-1 text-muted"></i>
                                             @shift.StartTime.ToString(@"hh\:mm") - @shift.EndTime.ToString(@"hh\:mm")
                                         </td>
-                                        <td>@duration.ToString("F1") h</td>
+                                        <td class="pe-4 text-end fw-bold text-primary">@duration.ToString("F1") h</td>
                                     </tr>
                                 }
                             </tbody>
@@ -99,77 +103,59 @@
     }
     else
     {
-        // --- WIDOK KALENDARZA ---
-
-        // Obliczenia kalendarzowe
         var firstDayOfMonth = new DateTime(currentYear, currentMonth, 1);
         var daysInMonth = DateTime.DaysInMonth(currentYear, currentMonth);
+        int offset = ((int)firstDayOfMonth.DayOfWeek + 6) % 7; // Poniedziałek = 0
 
-        // Obliczamy przesunięcie (dzień tygodnia 1. dnia miesiąca).
-        // DayOfWeek: Sunday=0, Monday=1... Chcemy Monday=0, Sunday=6
-        int offset = ((int)firstDayOfMonth.DayOfWeek + 6) % 7;
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="calendar-header bg-light text-muted small text-uppercase fw-bold border-bottom">
+                    <div>Pn</div><div>Wt</div><div>Śr</div><div>Cz</div><div>Pt</div><div class="text-danger">Sb</div><div class="text-danger">Nd</div>
+                </div>
 
-        <div class="calendar-container shadow-sm bg-white rounded">
-            <div class="calendar-header">
-                <div>Pn</div><div>Wt</div><div>Śr</div><div>Cz</div><div>Pt</div><div class="text-danger">Sb</div><div class="text-danger">Nd</div>
-            </div>
+                <div class="calendar-grid">
+                    @for (int i = 0; i < offset; i++)
+                    {
+                        <div class="calendar-day empty bg-light bg-opacity-25"></div>
+                    }
 
-            <div class="calendar-grid">
-                @* Puste pola przed 1. dniem miesiąca *@
-                @for (int i = 0; i < offset; i++)
-                {
-                    <div class="calendar-day empty"></div>
-                }
+                    @for (int day = 1; day <= daysInMonth; day++)
+                    {
+                        var currentDate = new DateTime(currentYear, currentMonth, day);
+                        var isToday = currentDate == DateTime.Today;
+                        var shiftsToday = Model.Where(s => s.Date.Day == day).OrderBy(s => s.StartTime).ToList();
 
-                @* Pętla po dniach miesiąca *@
-                @for (int day = 1; day <= daysInMonth; day++)
-                {
-                    var currentDate = new DateTime(currentYear, currentMonth, day);
-                    var isToday = currentDate == DateTime.Today;
+                        <div class="calendar-day @(isToday ? "today" : "")">
+                            <div class="day-number @(isToday ? "text-primary fw-bold" : "text-muted")">@day</div>
 
-                    // Znajdź zmiany dla tego dnia
-                    var shiftsToday = Model.Where(s => s.Date.Day == day).ToList();
-
-                    <div class="calendar-day @(isToday ? "today" : "")">
-                        <div class="day-number">@day</div>
-
-                        <div class="shifts-list">
-                            @foreach (var shift in shiftsToday)
-                            {
-                                <div class="shift-item" title="@shift.StartTime.ToString(@"hh\:mm") - @shift.EndTime.ToString(@"hh\:mm")">
-                                    <span class="badge bg-success w-100 text-start text-truncate">
+                            <div class="d-flex flex-column gap-1">
+                                @foreach (var shift in shiftsToday)
+                                {
+                                    <div class="shift-item p-1 rounded-2 bg-primary bg-opacity-10 border border-primary text-primary" title="@shift.StartTime.ToString(@"hh\:mm") - @shift.EndTime.ToString(@"hh\:mm")">
+                                        <div class="d-flex justify-content-between align-items-center" style="line-height: 1;">
+                                            <small class="fw-bold" style="font-size: 0.7rem;">@shift.StartTime.ToString(@"hh\:mm")</small>
+                                            <small style="font-size: 0.7rem;">@((shift.EndTime - shift.StartTime).TotalHours.ToString("0.#"))h</small>
+                                        </div>
                                         @if (shift.ShiftPositionTag != null)
                                         {
-                                            <small class="fw-normal">@shift.ShiftPositionTag.Name</small>
-                            
-                                            <br />
+                                            <div class="text-truncate mt-1 text-dark" style="font-size: 0.65rem;">@shift.ShiftPositionTag.Name</div>
                                         }
-                                        @shift.StartTime.ToString(@"hh\:mm") - @shift.EndTime.ToString(@"hh\:mm")
-                                    </span>
-                                </div>
-                            }
+                                    </div>
+                                }
+                            </div>
                         </div>
-                    </div>
-                }
+                    }
+                </div>
             </div>
         </div>
     }
 </div>
 
 <style>
-    /* Style dla kalendarza */
-    .calendar-container {
-        border: 1px solid #dee2e6;
-        overflow: hidden;
-    }
-
     .calendar-header {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
         text-align: center;
-        font-weight: bold;
         padding: 10px 0;
     }
 
@@ -179,52 +165,38 @@
     }
 
     .calendar-day {
-        border-right: 1px solid #dee2e6;
-        border-bottom: 1px solid #dee2e6;
+        border-right: 1px solid #f0f0f0;
+        border-bottom: 1px solid #f0f0f0;
         min-height: 120px;
-        padding: 5px;
+        padding: 8px;
         position: relative;
         background-color: #fff;
     }
-        /* Co 7 element (Niedziela) nie ma prawej krawędzi */
+
         .calendar-day:nth-child(7n) {
             border-right: none;
         }
 
-        .calendar-day.empty {
-            background-color: #fcfcfc;
-        }
-
         .calendar-day.today {
-            background-color: #e8f4fd; /* Lekki niebieski dla "dzisiaj" */
-            border: 2px solid #0d6efd;
+            background-color: #f8faff;
+            box-shadow: inset 0 0 0 2px var(--bs-primary);
         }
 
     .day-number {
-        font-weight: bold;
-        color: #6c757d;
         text-align: right;
+        font-size: 0.9rem;
         margin-bottom: 5px;
     }
 
-    .shift-item {
-        margin-bottom: 2px;
-        font-size: 0.85rem;
-    }
-
-    /* Responsywność dla małych ekranów - POPRAWIONO @@media */
     @@media (max-width: 768px) {
         .calendar-day {
             min-height: 80px;
             font-size: 0.8rem;
+            padding: 4px;
         }
 
-        .calendar-header {
-            font-size: 0.8rem;
-        }
-
-        .btn-group strong {
-            display: none; /* Ukryj pełną nazwę miesiąca na b. małych ekranach w przycisku */
+        .btn-group span {
+            display: none;
         }
     }
 </style>

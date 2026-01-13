@@ -4,52 +4,97 @@
     ViewData["Title"] = "Grafiki";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Zarządzanie Grafikami</h2>
+            <p class="text-muted small mb-0">Planuj i publikuj zmiany dla pracowników</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+            <i class="bi bi-calendar-plus me-2"></i>Utwórz nowy grafik
+        </a>
+    </div>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
-}
-@if (TempData["InfoMessage"] != null)
-{
-    <div class="alert alert-info">@TempData["InfoMessage"]</div>
-}
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+            <i class="bi bi-check-circle-fill me-3 fs-4 text-success"></i>
+            <div>@TempData["SuccessMessage"]</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+            <i class="bi bi-info-circle-fill me-3 fs-4 text-info"></i>
+            <div>@TempData["InfoMessage"]</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Utwórz nowy grafik</a>
-</p>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light small text-uppercase text-muted">
+                        <tr>
+                            <th class="ps-4 py-3 fw-bold">Okres</th>
+                            <th class="fw-bold">Status</th>
+                            <th class="fw-bold">Utworzono</th>
+                            <th class="text-end pe-4 fw-bold">Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="bi bi-calendar-range fs-1 d-block mb-2 opacity-25"></i>
+                                    Brak utworzonych grafików.
+                                </td>
+                            </tr>
+                        }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Okres</th>
-            <th>Status</th>
-            <th>Data utworzenia</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.StartDate.ToString("yyyy-MM-dd") - @item.EndDate.ToString("yyyy-MM-dd")</td>
-                <td>
-                    @if (item.IsPublished)
-                    {
-                        <span class="badge bg-success">Opublikowany</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-warning text-dark">Roboczy</span>
-                    }
-                </td>
-                <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edytuj / Wypełnij</a> |
-                    @* <a asp-action="Details" asp-route-id="@item.Id">Details</a> | *@
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Usuń</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                        @foreach (var item in Model)
+                        {
+                            <tr class="border-bottom-0">
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">
+                                        @item.StartDate.ToString("dd.MM.yyyy") <i class="bi bi-arrow-right mx-1 text-muted small"></i> @item.EndDate.ToString("dd.MM.yyyy")
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (item.IsPublished)
+                                    {
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-2 fw-normal">
+                                            <i class="bi bi-check2-circle me-1"></i>Opublikowany
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-2 fw-normal text-dark">
+                                            <i class="bi bi-pencil me-1"></i>Roboczy
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-muted small">
+                                    @item.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary border-0 rounded-2 me-1 fw-medium">
+                                            <i class="bi bi-pencil-square me-1"></i>Edytuj
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger border-0 rounded-2" title="Usuń">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

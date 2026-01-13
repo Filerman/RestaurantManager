@@ -5,158 +5,230 @@
     var availableTags = Model.AvailableTags ?? new List<PositionTag>();
 }
 
-<h1>@ViewData["Title"]</h1>
+<style>
+    /* Wymuszenie zaokrąglonych rogów i efektu przyciemnienia */
+    .rounded-4 {
+        border-radius: 1.25rem !important;
+    }
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-@if (TempData["InfoMessage"] != null)
-{
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        @TempData["InfoMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+    .modal-content {
+        overflow: hidden;
+        border: none;
+    }
 
+    /* Klasa przyciemniająca okno pod spodem */
+    .modal-darken {
+        filter: brightness(0.5);
+        transition: filter 0.3s ease;
+        pointer-events: none; /* Blokuje interakcję z oknem pod spodem */
+    }
+</style>
 
-<form asp-action="Edit">
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="Id" />
-    <input type="hidden" asp-for="StartDate" />
-    <input type="hidden" asp-for="EndDate" />
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="form-check form-switch fs-5">
-            <input type="checkbox" class="form-check-input" asp-for="IsPublished" role="switch" id="publishSwitch">
-            <label class="form-check-label" asp-for="IsPublished" for="publishSwitch">Opublikuj grafik (widoczny dla pracowników)</label>
-        </div>
+<div class="container mt-4 mb-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <input type="submit" value="Zapisz Status Publikacji" class="btn btn-primary" />
-            <a asp-action="Index" class="btn btn-secondary">Wróć do listy grafików</a>
+            <h2 class="fw-bold text-dark mb-0">Edycja Grafiku</h2>
+            <p class="text-muted small mb-0">
+                <i class="bi bi-calendar-range me-1"></i> @Model.StartDate.ToString("dd.MM.yyyy") - @Model.EndDate.ToString("dd.MM.yyyy")
+            </p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 fw-medium btn-sm d-flex align-items-center">
+                <i class="bi bi-arrow-left me-2"></i> Wróć do listy
+            </a>
+
+            <form asp-action="Edit" class="d-flex align-items-center gap-2 bg-white p-1 ps-3 rounded-pill shadow-sm border">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="StartDate" />
+                <input type="hidden" asp-for="EndDate" />
+
+                <div class="form-check form-switch">
+                    <input type="checkbox" class="form-check-input" asp-for="IsPublished" role="switch" id="publishSwitch" style="cursor: pointer;">
+                    <label class="form-check-label fw-medium small cursor-pointer me-2" asp-for="IsPublished" for="publishSwitch">Opublikuj</label>
+                </div>
+            </form>
         </div>
     </div>
 
-    <hr />
-    <p>Zarządzaj zmianami poniżej. Zmiany są zapisywane automatycznie po dodaniu/edycji/usunięciu w okienku modalnym.</p>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success rounded-3 border-0 shadow-sm mb-4">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info rounded-3 border-0 shadow-sm mb-4">@TempData["InfoMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger rounded-3 border-0 shadow-sm mb-4">@TempData["ErrorMessage"]</div>
+    }
 
-    <div class="schedule-grid">
+    <div class="schedule-grid row g-4">
         @if (Model.Days != null && Model.Days.Any())
         {
             @foreach (var day in Model.Days)
             {
-                <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <h5>@day.DayName, @day.Date.ToString("yyyy-MM-dd")</h5>
-                    </div>
-                    <div class="card-body" id="day-@day.Date.ToString("yyyyMMdd")">
-                        <p class="text-muted no-shifts-message" style="@(day.Shifts.Any() ? "display: none;" : "")">Brak zmian w tym dniu.</p>
-                        <ul class="list-group list-group-flush shifts-list" style="@(day.Shifts.Any() ? "" : "display: none;")">
-                            @foreach (var shift in day.Shifts.OrderBy(s => s.StartTime))
-                            {
-                                <li class="list-group-item d-flex justify-content-between align-items-center" data-shift-id="@shift.Id">
-                                    <div>
-                                        <strong>@shift.StartTime.ToString(@"hh\:mm") - @shift.EndTime.ToString(@"hh\:mm")</strong><br />
-                                        Stanowisko: <span class="badge bg-secondary">@shift.PositionTagName</span><br />
-                                        Pracownik: <span class="badge @(shift.AssignedUserId.HasValue && shift.AssignedUserId > 0 ? "bg-info text-dark" : "bg-warning text-dark")">@(shift.AssignedUserName ?? "Nieprzypisany")</span>
-                                    </div>
-                                    <div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary edit-shift-btn" data-shift-id="@shift.Id">Edytuj</button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger delete-direct-btn" data-shift-id="@shift.Id">Usuń</button>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                        <button type="button" class="btn btn-success btn-sm mt-2 add-shift-btn" data-date="@day.Date.ToString("yyyy-MM-dd")">Dodaj zmianę</button>
+                <div class="col-md-6 col-lg-4 col-xl-3">
+                    <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+                        <div class="card-header bg-light py-2 px-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark">@day.DayName</span>
+                            <span class="badge bg-white text-muted border fw-normal">@day.Date.ToString("dd.MM")</span>
+                        </div>
+                        <div class="card-body p-3 bg-white d-flex flex-column" id="day-@day.Date.ToString("yyyyMMdd")">
+
+                            <ul class="list-group list-group-flush shifts-list mb-3 flex-grow-1" style="@(day.Shifts.Any() ? "" : "display: none;")">
+                                @foreach (var shift in day.Shifts.OrderBy(s => s.StartTime))
+                                {
+                                    <li class="list-group-item px-0 py-2 border-bottom-0 d-flex justify-content-between align-items-center" data-shift-id="@shift.Id">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <i class="bi bi-clock text-primary me-1 small"></i>
+                                                <strong class="small">@shift.StartTime.ToString(@"hh\:mm") - @shift.EndTime.ToString(@"hh\:mm")</strong>
+                                            </div>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill fw-normal" style="font-size: 0.7rem;">@shift.PositionTagName</span>
+                                                <span class="badge @(shift.AssignedUserId.HasValue && shift.AssignedUserId > 0 ? "bg-info bg-opacity-10 text-info border border-info" : "bg-warning bg-opacity-10 text-warning border border-warning text-dark") rounded-pill fw-normal" style="font-size: 0.7rem;">
+                                                    @(shift.AssignedUserName ?? "Wakat")
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-1 ms-2">
+                                            <button type="button" class="btn btn-light border btn-sm text-primary edit-shift-btn shadow-sm" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" data-shift-id="@shift.Id" title="Edytuj">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-light border btn-sm text-danger delete-direct-btn shadow-sm" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" data-shift-id="@shift.Id" title="Usuń">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+
+                            <p class="text-center text-muted small no-shifts-message my-auto py-4" style="@(day.Shifts.Any() ? "display: none;" : "")">
+                                <i class="bi bi-calendar-minus d-block fs-4 mb-1 opacity-25"></i>
+                                Brak zmian
+                            </p>
+
+                            <button type="button" class="btn btn-outline-success btn-sm w-100 rounded-pill mt-auto add-shift-btn fw-medium py-2" data-date="@day.Date.ToString("yyyy-MM-dd")">
+                                <i class="bi bi-plus-lg me-1"></i> Dodaj zmianę
+                            </button>
+                        </div>
                     </div>
                 </div>
             }
         }
         else
         {
-            <p class="text-warning">Nie udało się załadować dni.</p>
+            <div class="col-12"><p class="text-warning">Nie udało się załadować dni.</p></div>
         }
     </div>
-</form>
+</div>
 
+@* Modal Dodawania/Edycji *@
 <div class="modal fade" id="shiftModal" tabindex="-1" aria-labelledby="shiftModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="shiftModalLabel">Dodaj/Edytuj Zmianę</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-primary py-3 border-bottom-0">
+                <h5 class="modal-title fw-bold text-white" id="shiftModalLabel">Zarządzanie Zmianą</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <form id="shiftForm">
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="shift-id" name="Id" value="0" />
                     <input type="hidden" id="shift-date" name="Date" />
                     <input type="hidden" id="shift-scheduleId" name="ScheduleId" value="@Model.Id" />
 
-                    <div class="mb-3">
-                        <label for="shift-tag" class="form-label">Wymagane Stanowisko <span class="text-danger">*</span></label>
-                        <select id="shift-tag" name="PositionTagId" class="form-select" required>
-                            <option value="">-- Wybierz tag --</option>
+                    <div class="form-floating mb-3">
+                        <select id="shift-tag" name="PositionTagId" class="form-select rounded-3" required>
+                            <option value="">-- Wybierz --</option>
                             @foreach (var tag in availableTags)
                             {
                                 <option value="@tag.Id">@tag.Name</option>
                             }
                         </select>
+                        <label for="shift-tag">Wymagane Stanowisko</label>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label for="shift-start" class="form-label">Start <span class="text-danger">*</span></label>
-                            <input type="time" id="shift-start" name="StartTime" class="form-control" required step="1800" />
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <input type="time" id="shift-start" name="StartTime" class="form-control rounded-3" required />
+                                <label for="shift-start">Start</label>
+                            </div>
                         </div>
-                        <div class="col">
-                            <label for="shift-end" class="form-label">Koniec <span class="text-danger">*</span></label>
-                            <input type="time" id="shift-end" name="EndTime" class="form-control" required step="1800" />
+                        <div class="col-6">
+                            <div class="form-floating">
+                                <input type="time" id="shift-end" name="EndTime" class="form-control rounded-3" required />
+                                <label for="shift-end">Koniec</label>
+                            </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="shift-employee" class="form-label">Przypisz Pracownika</label>
-                        <select id="shift-employee" name="AssignedUserId" class="form-select">
+
+                    <div class="form-floating mb-2">
+                        <select id="shift-employee" name="AssignedUserId" class="form-select rounded-3">
                             <option value="">-- Nieprzypisany --</option>
                         </select>
-                        <small id="availability-info" class="form-text text-muted"></small>
+                        <label for="shift-employee">Przypisz Pracownika</label>
                     </div>
-                    <div id="shift-validation-errors" class="text-danger mt-2"></div>
+                    <small id="availability-info" class="form-text text-muted d-block mb-3 ps-1"></small>
+
+                    <div id="shift-validation-errors" class="text-danger small fw-bold"></div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <button type="button" class="btn btn-danger me-auto" id="deleteShiftBtn" style="display: none;">Usuń Zmianę</button>
-                <button type="button" class="btn btn-primary" id="saveShiftBtn">Zapisz Zmianę</button>
+            <div class="modal-footer bg-light border-top-0 p-3">
+                <button type="button" class="btn btn-danger me-auto rounded-pill px-3 shadow-sm" id="deleteShiftBtn" style="display: none;">
+                    <i class="bi bi-trash"></i> Usuń
+                </button>
+                <button type="button" class="btn btn-light border rounded-pill px-3" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="saveShiftBtn">
+                    <i class="bi bi-check-lg me-1"></i> Zapisz
+                </button>
             </div>
         </div>
     </div>
 </div>
 
+@* Modal Potwierdzenia Usuwania *@
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-danger py-3 border-bottom-0">
+                <h5 class="modal-title fw-bold text-white">Potwierdź usunięcie</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2.5rem;"></i>
+                </div>
+                <p class="mb-0 fw-medium">Czy na pewno chcesz usunąć tę zmianę?</p>
+                <p class="text-muted small">Tej operacji nie można cofnąć.</p>
+            </div>
+            <div class="modal-footer bg-light border-top-0 p-3 justify-content-center">
+                <button type="button" class="btn btn-light border rounded-pill px-4" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" id="confirmDeleteBtn">Usuń zmianę</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        // Upewnij się, że Moment.js jest załadowany
         if (typeof moment === 'undefined') { console.error("Moment.js nie jest załadowany."); }
         else if (moment.locale) { moment.locale('pl'); }
 
         $(document).ready(function () {
             const shiftModalElement = document.getElementById('shiftModal');
-            if (!shiftModalElement) { console.error("Nie znaleziono modala #shiftModal."); return; }
+            const deleteConfirmModalElement = document.getElementById('deleteConfirmModal');
+
             const shiftModal = new bootstrap.Modal(shiftModalElement);
+            const deleteConfirmModal = new bootstrap.Modal(deleteConfirmModalElement);
+
             const shiftForm = $('#shiftForm');
             const shiftIdInput = $('#shift-id');
             const shiftDateInput = $('#shift-date');
@@ -168,18 +240,29 @@
             const validationErrors = $('#shift-validation-errors');
             const saveShiftBtn = $('#saveShiftBtn');
             const deleteShiftBtn = $('#deleteShiftBtn');
-            const scheduleId = @Model.Id;
-            const csrfToken = $('#shiftForm input[name="__RequestVerificationToken"]').val();
+            const confirmDeleteBtn = $('#confirmDeleteBtn');
 
-            if (!csrfToken) { console.error("Nie znaleziono tokenu CSRF."); }
+            const csrfToken = $('input[name="__RequestVerificationToken"]').first().val();
+            let shiftIdToDelete = null;
+
+            // Logika przyciemniania okna edycji, gdy wyskakuje potwierdzenie usunięcia
+            $(deleteConfirmModalElement).on('show.bs.modal', function () {
+                if ($('#shiftModal').hasClass('show')) {
+                    $('#shiftModal .modal-content').addClass('modal-darken');
+                }
+            });
+
+            $(deleteConfirmModalElement).on('hidden.bs.modal', function () {
+                $('#shiftModal .modal-content').removeClass('modal-darken');
+            });
 
             function prepareModal(date, shiftDetails = null) {
                 validationErrors.empty().hide();
                 shiftForm[0].reset();
                 shiftIdInput.val(shiftDetails ? shiftDetails.id : '0');
-                shiftDateInput.val(date); // Format YYYY-MM-DD
+                shiftDateInput.val(date);
                 deleteShiftBtn.hide();
-                let modalTitleDate = moment(date).isValid() ? moment(date).format('dddd, DD.MM') : 'Nieprawidłowa data';
+                let modalTitleDate = moment(date).isValid() ? moment(date).format('dddd, DD.MM') : 'Data';
 
                 if (shiftDetails) {
                     shiftTagSelect.val(shiftDetails.positionTagId || '');
@@ -187,16 +270,14 @@
                     shiftEndInput.val(shiftDetails.endTime);
                     deleteShiftBtn.show();
                     $('#shiftModalLabel').text(`Edytuj Zmianę (${modalTitleDate})`);
-                    // Pracownik zostanie załadowany przez loadAvailableEmployees
                     loadAvailableEmployees(shiftDetails.userId);
                 } else {
                     shiftStartInput.val('09:00');
                     shiftEndInput.val('17:00');
                     $('#shiftModalLabel').text(`Dodaj Zmianę (${modalTitleDate})`);
-                    // Wyczyść listę pracowników dla nowej zmiany
                     loadAvailableEmployees();
                 }
-                try { shiftModal.show(); } catch (e) { console.error("Błąd pokazywania modala:", e); }
+                shiftModal.show();
             }
 
             function loadAvailableEmployees(selectedUserId = null) {
@@ -205,13 +286,12 @@
                 const endTime = shiftEndInput.val();
                 const tagId = shiftTagSelect.val();
 
-                shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">-- Ładowanie... --</option>');
+                shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">Ładowanie...</option>');
                 availabilityInfo.text('');
 
-                if (!date || !startTime || !endTime || !tagId || !moment(date, 'YYYY-MM-DD', true).isValid()) {
-                    shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">-- Wybierz tag i poprawne godziny/datę --</option>'); return;
+                if (!date || !startTime || !endTime || !tagId) {
+                    shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">Wybierz parametry</option>'); return;
                 }
-                if (endTime <= startTime) { shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">-- Błąd: Koniec <= Start --</option>'); return; }
 
                  $.ajax({
                      url: '@Url.Action("GetAvailableEmployees", "Schedules")', type: 'GET',
@@ -219,28 +299,24 @@
                      success: function (employees) {
                          shiftEmployeeSelect.prop('disabled', false).empty();
                          if (employees && employees.length > 0) {
-                              shiftEmployeeSelect.append('<option value="">-- Nieprzypisany --</option>');
-                             $.each(employees, function (i, employee) { shiftEmployeeSelect.append($('<option>', { value: employee.id, text: employee.displayName })); });
-                             if (selectedUserId && shiftEmployeeSelect.find(`option[value="${selectedUserId}"]`).length > 0) { shiftEmployeeSelect.val(selectedUserId); }
-                             else { shiftEmployeeSelect.val(''); }
-                              availabilityInfo.text(`Znaleziono ${employees.length} dostępnych.`);
-                         } else if (employees && employees.error) {
-                             console.error("Błąd serwera (GetAvailableEmployees):", employees.error);
-                             shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">-- Błąd serwera --</option>'); availabilityInfo.text('Błąd wyszukiwania.');
+                             shiftEmployeeSelect.append('<option value="">-- Nieprzypisany --</option>');
+                             $.each(employees, function (i, emp) { shiftEmployeeSelect.append($('<option>', { value: emp.id, text: emp.displayName })); });
+                             if (selectedUserId) { shiftEmployeeSelect.val(selectedUserId); }
+                             availabilityInfo.text(`Dostępnych: ${employees.length}`);
                          } else {
-                             shiftEmployeeSelect.append('<option value="">-- Brak dostępnych --</option>'); availabilityInfo.text('Brak pracowników.');
+                             shiftEmployeeSelect.append('<option value="">Brak dostępnych</option>');
+                             availabilityInfo.text('Brak dostępnych pracowników w tym czasie.');
                          }
                      },
-                     error: function (xhr) {
-                         console.error("Błąd AJAX (GetAvailableEmployees):", xhr.status, xhr.responseText);
-                         shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">-- Błąd ładowania --</option>'); availabilityInfo.text('Błąd serwera.');
+                     error: function () {
+                         shiftEmployeeSelect.prop('disabled', true).empty().append('<option value="">Błąd</option>');
                      }
                  });
             }
 
             $('.add-shift-btn').click(function () {
                 const date = $(this).data('date');
-                if (date) { prepareModal(date); } else { console.error("Brak data-date."); }
+                if (date) { prepareModal(date); }
             });
 
              $(document).on('click', '.edit-shift-btn', function () {
@@ -248,11 +324,10 @@
                  if (!shiftId) return;
                  $.ajax({
                      url: '@Url.Action("GetShiftDetails", "Schedules")', type: 'GET', data: { shiftId: shiftId },
-                     success: function (shiftDetails) {
-                          if (shiftDetails.error) { alert(shiftDetails.error); return; }
-                          prepareModal(shiftDetails.date, shiftDetails);
-                     },
-                     error: function (xhr) { console.error("Błąd AJAX (GetShiftDetails):", xhr.status, xhr.responseText); alert('Nie pobrano danych zmiany.'); }
+                     success: function (details) {
+                          if (details.error) { alert(details.error); return; }
+                          prepareModal(details.date, details);
+                     }
                  });
             });
 
@@ -262,61 +337,50 @@
 
             saveShiftBtn.click(function () {
                 validationErrors.empty().hide();
-                let isValid = true;
-                if (!shiftTagSelect.val()) { validationErrors.append('<p>Wybierz wymagane stanowisko.</p>').show(); isValid = false; }
-                if (!shiftStartInput.val() || !shiftEndInput.val() || shiftEndInput.val() <= shiftStartInput.val()) { validationErrors.append('<p>Godzina zakończenia musi być późniejsza niż rozpoczęcia.</p>').show(); isValid = false; }
-                if (!isValid) return;
-
                 const formData = shiftForm.serializeArray();
-                // Token jest już w formData dzięki @Html.AntiForgeryToken() w <form id="shiftForm">
-                console.log("Sending SaveShift data:", $.param(formData));
                 $(this).prop('disabled', true).text('Zapisywanie...');
 
                  $.ajax({
                      url: '@Url.Action("SaveShift", "Schedules")', type: 'POST', data: $.param(formData),
                      success: function (response) {
-                         console.log("SaveShift response:", response);
-                         saveShiftBtn.prop('disabled', false).text('Zapisz Zmianę');
+                         saveShiftBtn.prop('disabled', false).text('Zapisz');
                          if (response.success && response.shift) {
                              shiftModal.hide(); updateShiftInUI(response.shift);
-                         } else { validationErrors.append(`<p>${response.message || 'Nieznany błąd zapisu.'}</p>`).show(); }
+                         } else { validationErrors.append(`<p>${response.message || 'Błąd zapisu.'}</p>`).show(); }
                      },
-                     error: function (xhr) {
-                          saveShiftBtn.prop('disabled', false).text('Zapisz Zmianę');
-                          console.error("Błąd AJAX (SaveShift):", xhr.status, xhr.responseText);
-                           let errorMsg = 'Wystąpił błąd serwera. Sprawdź konsolę.';
-                           if(xhr.responseJSON && xhr.responseJSON.message) { errorMsg = xhr.responseJSON.message; }
-                           else if (xhr.responseText) { let match = xhr.responseText.match(/<title>(.*?)<\/title>/); if (match && match[1]) { errorMsg = `Błąd serwera: ${match[1]}`; } }
-                          validationErrors.append(`<p>${errorMsg}</p>`).show();
-                     }
+                     error: function () { saveShiftBtn.prop('disabled', false).text('Zapisz'); alert('Błąd serwera.'); }
                  });
             });
 
             $(document).on('click', '#deleteShiftBtn, .delete-direct-btn', function () {
-                 const shiftId = $(this).is('#deleteShiftBtn') ? shiftIdInput.val() : $(this).data('shift-id');
-                 const buttonElement = $(this);
-                 if (!shiftId || shiftId === '0') return;
-                 if (confirm('Czy na pewno chcesz usunąć tę zmianę?')) {
-                     buttonElement.prop('disabled', true).text('Usuwanie...');
-                      $.ajax({
-                           url: '@Url.Action("DeleteShift", "Schedules")', type: 'POST',
-                           data: { __RequestVerificationToken: csrfToken, shiftId: shiftId },
-                           success: function (response) {
-                                if (response.success) {
-                                     shiftModal.hide();
-                                     let listItem = $(`.shifts-list li[data-shift-id="${shiftId}"]`);
-                                     let dayContainer = listItem.closest('.card-body');
-                                     listItem.fadeOut(300, function() { $(this).remove(); checkEmptyList(dayContainer); });
-                                } else {
-                                     buttonElement.prop('disabled', false).text('Usuń'); alert(response.message || 'Nie usunięto zmiany.');
-                                }
-                           },
-                           error: function (xhr) {
-                                buttonElement.prop('disabled', false).text('Usuń');
-                                console.error("Błąd AJAX (DeleteShift):", xhr.status, xhr.responseText); alert('Błąd serwera podczas usuwania.');
-                           }
-                      });
-                 }
+                 shiftIdToDelete = $(this).is('#deleteShiftBtn') ? shiftIdInput.val() : $(this).data('shift-id');
+                 if (!shiftIdToDelete || shiftIdToDelete === '0') return;
+                 deleteConfirmModal.show();
+            });
+
+            confirmDeleteBtn.click(function() {
+                if (!shiftIdToDelete) return;
+                confirmDeleteBtn.prop('disabled', true).text('Usuwanie...');
+
+                $.ajax({
+                    url: '@Url.Action("DeleteShift", "Schedules")',
+                    type: 'POST',
+                    data: { __RequestVerificationToken: csrfToken, shiftId: shiftIdToDelete },
+                    success: function (response) {
+                        confirmDeleteBtn.prop('disabled', false).text('Usuń zmianę');
+                        deleteConfirmModal.hide();
+                        if (response.success) {
+                            shiftModal.hide();
+                            let listItem = $(`.shifts-list li[data-shift-id="${shiftIdToDelete}"]`);
+                            let dayContainer = listItem.closest('.card-body');
+                            listItem.fadeOut(300, function() { $(this).remove(); checkEmptyList(dayContainer); });
+                        } else { alert(response.message); }
+                    },
+                    error: function () {
+                        confirmDeleteBtn.prop('disabled', false).text('Usuń zmianę');
+                        alert('Błąd serwera.');
+                    }
+                });
             });
 
             function updateShiftInUI(shiftData) {
@@ -324,41 +388,45 @@
                  const listSelector = `${dayId} .shifts-list`;
                  const noShiftsSelector = `${dayId} .no-shifts-message`;
                  const listItemSelector = `${listSelector} li[data-shift-id="${shiftData.id}"]`;
-                 const badgeClass = shiftData.assignedUserId ? (shiftData.assignedUserId > 0 ? "bg-info text-dark" : "bg-warning text-dark") : "bg-warning text-dark";
-                 const userName = shiftData.assignedUserName || 'Nieprzypisany';
 
-                 const newShiftHtml = `
-                     <li class="list-group-item d-flex justify-content-between align-items-center" data-shift-id="${shiftData.id}" style="display: none;">
-                         <div>
-                             <strong>${shiftData.startTime} - ${shiftData.endTime}</strong><br />
-                             Stanowisko: <span class="badge bg-secondary">${shiftData.positionTagName || 'Brak'}</span><br />
-                             Pracownik: <span class="badge ${badgeClass}">${userName}</span>
-                         </div>
-                         <div>
-                             <button type="button" class="btn btn-sm btn-outline-primary edit-shift-btn" data-shift-id="${shiftData.id}">Edytuj</button>
-                             <button type="button" class="btn btn-sm btn-outline-danger delete-direct-btn" data-shift-id="${shiftData.id}">Usuń</button>
-                         </div>
+                 const badgeClass = shiftData.assignedUserId ? "bg-info bg-opacity-10 text-info border border-info" : "bg-warning bg-opacity-10 text-warning border border-warning text-dark";
+                 const userName = shiftData.assignedUserName || 'Wakat';
+
+                 const html = `
+                     <li class="list-group-item px-0 py-2 border-bottom-0 d-flex justify-content-between align-items-center" data-shift-id="${shiftData.id}">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="bi bi-clock text-primary me-1 small"></i>
+                                <strong class="small">${shiftData.startTime} - ${shiftData.endTime}</strong>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill fw-normal" style="font-size: 0.7rem;">${shiftData.positionTagName || 'Brak'}</span>
+                                <span class="badge ${badgeClass} rounded-pill fw-normal" style="font-size: 0.7rem;">${userName}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-1 ms-2">
+                            <button type="button" class="btn btn-light border btn-sm text-primary edit-shift-btn shadow-sm" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" data-shift-id="${shiftData.id}" title="Edytuj"><i class="bi bi-pencil-square"></i></button>
+                            <button type="button" class="btn btn-light border btn-sm text-danger delete-direct-btn shadow-sm" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" data-shift-id="${shiftData.id}" title="Usuń"><i class="bi bi-trash"></i></button>
+                        </div>
                      </li>`;
 
-                 if ($(listItemSelector).length > 0) { $(listItemSelector).replaceWith(newShiftHtml); }
-                 else { $(listSelector).append(newShiftHtml); $(noShiftsSelector).hide(); $(listSelector).show(); }
-                 $(`${listSelector} li[data-shift-id="${shiftData.id}"]`).fadeIn(300);
-                 sortShiftsInList(listSelector);
-             }
+                 if ($(listItemSelector).length > 0) { $(listItemSelector).replaceWith(html); }
+                 else { $(listSelector).append(html); $(noShiftsSelector).hide(); $(listSelector).show(); }
+
+                 var list = $(listSelector);
+                 var items = list.children('li').get();
+                 items.sort(function(a, b) {
+                     var timeA = $(a).find('strong').text().split(' - ')[0];
+                     var timeB = $(b).find('strong').text().split(' - ')[0];
+                     return timeA.localeCompare(timeB);
+                 });
+                 $.each(items, function(i, item) { list.append(item); });
+            }
 
             function checkEmptyList(dayContainer) {
-                 if(!dayContainer || !dayContainer.length) return;
                  let list = dayContainer.find('.shifts-list');
-                 let message = dayContainer.find('.no-shifts-message');
-                 if (list.children('li').length === 0) { list.hide(); message.show(); }
-             }
-
-            function sortShiftsInList(listSelector) {
-                 var list = $(listSelector); var listItems = list.children('li').get();
-                 listItems.sort(function(a, b) { var timeA = $(a).find('strong').text().split(' - ')[0]; var timeB = $(b).find('strong').text().split(' - ')[0]; return timeA.localeCompare(timeB); });
-                 $.each(listItems, function(idx, itm) { list.append(itm); });
-             }
-
-        }); // Koniec document ready
+                 if (list.children('li').length === 0) { list.hide(); dayContainer.find('.no-shifts-message').show(); }
+            }
+        });
     </script>
 }
