@@ -4,34 +4,46 @@
     ViewData["Title"] = "Dodaj Stolik";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h4 class="mb-0 fw-bold text-success"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Nowy Stolik</h4>
+                </div>
+                <div class="card-body p-4 bg-light bg-opacity-25">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<h4>Nowy Stolik</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group mb-3">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Name" class="form-control rounded-3" placeholder="Nazwa" />
+                            <label asp-for="Name">Nazwa (np. Stolik 1, Okno 2)</label>
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Capacity" class="form-control rounded-3" type="number" min="1" placeholder="Pojemność" />
+                            <label asp-for="Capacity">Liczba miejsc</label>
+                            <span asp-validation-for="Capacity" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-check form-switch mb-4 p-3 bg-white rounded-3 border shadow-sm">
+                            <input class="form-check-input ms-0 me-3" asp-for="IsAvailable" type="checkbox" role="switch" style="margin-top: 0.15rem; transform: scale(1.2);" checked>
+                            <label class="form-check-label fw-bold text-dark" asp-for="IsAvailable">
+                                Stolik dostępny dla gości
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end pt-2">
+                            <a asp-action="Index" class="btn btn-light border rounded-pill px-4 fw-medium">Anuluj</a>
+                            <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm">
+                                <i class="bi bi-check-lg me-1"></i> Utwórz
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group mb-3">
-                <label asp-for="Capacity" class="control-label"></label>
-                <input asp-for="Capacity" class="form-control" type="number" />
-                <span asp-validation-for="Capacity" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check mb-3">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsAvailable" /> @Html.DisplayNameFor(model => model.IsAvailable)
-                </label>
-            </div>
-            <div class="form-group mb-3">
-                <input type="submit" value="Utwórz" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">Powrót do listy</a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
