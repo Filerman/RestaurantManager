@@ -8,9 +8,7 @@ namespace RestaurantManager.Data
     {
         public static void Seed(AppDbContext context)
         {
-            // *** TYMCZASOWO ZAKOMENTOWANE NA CZAS NAPRAWY MIGRACJI ***
              context.Database.Migrate();
-            // *** KONIEC KOMENTOWANIA ***
 
             // Admin
             if (!context.Users.Any(u => u.Username == "admin"))
@@ -19,9 +17,9 @@ namespace RestaurantManager.Data
                 {
                     Username = "admin",
                     Email = "admin@r.com",
-                    Password = "admin123", // Pamiętaj o hashowaniu w prawdziwej aplikacji!
+                    Password = "admin123", 
                     Role = "Admin",
-                    ProfilePicturePath = "/images/profiles/default.png" // Dodano domyślny avatar
+                    ProfilePicturePath = "/images/profiles/default.png" 
                 });
             }
 
@@ -32,9 +30,9 @@ namespace RestaurantManager.Data
                 {
                     Username = "manager",
                     Email = "mgr@r.com",
-                    Password = "manager123", // Pamiętaj o hashowaniu!
+                    Password = "manager123",
                     Role = "Manager",
-                    ProfilePicturePath = "/images/profiles/default.png" // Dodano domyślny avatar
+                    ProfilePicturePath = "/images/profiles/default.png" 
                 });
             }
 
@@ -45,12 +43,12 @@ namespace RestaurantManager.Data
                 {
                     Username = "employee",
                     Email = "empl@r.com",
-                    Password = "emp123", // Pamiętaj o hashowaniu!
+                    Password = "emp123", 
                     Role = "Employee",
-                    ProfilePicturePath = "/images/profiles/default.png" // Dodano domyślny avatar
+                    ProfilePicturePath = "/images/profiles/default.png" 
                 });
             }
-            // Seed Tables if none exist - Zakładam, że ten kod jest w nowszej wersji Seeder.cs
+  
             if (!context.Tables.Any())
             {
                 context.Tables.AddRange(
@@ -61,7 +59,6 @@ namespace RestaurantManager.Data
                 );
             }
 
-            // Seed MenuItems if none exist - Zakładam, że ten kod jest w nowszej wersji Seeder.cs
             if (!context.MenuItems.Any())
             {
                 context.MenuItems.AddRange(
@@ -72,7 +69,6 @@ namespace RestaurantManager.Data
                 );
             }
 
-            // --- 5. GODZINY OTWARCIA (Nowość - wymagane do walidacji rezerwacji) ---
             if (!context.OpeningHours.Any())
             {
                 var days = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>();
@@ -81,8 +77,8 @@ namespace RestaurantManager.Data
                     context.OpeningHours.Add(new OpeningHour
                     {
                         DayOfWeek = day,
-                        OpenTime = new TimeSpan(12, 0, 0), // Domyślnie 12:00
-                        CloseTime = new TimeSpan(22, 0, 0), // Domyślnie 22:00
+                        OpenTime = new TimeSpan(12, 0, 0), 
+                        CloseTime = new TimeSpan(22, 0, 0), 
                         IsClosed = false
                     });
                 }
@@ -95,15 +91,15 @@ namespace RestaurantManager.Data
                     {
                         Title = "Wielkie Otwarcie!",
                         Content = "Zapraszamy na uroczyste otwarcie naszej restauracji już w ten weekend! Darmowy deser dla każdego.",
-                        ValidFrom = DateTime.Now.AddDays(-2), // ZMIANA: DatePosted -> ValidFrom
+                        ValidFrom = DateTime.Now.AddDays(-2), 
                         ValidUntil = DateTime.Now.AddDays(5),
-                        DateCreated = DateTime.Now.AddDays(-2) // Opcjonalnie uzupełniamy datę utworzenia
+                        DateCreated = DateTime.Now.AddDays(-2) 
                     },
                     new Announcement
                     {
                         Title = "Zmiana godzin w Święta",
                         Content = "W dni świąteczne restauracja będzie czynna od 14:00 do 20:00.",
-                        ValidFrom = DateTime.Now.AddDays(-1), // ZMIANA: DatePosted -> ValidFrom
+                        ValidFrom = DateTime.Now.AddDays(-1),
                         ValidUntil = DateTime.Now.AddDays(30),
                         DateCreated = DateTime.Now.AddDays(-1)
                     }
@@ -111,7 +107,7 @@ namespace RestaurantManager.Data
 
             }
 
-            // 8. *** FAQ ***
+            // FAQ
             if (!context.FaqItems.Any())
             {
                 context.FaqItems.AddRange(
