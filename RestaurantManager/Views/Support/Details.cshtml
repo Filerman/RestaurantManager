@@ -3,68 +3,86 @@
     ViewData["Title"] = "Szczegóły Zgłoszenia";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>@Model.Subject <small class="text-muted">(@Model.Status)</small></h3>
-        <a asp-action="Manage" class="btn btn-outline-secondary">Powrót do listy</a>
-    </div>
-    <hr />
-
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-header bg-light">
-                    <div class="d-flex justify-content-between">
-                        <span>
-                            <strong>Zgłosił:</strong> @(Model.CreatedByUser?.Username ?? "Nieznany")
-                            <span class="text-muted small">(@Model.CreatedByUser?.Email)</span>
-                        </span>
-                        <span class="text-muted">@Model.DateCreated.ToString("dd.MM.yyyy HH:mm")</span>
-                    </div>
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <a asp-action="Manage" class="btn btn-outline-secondary rounded-circle shadow-sm" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <h3 class="fw-bold mb-0">Zgłoszenie #@Model.Id</h3>
                 </div>
-                <div class="card-body">
-                    <h5 class="card-title text-secondary">Treść zgłoszenia:</h5>
-                    <p class="card-text fs-5">@Model.Description</p>
+                <div>
+                    @switch (Model.Status)
+                    {
+                        case RestaurantManager.Models.TicketStatus.New:
+                            <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">Nowe</span>
+                            break;
+                        case RestaurantManager.Models.TicketStatus.Resolved:
+                            <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">Rozwiązane</span>
+                            break;
+                        default:
+                            <span class="badge bg-secondary fs-6 px-3 py-2 rounded-pill">@Model.Status</span>
+                            break;
+                    }
                 </div>
             </div>
 
-            <div class="card shadow-sm border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Rozwiązanie / Odpowiedź</h5>
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-header bg-light py-3 px-4 border-bottom-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="fw-bold text-dark d-block">@(Model.CreatedByUser?.Username ?? "Użytkownik usunięty")</span>
+                        <small class="text-muted">@(Model.CreatedByUser?.Email)</small>
+                    </div>
+                    <span class="text-muted small">@Model.DateCreated.ToString("dd.MM.yyyy HH:mm")</span>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">@Model.Subject</h5>
+                    <p class="text-dark mb-0" style="white-space: pre-wrap;">@Model.Description</p>
+                </div>
+            </div>
+
+            <div class="card shadow border-0 rounded-4 overflow-hidden border-top border-4 border-primary">
+                <div class="card-header bg-white py-3 px-4 border-bottom-0">
+                    <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-chat-dots-fill me-2"></i>Odpowiedź / Rozwiązanie</h5>
+                </div>
+                <div class="card-body p-4 bg-light bg-opacity-25">
                     <form asp-action="ResolveTicket" method="post">
                         <input type="hidden" name="id" value="@Model.Id" />
 
-                        <div class="form-group mb-3">
-                            <label class="form-label fw-bold">Treść odpowiedzi:</label>
-                            <textarea name="managerResponse" class="form-control" rows="4" placeholder="Wpisz rozwiązanie lub komentarz dla zgłaszającego...">@Model.ManagerResponse</textarea>
-                            <div class="form-text">Ta odpowiedź będzie widoczna dla zgłaszającego oraz (opcjonalnie) w FAQ.</div>
+                        <div class="form-floating mb-4">
+                            <textarea name="managerResponse" class="form-control rounded-3" style="height: 150px" placeholder="Treść">@Model.ManagerResponse</textarea>
+                            <label>Treść odpowiedzi dla użytkownika</label>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Status zgłoszenia:</label>
-                                <select name="status" class="form-select" asp-items="Html.GetEnumSelectList<RestaurantManager.Models.TicketStatus>()" asp-for="Status"></select>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <select name="status" class="form-select rounded-3" asp-items="Html.GetEnumSelectList<RestaurantManager.Models.TicketStatus>()" asp-for="Status"></select>
+                                    <label>Zmień status</label>
+                                </div>
                             </div>
 
-                            <div class="col-md-6 mb-3">
-                                <div class="card bg-light border-0 p-3">
-                                    <div class="form-check form-switch mb-2">
-                                        <input class="form-check-input" type="checkbox" id="addToFaq" name="addToFaq" value="true" onchange="toggleFaqInput()">
-                                        <label class="form-check-label fw-bold" for="addToFaq">Opublikuj w FAQ</label>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-white shadow-sm p-3 rounded-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="addToFaq" name="addToFaq" value="true" onchange="toggleFaqInput()" style="cursor: pointer;">
+                                        <label class="form-check-label fw-bold cursor-pointer" for="addToFaq">Dodaj do bazy wiedzy (FAQ)</label>
                                     </div>
 
-                                    <div id="faqInputGroup" style="display:none;">
-                                        <label class="form-label small text-muted">Edytuj treść pytania do FAQ:</label>
-                                        <input type="text" name="faqQuestion" class="form-control form-control-sm" value="@Model.Subject" placeholder="Wpisz poprawione pytanie..." />
+                                    <div id="faqInputGroup" class="mt-3" style="display:none;">
+                                        <label class="form-label small text-muted text-uppercase fw-bold ls-1 mb-1">Pytanie w FAQ</label>
+                                        <input type="text" name="faqQuestion" class="form-control form-control-sm rounded-3" value="@Model.Subject" />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="text-end border-top pt-3">
-                            <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-lg"></i> Zapisz i Zaktualizuj</button>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4 pt-2 border-top">
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-sm">
+                                <i class="bi bi-send-check me-2"></i> Zapisz i Wyślij
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -77,11 +95,6 @@
     function toggleFaqInput() {
         var checkbox = document.getElementById('addToFaq');
         var inputGroup = document.getElementById('faqInputGroup');
-
-        if (checkbox.checked) {
-            inputGroup.style.display = 'block';
-        } else {
-            inputGroup.style.display = 'none';
-        }
+        inputGroup.style.display = checkbox.checked ? 'block' : 'none';
     }
 </script>
