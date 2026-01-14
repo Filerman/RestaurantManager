@@ -4,26 +4,45 @@
     ViewData["Title"] = "Usuń Użytkownika";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-3 text-danger">
+                        <i class="bi bi-person-x-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="card-title fw-bold mb-3">Usuwasz użytkownika</h4>
+                    <p class="text-muted mb-4 small">Czy na pewno chcesz trwale usunąć to konto z systemu?</p>
 
-<h3 class="text-danger">Czy na pewno chcesz usunąć tego użytkownika?</h3>
-<div>
-    <h4>Użytkownik</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Username)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Username)</dd>
+                    <div class="bg-light p-3 rounded-3 mb-4 text-start small border">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Login:</span>
+                            <span class="fw-bold text-dark">@Model.Username</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Email:</span>
+                            <span class="fw-bold text-dark text-break">@Model.Email</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Telefon:</span>
+                            <span class="fw-bold text-dark">
+                                @(!string.IsNullOrEmpty(Model.PhoneNumber) ? Model.PhoneNumber : (Model.Employee?.Phone ?? "-"))
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Rola:</span>
+                            <span class="fw-bold text-primary">@Model.Role</span>
+                        </div>
+                    </div>
 
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Email)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Email)</dd>
-
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Role)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Role)</dd>
-    </dl>
-
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Usuń" class="btn btn-danger" />
-        <a asp-action="Index" class="btn btn-secondary">Powrót do listy</a>
-    </form>
+                    <form asp-action="Delete" class="d-flex justify-content-center gap-2">
+                        <input type="hidden" asp-for="Id" />
+                        <a asp-action="Index" class="btn btn-light border px-4 rounded-pill fw-medium">Anuluj</a>
+                        <button type="submit" class="btn btn-danger px-4 rounded-pill fw-bold shadow-sm">Tak, usuń</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

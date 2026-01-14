@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace RestaurantManager.Controllers
 {
-    // USUNIĘTO atrybut z poziomu klasy, aby móc różnicować uprawnienia dla metod
     public class UsersController : Controller
     {
         private readonly AppDbContext _context;
@@ -24,15 +23,31 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // --- NOWA METODA: Katalog Kontaktów (Dostępna dla Pracowników) ---
         [RoleAuthorize("Admin", "Manager", "Employee")]
-        public async Task<IActionResult> Directory(string searchString)
+        public async Task<IActionResult> Directory(string searchString, string filter = "all")
         {
             var usersQuery = _context.Users
                 .Include(u => u.Employee) // Dołączamy dane pracownika (telefon, imię)
                 .AsNoTracking();
 
-            // Wyszukiwanie
+            // 1. Filtrowanie po typie (Wszyscy / Pracownicy / Klienci)
+            switch (filter)
+            {
+                case "employees":
+                    // Pracownicy to: Admin, Manager, Employee
+                    usersQuery = usersQuery.Where(u => u.Role == "Admin" || u.Role == "Manager" || u.Role == "Employee");
+                    break;
+                case "clients":
+                    // Klienci to: Guest
+                    usersQuery = usersQuery.Where(u => u.Role == "Guest");
+                    break;
+                case "all":
+                default:
+                    // Brak dodatkowego filtra
+                    break;
+            }
+
+            // 2. Wyszukiwanie (Search)
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString = searchString.ToLower();
@@ -43,14 +58,15 @@ namespace RestaurantManager.Controllers
             }
 
             var users = await usersQuery
-                .OrderByDescending(u => u.Role)
+                .OrderByDescending(u => u.Role) // Najpierw ważniejsze role
                 .ThenBy(u => u.Username)
                 .ToListAsync();
 
             ViewData["CurrentFilter"] = searchString;
+            ViewData["SelectedFilter"] = filter; // Przekazujemy wybrany filtr do widoku
+
             return View(users);
         }
-        // ---------------------------------------------------------------
 
         // GET: Users
         [RoleAuthorize("Admin", "Manager")]

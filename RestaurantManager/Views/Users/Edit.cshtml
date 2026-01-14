@@ -2,51 +2,62 @@
 
 @{
     ViewData["Title"] = "Edytuj Użytkownika";
-    // Odczytujemy flagę z ViewBag
-    bool canEdit = ViewBag.CanEdit ?? true; // Domyślnie można edytować
+    bool canEdit = ViewBag.CanEdit ?? true;
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-person-gear me-2"></i>Edycja Konta</h4>
+                    <p class="text-muted small mb-0 mt-1">Użytkownik: <strong>@Model.Username</strong></p>
+                </div>
 
-<h4>Użytkownik: @Model.Username</h4>
-<hr />
+                <div class="card-body p-4 bg-light bg-opacity-25">
 
-@if (!canEdit && ViewBag.CannotEditMessage != null)
-{
-    <div class="alert alert-warning">@ViewBag.CannotEditMessage</div>
-}
+                    @if (!canEdit && ViewBag.CannotEditMessage != null)
+                    {
+                        <div class="alert alert-warning border-0 shadow-sm rounded-3 small">
+                            <i class="bi bi-lock-fill me-2"></i>@ViewBag.CannotEditMessage
+                        </div>
+                    }
 
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
+                        <input type="hidden" asp-for="Id" />
 
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
+                        <div class="form-floating mb-3">
+                            <input asp-for="Username" class="form-control rounded-3" disabled="@(!canEdit)" placeholder="Login" />
+                            <label asp-for="Username">Nazwa użytkownika</label>
+                            <span asp-validation-for="Username" class="text-danger small"></span>
+                        </div>
 
-            <div class="form-group">
-                <label asp-for="Username" class="control-label"></label>
-                <input asp-for="Username" class="form-control" disabled="@(!canEdit)" />
-                <span asp-validation-for="Username" class="text-danger"></span>
+                        <div class="form-floating mb-3">
+                            <input asp-for="Email" class="form-control rounded-3" disabled="@(!canEdit)" placeholder="Email" />
+                            <label asp-for="Email">Adres Email</label>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <select asp-for="Role" class="form-select rounded-3" asp-items="ViewBag.Roles" disabled="@(!canEdit)"></select>
+                            <label asp-for="Role">Rola w systemie</label>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            @if (canEdit)
+                            {
+                                <button type="submit" class="btn btn-primary rounded-pill fw-bold shadow-sm py-2">
+                                    <i class="bi bi-save me-2"></i> Zapisz Zmiany
+                                </button>
+                            }
+                            <a asp-action="Index" class="btn btn-light border rounded-pill fw-medium py-2">Wróć do listy</a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" disabled="@(!canEdit)" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Role" class="control-label"></label>
-                <select asp-for="Role" class="form-control" asp-items="ViewBag.Roles" disabled="@(!canEdit)"></select>
-                <span asp-validation-for="Role" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mt-3">
-                @if (canEdit)
-                {
-                    <input type="submit" value="Zapisz" class="btn btn-primary" />
-                }
-                <a asp-action="Index" class="btn btn-secondary">Powrót do listy</a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 

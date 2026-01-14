@@ -1,90 +1,122 @@
 ﻿@model IEnumerable<RestaurantManager.Models.User>
+@using Microsoft.AspNetCore.Http
 
 @{
     ViewData["Title"] = "Zarządzanie Użytkownikami";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-primary"><i class="bi bi-people-fill"></i> @ViewData["Title"]</h2>
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0"><i class="bi bi-people-fill text-primary me-2"></i>@ViewData["Title"]</h2>
+            <p class="text-muted small mb-0">Zarządzaj kontami, rolami i dostępem</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Directory" class="btn btn-outline-primary rounded-pill px-4 fw-medium shadow-sm">
+                <i class="bi bi-person-lines-fill me-2"></i>Katalog
+            </a>
+        </div>
     </div>
 
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show shadow-sm">
-            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+            <i class="bi bi-check-circle-fill me-3 fs-4 text-success"></i>
+            <div>@TempData["SuccessMessage"]</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
         </div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
+            <i class="bi bi-exclamation-triangle-fill me-3 fs-4 text-danger"></i>
+            <div>@TempData["ErrorMessage"]</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead class="bg-light small text-uppercase text-muted">
                         <tr>
-                            <th>@Html.DisplayNameFor(model => model.Username)</th>
-                            <th>@Html.DisplayNameFor(model => model.Email)</th>
-                            <th>@Html.DisplayNameFor(model => model.Role)</th>
-                            <th class="text-end pe-4">Akcje</th>
+                            <th class="ps-4 py-3 fw-bold">Użytkownik</th>
+                            <th class="fw-bold">Kontakt</th>
+                            <th class="fw-bold">Telefon</th>
+                            <th class="fw-bold">Rola</th>
+                            <th class="text-end pe-4 fw-bold">Akcje</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model)
                         {
-                            <tr>
-                                <td class="fw-bold">@Html.DisplayFor(modelItem => item.Username)</td>
+                            <tr class="border-bottom-0">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            @if (!string.IsNullOrEmpty(item.ProfilePicturePath))
+                                            {
+                                                <img src="@item.ProfilePicturePath" alt="Avatar" class="rounded-circle shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary border fw-bold" style="width: 40px; height: 40px;">
+                                                    @item.Username.Substring(0, 1).ToUpper()
+                                                </div>
+                                            }
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark">@item.Username</div>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td>
-                                    <a href="mailto:@item.Email" class="text-decoration-none">
-                                        <i class="bi bi-envelope"></i> @Html.DisplayFor(modelItem => item.Email)
+                                    <a href="mailto:@item.Email" class="text-decoration-none text-dark d-block">
+                                        <i class="bi bi-envelope text-muted me-2"></i>@item.Email
                                     </a>
                                 </td>
                                 <td>
-                                    @if (item.Role == "Admin")
-                                    {
-                                        <span class="badge bg-danger">Admin</span>
+                                    @{
+                                        string phone = !string.IsNullOrEmpty(item.PhoneNumber) ? item.PhoneNumber
+                                        : (item.Employee?.Phone ?? "-");
                                     }
-                                    else if (item.Role == "Manager")
+                                    <span class="text-muted">@phone</span>
+                                </td>
+                                <td>
+                                    @switch (item.Role)
                                     {
-
-                                        <span class="badge bg-warning text-dark">Manager</span>
-                                    }
-                                    else if (item.Role == "Employee")
-                                    {
-
-                                        <span class="badge bg-success">Pracownik</span>
-                                    }
-                                    else
-                                    {
-
-                                        <span class="badge bg-secondary">Gość</span>
+                                        case "Admin":
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-2 fw-normal">Administrator</span>
+                                            break;
+                                        case "Manager":
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-2 fw-normal text-dark">Manager</span>
+                                            break;
+                                        case "Employee":
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-2 fw-normal">Pracownik</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill px-2 fw-normal">Gość</span>
+                                            break;
                                     }
                                 </td>
                                 <td class="text-end pe-4">
-                                    <div class="btn-group shadow-sm">
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Edytuj">
-                                            <i class="bi bi-pencil"></i>
+                                    <div class="btn-group">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary border-0 rounded-2 me-1" title="Edytuj">
+                                            <i class="bi bi-pencil-square"></i>
                                         </a>
-                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Szczegóły">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary border-0 rounded-2 me-1" title="Szczegóły">
                                             <i class="bi bi-info-circle"></i>
                                         </a>
 
-                                        @* NOWY PRZYCISK: RESET HASŁA *@
                                         @if (Context.Session.GetString("UserRole") == "Admin")
                                         {
-                                            <a asp-action="AdminResetPassword" asp-route-id="@item.Id" class="btn btn-sm btn-warning text-dark" title="Resetuj hasło">
+                                            <a asp-action="AdminResetPassword" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning text-dark border-0 rounded-2 me-1" title="Resetuj hasło">
                                                 <i class="bi bi-key-fill"></i>
                                             </a>
                                         }
 
-                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Usuń">
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger border-0 rounded-2" title="Usuń">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </div>

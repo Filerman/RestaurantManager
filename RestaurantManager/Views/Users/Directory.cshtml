@@ -2,100 +2,114 @@
 
 @{
     ViewData["Title"] = "Katalog Kontaktów";
+    string currentFilter = ViewData["SelectedFilter"] as string ?? "all";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-person-lines-fill text-primary"></i> Katalog Kontaktów</h2>
+<div class="container mt-4 mb-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold text-dark mb-0"><i class="bi bi-person-lines-fill text-primary me-2"></i>Katalog Kontaktów</h2>
+            <p class="text-muted small mb-0">Lista pracowników i użytkowników</p>
+        </div>
 
-        <form asp-action="Directory" method="get" class="d-flex">
-            <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control me-2" placeholder="Szukaj..." />
-            <button type="submit" class="btn btn-outline-primary">Szukaj</button>
-            <a asp-action="Directory" class="btn btn-outline-secondary ms-1">Reset</a>
+        <form asp-action="Directory" method="get" class="d-flex gap-2 bg-white p-2 rounded-pill shadow-sm border w-100 w-md-auto">
+            <select name="filter" class="form-select border-0 bg-light rounded-pill ps-3 pe-4 fw-medium text-dark shadow-none" style="width: auto; cursor: pointer;" onchange="this.form.submit()">
+                <!option value="all" @(currentFilter == "all" ? "selected" : "")>Wszyscy</!option>
+                <!option value="employees" @(currentFilter == "employees" ? "selected" : "")>Pracownicy</!option>
+                <!option value="clients" @(currentFilter == "clients" ? "selected" : "")>Klienci</!option>
+            </select>
+
+            <div class="vr my-1 text-muted opacity-25"></div>
+
+            <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control border-0 bg-transparent ps-2 shadow-none" placeholder="Szukaj..." />
+            
+            @* ZMIANA: Usunięto rounded-circle, dodano px-3 *@
+            <button type="submit" class="btn btn-primary rounded-pill px-3 shadow-sm d-flex align-items-center justify-content-center">
+                <i class="bi bi-search"></i>
+            </button>
         </form>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
+        @if (!Model.Any())
+        {
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="bi bi-search fs-1 d-block mb-3 opacity-25"></i>
+                Brak wyników dla podanych kryteriów.
+            </div>
+        }
+
         @foreach (var item in Model)
         {
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card shadow-sm h-100 border-0">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-hover">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
                             @if (!string.IsNullOrEmpty(item.ProfilePicturePath))
                             {
-                                <img src="@item.ProfilePicturePath" alt="Avatar" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                                <img src="@item.ProfilePicturePath" alt="Avatar" class="rounded-circle shadow-sm border border-2 border-white" style="width: 80px; height: 80px; object-fit: cover;">
                             }
                             else
                             {
-                                <img src="/images/profiles/default.png" alt="Avatar" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary border fw-bold mx-auto fs-3" style="width: 80px; height: 80px;">
+                                    @item.Username.Substring(0, 1).ToUpper()
+                                </div>
                             }
                         </div>
-                        <div class="flex-grow-1 overflow-hidden">
-                            <h5 class="card-title mb-1 text-truncate">
+                        
+                        <h5 class="fw-bold text-dark mb-1 text-truncate">
+                            @(item.Employee != null ? item.Employee.FullName : item.Username)
+                        </h5>
+                        
+                        <div class="mb-3">
+                            @if (item.Role == "Admin")
+                            {
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-2 fw-normal">Administrator</span>
+                            }
+                            else if (item.Role == "Manager")
+                            {
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-2 fw-normal text-dark">Manager</span>
+                            }
+                            else if (item.Role == "Employee")
+                            {
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-2 fw-normal">Pracownik</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill px-2 fw-normal">Gość</span>
+                            }
+                        </div>
+
+                        <div class="d-flex flex-column gap-2 small text-start bg-light p-3 rounded-3">
+                            <div class="text-truncate">
+                                <i class="bi bi-envelope text-primary me-2"></i>
+                                <a href="mailto:@item.Email" class="text-decoration-none text-dark">@item.Email</a>
+                            </div>
+                            
+                            <div class="text-truncate">
                                 @if (item.Employee != null)
                                 {
-                                    @item.Employee.FullName
+                                    <i class="bi bi-telephone-fill text-success me-2"></i>
+                                    <a href="tel:@item.Employee.Phone" class="text-decoration-none text-dark">@item.Employee.Phone</a>
+                                }
+                                else if (!string.IsNullOrEmpty(item.PhoneNumber))
+                                {
+                                    <i class="bi bi-telephone text-muted me-2"></i>
+                                    <a href="tel:@item.PhoneNumber" class="text-decoration-none text-dark">@item.PhoneNumber</a>
                                 }
                                 else
                                 {
-                                    @item.Username
-                                }
-                            </h5>
-
-                            @* Odznaka Roli *@
-                            <div class="mb-2">
-                                @if (item.Role == "Admin")
-                                {
-                                    <span class="badge bg-danger">Administrator</span>
-                                }
-                                else if (item.Role == "Manager")
-                                {
-                                    <span class="badge bg-warning text-dark">Manager</span>
-                                }
-                                else if (item.Role == "Employee")
-                                {
-                                    <span class="badge bg-success">Pracownik</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">Gość / Klient</span>
+                                    <i class="bi bi-telephone-x text-muted me-2 opacity-50"></i> <span class="text-muted fst-italic">Brak numeru</span>
                                 }
                             </div>
-
-                            <div class="small text-muted text-truncate mb-1">
-                                <i class="bi bi-envelope"></i> <a href="mailto:@item.Email" class="text-decoration-none text-muted">@item.Email</a>
-                            </div>
-
-                            @* LOGIKA TELEFONU *@
-                            @if (item.Employee != null)
-                            {
-                                <div class="small text-muted">
-                                    <i class="bi bi-telephone-fill text-success"></i> <a href="tel:@item.Employee.Phone" class="text-decoration-none text-muted">@item.Employee.Phone (Sł.)</a>
-                                </div>
-                            }
-
-                            @if (!string.IsNullOrEmpty(item.PhoneNumber))
-                            {
-                                <div class="small text-muted">
-                                    <i class="bi bi-telephone"></i> <a href="tel:@item.PhoneNumber" class="text-decoration-none text-muted">@item.PhoneNumber</a>
-                                </div>
-                            }
-                            else if (item.Employee == null)
-                            {
-                                <div class="small text-muted fst-italic">Brak nr telefonu</div>
-                            }
-
                         </div>
                     </div>
-                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
-                    {
-                        <div class="card-footer bg-transparent border-0 text-end">
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-light text-primary">Szczegóły</a>
-                        </div>
-                    }
                 </div>
-            </div> @* Poprawne zamknięcie kolumny *@
+            </div>
         }
     </div>
 </div>
+
+<style>
+    .card-hover:hover { transform: translateY(-5px); transition: transform 0.3s ease; box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+</style>
