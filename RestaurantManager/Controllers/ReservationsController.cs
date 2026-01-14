@@ -85,7 +85,6 @@ namespace RestaurantManager.Controllers
             }
 
             // 2. Sprawdzenie godzin otwarcia
-            // Pobieramy konfigurację dla dnia tygodnia wybranego w rezerwacji
             var dayOfWeek = r.DateTime.DayOfWeek;
             var openingHour = _ctx.OpeningHours.FirstOrDefault(oh => oh.DayOfWeek == dayOfWeek);
 
@@ -98,7 +97,6 @@ namespace RestaurantManager.Controllers
                 else
                 {
                     var time = r.DateTime.TimeOfDay;
-                    // Sprawdzamy czy godzina rezerwacji mieści się w zakresie
                     if (time < openingHour.OpenTime || time > openingHour.CloseTime)
                     {
                         ModelState.AddModelError("DateTime", $"Restauracja jest czynna w godzinach {openingHour.OpenTime:hh\\:mm} - {openingHour.CloseTime:hh\\:mm}.");
@@ -107,33 +105,29 @@ namespace RestaurantManager.Controllers
             }
 
             // 3. Sprawdzenie konfliktu rezerwacji (Czy stolik jest wolny?)
-            if (ModelState.IsValid) // Sprawdzamy to tylko jeśli data jest poprawna
+            if (ModelState.IsValid)
             {
-                // Zakładamy, że każda rezerwacja trwa domyślnie 2 godziny
-                var reservationDuration = TimeSpan.FromHours(2);
+                // ZMIANA: Pobieramy czas trwania rezerwacji z ustawień (lub domyślnie 120 min)
+                var settings = _ctx.ContactInfos.FirstOrDefault();
+                int occupancyMinutes = settings?.DefaultTableOccupancyMinutes ?? 120;
+
+                var reservationDuration = TimeSpan.FromMinutes(occupancyMinutes);
                 var newReservationStart = r.DateTime;
                 var newReservationEnd = r.DateTime.Add(reservationDuration);
 
-                // *** POPRAWKA BŁĘDU "InvalidOperationException" ***
-                // Obliczamy graniczną datę w C# (zamiast w LINQ), aby baza danych nie musiała robić odejmowania dat.
-                // Logika: Jeśli istniejąca rezerwacja ma się skończyć PO naszym starcie (overlap),
-                // to jej Start musi być WIĘKSZY niż (NaszStart - CzasTrwania).
                 var conflictThreshold = newReservationStart.Subtract(reservationDuration);
 
                 bool overlap = _ctx.Reservations
                     .Any(existing =>
-                        existing.TableId == r.TableId && // Ten sam stolik
-                        existing.Status != ReservationStatus.Rejected && // Ignorujemy odrzucone
-                                                                         // Warunek 1: Istniejąca zaczyna się przed końcem nowej
+                        existing.TableId == r.TableId &&
+                        existing.Status != ReservationStatus.Rejected &&
                         existing.DateTime < newReservationEnd &&
-                        // Warunek 2: Istniejąca kończy się po starcie nowej
-                        // (co matematycznie oznacza: StartIstniejącej > NaszStart - 2h)
                         existing.DateTime > conflictThreshold
                     );
 
                 if (overlap)
                 {
-                    ModelState.AddModelError("TableId", "Ten stolik jest już zarezerwowany w wybranym terminie (zakładając 2h wizyty). Wybierz inną godzinę lub stolik.");
+                    ModelState.AddModelError("TableId", $"Ten stolik jest już zarezerwowany w tym czasie (zakładany czas wizyty: {occupancyMinutes} min). Wybierz inną godzinę lub stolik.");
                 }
             }
 

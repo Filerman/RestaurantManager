@@ -2,9 +2,12 @@
 
 @{
     ViewData["Title"] = "Zarządzanie Stolikami";
+    // Pobieramy wartość przekazaną z kontrolera (domyślnie 120, jeśli null)
+    int defaultOccupancy = ViewBag.DefaultOccupancyMinutes != null ? (int)ViewBag.DefaultOccupancyMinutes : 120;
 }
 
 <div class="container mt-4 mb-5">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-0">Zarządzanie Stolikami</h2>
@@ -13,6 +16,27 @@
         <a asp-action="Create" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold">
             <i class="bi bi-plus-lg me-2"></i>Dodaj nowy stolik
         </a>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 mb-4 bg-white overflow-hidden">
+        <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-clock-history text-primary me-2"></i>Ustawienia Rezerwacji
+                </h5>
+                <p class="text-muted small mb-0">
+                    Określ domyślny czas zajętości stolika dla nowych rezerwacji.
+                </p>
+            </div>
+
+            <form asp-action="UpdateOccupancy" method="post" class="d-flex align-items-center gap-2">
+                <div class="input-group shadow-sm" style="max-width: 180px;">
+                    <input type="number" name="minutes" value="@defaultOccupancy" min="30" step="15" class="form-control border-end-0 fw-bold text-center" />
+                    <span class="input-group-text bg-white border-start-0 text-muted small">min</span>
+                </div>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Zapisz</button>
+            </form>
+        </div>
     </div>
 
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">

@@ -21,7 +21,38 @@ namespace RestaurantManager.Controllers
         // GET: Tables
         public async Task<IActionResult> Index()
         {
+            // Pobieramy aktualne ustawienie czasu (jeśli istnieje)
+            var settings = await _context.ContactInfos.FirstOrDefaultAsync();
+            ViewBag.DefaultOccupancyMinutes = settings?.DefaultTableOccupancyMinutes ?? 120; // Domyślnie 2h
+
             return View(await _context.Tables.ToListAsync());
+        }
+
+        // Aktualizacja domyślnego czasu zajętości
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateOccupancy(int minutes)
+        {
+            var settings = await _context.ContactInfos.FirstOrDefaultAsync();
+            if (settings == null)
+            {
+                // Jeśli nie ma rekordu, tworzymy go (teoretycznie seed powinien to zrobić, ale dla bezpieczeństwa)
+                settings = new ContactInfo
+                {
+                    // Wymagane pola (atrapa, bo seed powinien był to wypełnić)
+                    AddressStreet = "-",
+                    AddressCity = "-",
+                    AddressZipCode = "-",
+                    PhoneNumber = "-",
+                    ContactEmail = "admin@example.com"
+                };
+                _context.ContactInfos.Add(settings);
+            }
+
+            settings.DefaultTableOccupancyMinutes = minutes;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Tables/Details/5

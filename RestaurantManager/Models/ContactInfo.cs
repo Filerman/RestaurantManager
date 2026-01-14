@@ -45,6 +45,10 @@ namespace RestaurantManager.Models
 
         [Display(Name = "Termin zgłaszania (dni przed końcem miesiąca)")]
         [Range(1, 31, ErrorMessage = "Wartość musi wynosić od 1 do 31 dni.")]
-        public int AvailabilityDeadlineDays { get; set; } = 7; // Domyślnie 7 dni przed końcem miesiąca
+        public int AvailabilityDeadlineDays { get; set; } = 7; // Domyślnie 7 dni przed końcem miesiąca\
+
+        [Display(Name = "Domyślny czas rezerwacji (minuty)")]
+        [Range(30, 480)]
+        public int DefaultTableOccupancyMinutes { get; set; } = 120; // Domyślnie 2h
     }
 }
