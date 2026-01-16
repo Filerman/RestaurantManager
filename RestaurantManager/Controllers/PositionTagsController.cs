@@ -24,16 +24,6 @@ namespace RestaurantManager.Controllers
             return View(await _context.PositionTags.ToListAsync());
         }
 
-        // GET: PositionTags/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var positionTag = await _context.PositionTags.FirstOrDefaultAsync(m => m.Id == id);
-            if (positionTag == null) return NotFound();
-
-            return View(positionTag);
-        }
 
         // GET: PositionTags/Create
         public IActionResult Create()

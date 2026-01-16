@@ -19,7 +19,7 @@ namespace RestaurantManager.Models
         [Display(Name = "Nazwa stanowiska")]
         public string Name { get; set; }
 
-        // *** NOWOŚĆ: Stawka przypisana do stanowiska ***
+
         [Required(ErrorMessage = "Stawka godzinowa jest wymagana.")]
         [Range(0, 10000, ErrorMessage = "Stawka musi być dodatnia.")]
         [Display(Name = "Stawka godzinowa (PLN)")]
