@@ -269,7 +269,6 @@ namespace RestaurantManager.Controllers
             return View(myShifts);
         }
 
-        // --- AKCJE AJAX ---
 
         // GET: /Schedules/GetAvailableEmployees
         [HttpGet]

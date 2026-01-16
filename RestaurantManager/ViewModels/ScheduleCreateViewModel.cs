@@ -15,10 +15,6 @@ namespace RestaurantManager.ViewModels
         [Display(Name = "Data zakończenia grafiku")]
         public DateTime EndDate { get; set; } = DateTime.Today.AddDays(6); // Domyślnie tydzień od dzisiaj
 
-        // Opcjonalnie: Wybór szablonu do użycia (dodamy później)
-        // public int? SelectedTemplateId { get; set; }
-        // public SelectList AvailableTemplates { get; set; }
-
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (EndDate < StartDate)

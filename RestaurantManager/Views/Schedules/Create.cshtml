@@ -27,6 +27,13 @@
                             <label asp-for="EndDate">Data końcowa</label>
                             <span asp-validation-for="EndDate" class="text-danger small"></span>
                         </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">
+                                <i class="bi bi-arrow-right-circle me-2"></i>Utwórz i przejdź do edycji
+                            </button>
+                            <a asp-action="Index" class="btn btn-link text-muted text-decoration-none small text-center mt-2">Anuluj</a>
+                        </div>
                     </form>
                 </div>
             </div>

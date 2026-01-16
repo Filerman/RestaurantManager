@@ -18,8 +18,6 @@ namespace RestaurantManager.Data
         public DbSet<PositionTag> PositionTags { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<Shift> Shifts { get; set; }
-        public DbSet<ScheduleTemplate> ScheduleTemplates { get; set; }
-        public DbSet<TemplateShiftSlot> TemplateShiftSlots { get; set; }
         public DbSet<GalleryImage> GalleryImages { get; set; }
         public DbSet<LossLog> LossLogs { get; set; }
         public DbSet<OpeningHour> OpeningHours { get; set; }
@@ -66,19 +64,6 @@ namespace RestaurantManager.Data
                 .HasForeignKey(sh => sh.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // ScheduleTemplate (1) ma wiele TemplateShiftSlots (*)
-            modelBuilder.Entity<ScheduleTemplate>()
-                .HasMany(t => t.ShiftSlots)
-                .WithOne(sl => sl.ScheduleTemplate)
-                .HasForeignKey(sl => sl.ScheduleTemplateId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // TemplateShiftSlot (1) wskazuje na jeden PositionTag (*)
-            modelBuilder.Entity<TemplateShiftSlot>()
-               .HasOne(sl => sl.RequiredPositionTag)
-               .WithMany()
-               .HasForeignKey(sl => sl.PositionTagId)
-               .OnDelete(DeleteBehavior.Restrict);
 
             // Shift (1) opcjonalnie wskazuje na jeden PositionTag (*)
             modelBuilder.Entity<Shift>()
