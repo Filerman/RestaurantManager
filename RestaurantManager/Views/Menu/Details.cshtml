@@ -4,7 +4,8 @@
 @{
     ViewData["Title"] = Model.Name;
     var role = Context.Session.GetString("UserRole");
-    bool canManage = (role == "Employee" || role == "Manager" || role == "Admin");
+    // ZMIANA: Pracownik nie zarządza
+    bool canManage = (role == "Manager" || role == "Admin");
     bool hasImage = !string.IsNullOrEmpty(Model.ImagePath);
 }
 
@@ -99,8 +100,8 @@
         text-decoration: underline !important;
     }
 
-    input[type=number]::-webkit-outer-spin-button,
-    input[type=number]::-webkit-inner-spin-button {
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
         -webkit-appearance: none;
         margin: 0;
     }

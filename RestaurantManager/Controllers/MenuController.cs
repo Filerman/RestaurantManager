@@ -25,8 +25,9 @@ namespace RestaurantManager.Controllers
         // --- GET: Index (Lista) ---
         public async Task<IActionResult> Index()
         {
-            // POPRAWKA: Sprawdzamy rolę z Sesji, bo User.IsInRole nie działa przy tym typie logowania
             var role = HttpContext.Session.GetString("UserRole");
+            // isStaff decyduje CZY WIDAĆ pozycje ukryte (niedostępne). 
+            // Pracownik nadal powinien je widzieć (np. żeby wiedzieć co jest w menu, nawet jak niedostępne).
             var isStaff = (role == "Admin" || role == "Manager" || role == "Employee");
 
             var query = _context.MenuItems.AsQueryable();
@@ -54,7 +55,7 @@ namespace RestaurantManager.Controllers
 
         // --- GET: Create ---
         [HttpGet]
-        [RoleAuthorize("Employee", "Manager", "Admin")]
+        [RoleAuthorize("Manager", "Admin")] // USUNIĘTO "Employee"
         public async Task<IActionResult> Create()
         {
             await LoadCategoriesToViewBag();
@@ -64,7 +65,7 @@ namespace RestaurantManager.Controllers
         // --- POST: Create ---
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RoleAuthorize("Employee", "Manager", "Admin")]
+        [RoleAuthorize("Manager", "Admin")] // USUNIĘTO "Employee"
         public async Task<IActionResult> Create(MenuItem item, IFormFile? imageFile)
         {
             if (ModelState.IsValid)
@@ -99,7 +100,7 @@ namespace RestaurantManager.Controllers
 
         // --- GET: Edit ---
         [HttpGet]
-        [RoleAuthorize("Employee", "Manager", "Admin")]
+        [RoleAuthorize("Manager", "Admin")] // USUNIĘTO "Employee"
         public async Task<IActionResult> Edit(int id)
         {
             var item = await _context.MenuItems.FindAsync(id);
@@ -112,7 +113,7 @@ namespace RestaurantManager.Controllers
         // --- POST: Edit ---
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RoleAuthorize("Employee", "Manager", "Admin")]
+        [RoleAuthorize("Manager", "Admin")] // USUNIĘTO "Employee"
         public async Task<IActionResult> Edit(int id, MenuItem item, IFormFile? imageFile)
         {
             if (id != item.Id) return NotFound();
@@ -166,7 +167,7 @@ namespace RestaurantManager.Controllers
 
         // --- GET: Delete ---
         [HttpGet]
-        [RoleAuthorize("Employee", "Manager", "Admin")]
+        [RoleAuthorize("Manager", "Admin")] // USUNIĘTO "Employee"
         public async Task<IActionResult> Delete(int id)
         {
             var item = await _context.MenuItems.FindAsync(id);
@@ -178,7 +179,7 @@ namespace RestaurantManager.Controllers
         // --- POST: Delete ---
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [RoleAuthorize("Employee", "Manager", "Admin")]
+        [RoleAuthorize("Manager", "Admin")] // USUNIĘTO "Employee"
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var item = await _context.MenuItems.FindAsync(id);

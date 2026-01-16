@@ -10,7 +10,8 @@
                           .ToList();
 
     var role = Context.Session.GetString("UserRole");
-    var canManage = (role == "Employee" || role == "Manager" || role == "Admin");
+    // ZMIANA: Pracownik nie może zarządzać (tylko Manager i Admin)
+    var canManage = (role == "Manager" || role == "Admin");
 }
 
 <div class="container mt-4 mb-5">
@@ -59,6 +60,7 @@
                         @foreach (var item in group)
                         {
                             <div class="col-md-6 col-lg-4 col-xl-3">
+                                @* Wklejam kod karty bezpośrednio, aby użyć lokalnego canManage *@
                                 <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-menu bg-white">
                                     <div class="position-relative">
                                         @if (!string.IsNullOrEmpty(item.ImagePath))
@@ -122,9 +124,11 @@
                                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary flex-fill rounded-pill fw-medium d-flex flex-column align-items-center py-2">
                                                     <i class="bi bi-pencil-square mb-1"></i> Edytuj
                                                 </a>
-                                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger flex-fill rounded-pill fw-medium d-flex flex-column align-items-center py-2">
-                                                    <i class="bi bi-trash mb-1"></i> Usuń
-                                                </a>
+                                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="flex-fill d-flex" onsubmit="return confirm('Czy na pewno usunąć to danie?');">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100 rounded-pill fw-medium d-flex flex-column align-items-center py-2">
+                                                        <i class="bi bi-trash mb-1"></i> Usuń
+                                                    </button>
+                                                </form>
                                             </div>
                                         }
                                     </div>
@@ -144,6 +148,7 @@
                         @foreach (var item in group)
                         {
                             <div class="col-md-6 col-lg-4 col-xl-3">
+                                @* Kod karty powtórzony dla innych zakładek - to samo co wyżej *@
                                 <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-menu bg-white">
                                     <div class="position-relative">
                                         @if (!string.IsNullOrEmpty(item.ImagePath))
@@ -207,9 +212,11 @@
                                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary flex-fill rounded-pill fw-medium d-flex flex-column align-items-center py-2">
                                                     <i class="bi bi-pencil-square mb-1"></i> Edytuj
                                                 </a>
-                                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger flex-fill rounded-pill fw-medium d-flex flex-column align-items-center py-2">
-                                                    <i class="bi bi-trash mb-1"></i> Usuń
-                                                </a>
+                                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="flex-fill d-flex" onsubmit="return confirm('Czy na pewno usunąć to danie?');">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100 rounded-pill fw-medium d-flex flex-column align-items-center py-2">
+                                                        <i class="bi bi-trash mb-1"></i> Usuń
+                                                    </button>
+                                                </form>
                                             </div>
                                         }
                                     </div>
