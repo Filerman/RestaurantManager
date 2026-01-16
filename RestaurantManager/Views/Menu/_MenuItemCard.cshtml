@@ -18,7 +18,6 @@
     <div class="card-body d-flex flex-column">
         <div class="d-flex justify-content-between align-items-start mb-2">
             <h5 class="card-title fw-bold text-dark mb-0 me-2" style="word-break: break-word;">@Model.Name</h5>
-            @* Jeśli nie ma zdjęcia, wyświetl cenę tutaj *@
             @if (string.IsNullOrEmpty(Model.ImagePath))
             {
                 <span class="text-success fw-bold text-nowrap">@Model.Price.ToString("F2") zł</span>
