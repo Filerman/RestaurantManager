@@ -10,7 +10,7 @@
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 p-3 bg-white rounded-4 shadow-sm border">
         <h2 class="mb-2 mb-md-0 fw-bold text-dark d-flex align-items-center">
-            <div class="icon-wrapper bg-primary-soft text-primary me-3 mb-0 fs-4" style="width: 40px; height: 40px;">
+            <div class="icon-wrapper bg-primary-soft text-primary me-3 mb-0 fs-4 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 10px;">
                 <i class="bi bi-calendar-check"></i>
             </div>
             @ViewData["Title"]
@@ -45,28 +45,13 @@
         </div>
     }
 
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
-            <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
-            <div>@TempData["SuccessMessage"]</div>
-            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
-        </div>
-    }
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
-            <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-danger"></i>
-            <div>@TempData["ErrorMessage"]</div>
-            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
-        </div>
-    }
+    @* USUNIĘTO BLOK TempData - jest obsługiwany w _Layout.cshtml *@
 
     <div class="row g-4">
         @if (!isViewingOthers)
         {
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0 rounded-4 h-100 bg-white">
+                <div class="card shadow-sm border-0 rounded-4 h-100 bg-white overflow-hidden">
                     <div class="card-header bg-white py-3 border-bottom-0">
                         <h5 class="card-title fw-bold text-dark mb-0">Dodaj termin</h5>
                     </div>
@@ -78,28 +63,28 @@
 
                             <div class="mb-3">
                                 <label asp-for="NewAvailability.Date" class="form-label fw-bold small text-uppercase text-muted">Data</label>
-                                <input asp-for="NewAvailability.Date" class="form-control bg-light border-0" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                <input asp-for="NewAvailability.Date" class="form-control bg-light border-0 rounded-3" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                                 <span asp-validation-for="NewAvailability.Date" class="text-danger small"></span>
                             </div>
 
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <label asp-for="NewAvailability.StartTime" class="form-label fw-bold small text-uppercase text-muted">Od</label>
-                                    <input asp-for="NewAvailability.StartTime" class="form-control bg-light border-0" type="time" />
+                                    <input asp-for="NewAvailability.StartTime" class="form-control bg-light border-0 rounded-3" type="time" />
                                 </div>
                                 <div class="col-6">
                                     <label asp-for="NewAvailability.EndTime" class="form-label fw-bold small text-uppercase text-muted">Do</label>
-                                    <input asp-for="NewAvailability.EndTime" class="form-control bg-light border-0" type="time" />
+                                    <input asp-for="NewAvailability.EndTime" class="form-control bg-light border-0 rounded-3" type="time" />
                                 </div>
                             </div>
                             <span asp-validation-for="NewAvailability.StartTime" class="text-danger small d-block"></span>
                             <span asp-validation-for="NewAvailability.EndTime" class="text-danger small d-block mb-3"></span>
 
                             <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary fw-bold shadow-sm rounded-pill">
+                                <button type="submit" class="btn btn-primary fw-bold shadow-sm rounded-pill py-2">
                                     <i class="bi bi-plus-lg me-1"></i> Dodaj termin
                                 </button>
-                                <a asp-action="Provide" class="btn btn-outline-dark fw-medium rounded-pill">
+                                <a asp-action="Provide" class="btn btn-outline-dark fw-medium rounded-pill py-2">
                                     <i class="bi bi-calendar-month me-1"></i> Edytor miesięczny
                                 </a>
                             </div>
@@ -110,10 +95,10 @@
         }
 
         <div class="@(isViewingOthers ? "col-12" : "col-lg-8")">
-            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden h-100">
                 <div class="card-header bg-light py-3 border-bottom-0 d-flex justify-content-between align-items-center">
                     <h5 class="card-title fw-bold text-dark mb-0">Nadchodzące zgłoszenia</h5>
-                    <span class="badge bg-white text-dark border">@Model.Availabilities.Count pozycji</span>
+                    <span class="badge bg-white text-dark border rounded-pill px-3">@Model.Availabilities.Count pozycji</span>
                 </div>
 
                 <div class="card-body p-0">
@@ -138,7 +123,7 @@
                                             <td class="ps-4">
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-light rounded p-2 text-center me-3" style="min-width: 50px;">
-                                                        <span class="d-block fw-bold fs-5 lh-1">@item.Date.Day</span>
+                                                        <span class="d-block fw-bold fs-5 lh-1 text-dark">@item.Date.Day</span>
                                                         <span class="d-block small text-muted text-uppercase" style="font-size: 0.65rem;">@item.Date.ToString("MMM", new System.Globalization.CultureInfo("pl-PL"))</span>
                                                     </div>
                                                     <div>
@@ -148,10 +133,12 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 fw-normal">
-                                                    <i class="bi bi-clock me-1"></i> @item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")
-                                                </span>
-                                                <small class="text-muted ms-2">(@((item.EndTime - item.StartTime).TotalHours.ToString("F1"))h)</small>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 fw-normal rounded-pill">
+                                                        <i class="bi bi-clock me-1"></i> @item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")
+                                                    </span>
+                                                    <small class="text-muted ms-2">(@((item.EndTime - item.StartTime).TotalHours.ToString("F1"))h)</small>
+                                                </div>
                                             </td>
 
                                             @if (!isViewingOthers)
@@ -175,7 +162,7 @@
                     }
                     else
                     {
-                        <div class="p-5 text-center">
+                        <div class="p-5 text-center h-100 d-flex flex-column justify-content-center align-items-center">
                             <div class="mb-3 text-muted opacity-25">
                                 <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
                             </div>

@@ -126,7 +126,7 @@ namespace RestaurantManager.Controllers
 
             ticket.Status = status;
             ticket.ManagerResponse = managerResponse;
-            ticket.HasUnreadResponse = true; // ZAPALAMY KROPKĘ
+            ticket.HasUnreadResponse = true; 
 
             if (addToFaq && !string.IsNullOrWhiteSpace(managerResponse))
             {
