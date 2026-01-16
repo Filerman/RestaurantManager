@@ -9,6 +9,8 @@
         activeIndex = Model.Categories.IndexOf(activeCategory);
         if (activeIndex == -1) activeIndex = 0;
     }
+
+    bool hasUnservedItems = Model.CurrentOrder != null && Model.CurrentOrder.OrderItems.Any(i => !i.IsServed);
 }
 
 <div class="container-fluid h-100 p-0">
@@ -84,7 +86,7 @@
                         <h2 class="fw-bold text-success mb-0">@Model.CurrentOrder.TotalAmount.ToString("C")</h2>
                     </div>
 
-                    <form asp-action="CloseTable" method="post" class="d-grid gap-2" target="_blank" onsubmit="setTimeout(function(){ window.location.reload(); }, 1000);">
+                    <form asp-action="CloseTable" method="post" class="d-grid gap-2" target="_blank" id="closeTableForm">
                         <input type="hidden" name="orderId" value="@Model.CurrentOrder.Id" />
                         <button type="submit" name="paymentMethod" value="Cash" class="btn btn-success fw-bold py-2 shadow-sm">
                             <i class="bi bi-cash-coin me-2"></i> Gotówka
@@ -171,6 +173,26 @@
     </div>
 </div>
 
+<div class="modal fade" id="unservedItemsModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3 text-warning">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Nie wszystkie dania wydano!</h4>
+                <p class="text-muted mb-4">
+                    Na rachunku znajdują się pozycje, które nie zostały oznaczone jako "Wydane" (zielony przycisk).<br />
+                    Upewnij się, że kuchnia wydała wszystko przed zamknięciem stolika.
+                </p>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-secondary rounded-pill fw-bold" data-bs-dismiss="modal">Wróć i sprawdź</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     /* Stylizacja zakładek (Pills) */
     .nav-pills .nav-link {
@@ -215,4 +237,29 @@
     .transition-all {
         transition: all 0.3s ease;
     }
+
+    /* Przyciemnienie tła modala */
+    .modal-backdrop.show {
+        opacity: 0.7;
+    }
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var form = document.getElementById('closeTableForm');
+        // Pobieramy wartość z serwera (Razor) do zmiennej JS
+        var hasUnservedItems = @(hasUnservedItems.ToString().ToLower());
+
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (hasUnservedItems) {
+                    e.preventDefault(); // Blokujemy wysłanie
+                    var modal = new bootstrap.Modal(document.getElementById('unservedItemsModal'));
+                    modal.show();
+                } else {
+                    setTimeout(function(){ window.location.reload(); }, 1000);
+                }
+            });
+        }
+    });
+</script>
