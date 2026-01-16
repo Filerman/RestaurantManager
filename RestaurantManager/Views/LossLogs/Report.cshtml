@@ -16,7 +16,8 @@
                 <div class="card-body p-4 bg-light bg-opacity-25">
                     <form asp-action="Report" method="post" id="reportForm">
                         @Html.AntiForgeryToken()
-                        <div asp-validation-summary="All" class="alert alert-danger shadow-sm border-0 rounded-3 small" role="alert" data-valmsg-summary="true"></div>
+
+                        <div asp-validation-summary="All" class="alert alert-danger shadow-sm border-0 rounded-3 small mb-4" role="alert" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
 
                         <div class="mb-4 text-center">
                             <label class="form-label d-block fw-bold small text-uppercase text-muted ls-1 mb-3">Co zostało utracone?</label>
@@ -121,6 +122,10 @@
         border-color: #dee2e6;
         color: #212529;
         box-shadow: inset 0 3px 5px rgba(0,0,0,0.125);
+    }
+
+    .validation-summary-valid {
+        display: none !important;
     }
 </style>
 
