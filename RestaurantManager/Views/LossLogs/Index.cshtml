@@ -104,7 +104,7 @@
                                     <form asp-action="Delete" method="post" onsubmit="return confirm('Czy na pewno chcesz usunąć ten wpis?');" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@item.Id" />
-                                        <button type="submit" class="btn btn-outline-danger btn-sm border-0 rounded-circle p-2" title="Usuń">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-2" title="Usuń">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
