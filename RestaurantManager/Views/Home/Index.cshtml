@@ -211,25 +211,20 @@
 </div>
 
 <style>
-    /* Stylowanie kontenera karuzeli */
     .hero-image-container {
-        /* Wymuszamy zaokrąglenie na poziomie kontenera */
         border-radius: 1.5rem;
         overflow: hidden;
         background-color: #fff;
         border: 1px solid rgba(0,0,0,0.05);
-        /* Kluczowe dla Safari i niektórych przeglądarek mobilnych */
         transform: translateZ(0);
     }
 
-        /* Wymuszamy zaokrąglenie również na elementach wewnętrznych karuzeli */
         .hero-image-container .carousel-inner,
         .hero-image-container .carousel-item {
             border-radius: 1.5rem;
             overflow: hidden;
         }
 
-        /* I na samym obrazku */
         .hero-image-container img {
             border-radius: 1.5rem;
             width: 100%;
@@ -249,7 +244,6 @@
         letter-spacing: -1px;
     }
 
-    /* Kolorowe tła dla ikonek */
     .bg-blue-light {
         background-color: rgba(13, 110, 253, 0.1);
         color: #0d6efd;
@@ -290,7 +284,6 @@
         color: #0dcaf0;
     }
 
-    /* Efekt hover na kafelki */
     .card-hover-effect .dashboard-card {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
