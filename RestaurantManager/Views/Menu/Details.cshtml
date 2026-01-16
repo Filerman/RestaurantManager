@@ -42,13 +42,18 @@
                     <div class="mt-auto">
                         @if (Model.IsAvailable)
                         {
-                            <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2">
+                            <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2 align-items-stretch">
                                 <input type="hidden" name="id" value="@Model.Id" />
                                 <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
 
-                                <div class="input-group" style="max-width: 140px;">
-                                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-x"></i></span>
-                                    <input type="number" name="quantity" class="form-control text-center border-start-0 ps-0 fw-bold" value="1" min="1" max="10">
+                                <div class="input-group shadow-sm rounded-pill overflow-hidden border" style="max-width: 120px;">
+                                    <button class="btn btn-light border-0 px-3 text-muted" type="button" onclick="this.parentNode.querySelector('input[type=number]').stepDown()">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" name="quantity" class="form-control text-center border-0 fw-bold fs-5 bg-white px-0" value="1" min="1" max="99">
+                                    <button class="btn btn-light border-0 px-3 text-muted" type="button" onclick="this.parentNode.querySelector('input[type=number]').stepUp()">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-lg px-4 flex-grow-1 rounded-pill shadow-sm fw-bold">
                                     <i class="bi bi-cart-plus me-2"></i> Dodaj do zamówienia
@@ -92,5 +97,15 @@
 
     .hover-underline:hover {
         text-decoration: underline !important;
+    }
+
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        -moz-appearance: textfield;
     }
 </style>

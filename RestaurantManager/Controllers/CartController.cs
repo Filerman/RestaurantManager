@@ -27,8 +27,10 @@ namespace RestaurantManager.Controllers
         // POST: /Cart/Add/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Add(int id)
+        public IActionResult Add(int id, int quantity = 1, string returnUrl = null)
         {
+            if (quantity < 1) quantity = 1;
+
             var menuItem = _context.MenuItems.Find(id);
             if (menuItem == null || !menuItem.IsAvailable)
             {
@@ -40,7 +42,7 @@ namespace RestaurantManager.Controllers
 
             if (existingItem != null)
             {
-                existingItem.Quantity++;
+                existingItem.Quantity += quantity;
             }
             else
             {
@@ -49,14 +51,21 @@ namespace RestaurantManager.Controllers
                     MenuItemId = menuItem.Id,
                     MenuItemName = menuItem.Name,
                     Price = menuItem.Price,
-                    Quantity = 1
+                    Quantity = quantity 
                 });
             }
 
             SaveCartToSession(cart);
-            TempData["SuccessMessage"] = $"Dodano {menuItem.Name} do koszyka.";
 
-            // Powrót do strony, z której kliknięto (Menu)
+            TempData["SuccessMessage"] = quantity > 1
+                ? $"Dodano {quantity}x {menuItem.Name} do koszyka."
+                : $"Dodano {menuItem.Name} do koszyka.";
+
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
             string referer = Request.Headers["Referer"].ToString();
             return !string.IsNullOrEmpty(referer) ? Redirect(referer) : RedirectToAction("Index", "Menu");
         }
@@ -72,6 +81,7 @@ namespace RestaurantManager.Controllers
             {
                 cart.Remove(item);
                 SaveCartToSession(cart);
+                TempData["SuccessMessage"] = "Usunięto pozycję z koszyka.";
             }
             return RedirectToAction(nameof(Index));
         }
