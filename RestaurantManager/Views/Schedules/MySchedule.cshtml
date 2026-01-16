@@ -5,7 +5,10 @@
 
     int currentYear = ViewBag.CurrentYear;
     int currentMonth = ViewBag.CurrentMonth;
-    string monthName = ViewBag.MonthName;
+    var monthDate = new DateTime(currentYear, currentMonth, 1);
+    string monthLabel = monthDate.ToString("MMMM yyyy", new System.Globalization.CultureInfo("pl-PL"));
+    monthLabel = char.ToUpper(monthLabel[0]) + monthLabel.Substring(1);
+
     string viewType = ViewBag.ViewType as string ?? "calendar";
 
     string GetRoute(int y, int m) => Url.Action("MySchedule", new { year = y, month = m, viewType = viewType });
@@ -33,9 +36,11 @@
                    class="btn btn-light border-0 text-muted hover-dark">
                     <i class="bi bi-chevron-left"></i>
                 </a>
-                <button type="button" class="btn btn-light border-0 px-4 fw-bold text-dark" style="min-width: 160px;" disabled>
-                    @monthName @currentYear
+
+                <button type="button" class="btn btn-light border-0 px-4 fw-bold text-dark" style="min-width: 180px;" disabled>
+                    @monthLabel
                 </button>
+
                 <a href="@GetRoute(currentMonth == 12 ? currentYear + 1 : currentYear, currentMonth == 12 ? 1 : currentMonth + 1)"
                    class="btn btn-light border-0 text-muted hover-dark">
                     <i class="bi bi-chevron-right"></i>
@@ -83,7 +88,6 @@
                                             }
                                             else
                                             {
-
                                                 <span>-</span>
                                             }
                                         </td>
@@ -105,7 +109,7 @@
     {
         var firstDayOfMonth = new DateTime(currentYear, currentMonth, 1);
         var daysInMonth = DateTime.DaysInMonth(currentYear, currentMonth);
-        int offset = ((int)firstDayOfMonth.DayOfWeek + 6) % 7; // Poniedziałek = 0
+        int offset = ((int)firstDayOfMonth.DayOfWeek + 6) % 7;
 
         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
             <div class="card-body p-0">
