@@ -12,20 +12,8 @@
                 </div>
 
                 <div class="card-body p-4 p-lg-5 bg-white">
-                    @if (TempData["Error"] != null)
-                    {
-                        <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
-                            <i class="bi bi-exclamation-circle-fill fs-4 me-3"></i>
-                            <div>@TempData["Error"]</div>
-                        </div>
-                    }
-                    @if (TempData["Success"] != null)
-                    {
-                        <div class="alert alert-success border-0 shadow-sm rounded-3 d-flex align-items-center mb-4">
-                            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
-                            <div>@TempData["Success"]</div>
-                        </div>
-                    }
+
+                    @* USUNIĘTO BLOK TempData - komunikaty wyświetli _Layout.cshtml *@
 
                     <form method="post">
                         <div class="form-floating mb-3">
@@ -63,6 +51,7 @@
 <style>
     .transition-hover:hover {
         transform: translateY(-2px);
+        transition: transform 0.2s;
     }
 
     .hover-underline:hover {
