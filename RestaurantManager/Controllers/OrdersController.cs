@@ -382,6 +382,13 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction(nameof(Confirmation), new { id = order.Id });
             }
 
+            model.TotalAmount = cart.Sum(x => x.TotalPrice);
+
+            ViewBag.EstimatedTime = minMinutes;
+
+            var targetDay = model.ScheduledDate != default ? model.ScheduledDate.DayOfWeek : DateTime.Now.DayOfWeek;
+            ViewBag.TodayOpeningHours = openingHour ?? await _context.OpeningHours.FirstOrDefaultAsync(h => h.DayOfWeek == targetDay);
+
             PrepareCitiesList();
             return View(model);
         }
