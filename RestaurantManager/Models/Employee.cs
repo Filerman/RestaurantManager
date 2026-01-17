@@ -1,4 +1,4 @@
-﻿using System; // Ważne dla DateTime
+﻿using System; 
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -10,7 +10,7 @@ namespace RestaurantManager.Models
         public Employee()
         {
             PositionTags = new HashSet<PositionTag>();
-            HireDate = DateTime.Now; // Domyślnie dzisiaj
+            HireDate = DateTime.Now; 
         }
 
         [Key]
@@ -27,7 +27,6 @@ namespace RestaurantManager.Models
         [Display(Name = "Telefon")]
         public string Phone { get; set; }
 
-        // *** NOWOŚĆ: Data zatrudnienia ***
         [Required]
         [DataType(DataType.Date)]
         [Display(Name = "Data zatrudnienia")]

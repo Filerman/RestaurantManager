@@ -31,13 +31,12 @@ namespace RestaurantManager.Models
         [Required(ErrorMessage = "Opis jest wymagany.")]
         [Display(Name = "Opis szczegółowy")]
         [StringLength(500, ErrorMessage = "Opis nie może przekraczać 500 znaków.")]
-        public string Description { get; set; } // Np. "Upadło na podłogę"
+        public string Description { get; set; }
 
         [Required(ErrorMessage = "Typ straty jest wymagany.")]
         [Display(Name = "Kategoria straty")]
-        public string LossType { get; set; } // Np. "Uszkodzenie", "Zepsucie"
+        public string LossType { get; set; } 
 
-        // EstimatedValue teraz będzie wyliczane automatycznie (Ilość * Cena)
         [Column(TypeName = "decimal(18, 2)")]
         [Display(Name = "Wartość całkowita (PLN)")]
         [DisplayFormat(DataFormatString = "{0:C2}")]

@@ -8,11 +8,11 @@ namespace RestaurantManager.Models
         public int Id { get; set; }
 
         [Required]
-        public DayOfWeek DayOfWeek { get; set; } // Niedziela = 0, Poniedziałek = 1 itd.
+        public DayOfWeek DayOfWeek { get; set; }
 
-        public TimeSpan OpenTime { get; set; } // np. 12:00
-        public TimeSpan CloseTime { get; set; } // np. 22:00
+        public TimeSpan OpenTime { get; set; }
+        public TimeSpan CloseTime { get; set; } 
 
-        public bool IsClosed { get; set; } // Czy w ten dzień w ogóle zamknięte
+        public bool IsClosed { get; set; }
     }
 }

@@ -21,7 +21,6 @@ namespace RestaurantManager.Models
         [Display(Name = "Data i godzina")]
         public DateTime DateTime { get; set; }
 
-        // Dane kontaktowe (mogą być pobrane z Usera, ale warto mieć je też przy rezerwacji w razie zmian)
         [Required]
         [Display(Name = "Imię i nazwisko")]
         public string CustomerName { get; set; }
@@ -37,13 +36,11 @@ namespace RestaurantManager.Models
         public string CustomerEmail { get; set; }
 
         [Display(Name = "Status")]
-        public ReservationStatus Status { get; set; } = ReservationStatus.Pending; // Domyślnie oczekująca
+        public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
 
-        // Relacja do Stolika
         public int TableId { get; set; }
         public virtual Table? Table { get; set; }
 
-        // *** NOWOŚĆ: Relacja do Użytkownika (kto złożył rezerwację) ***
         public int? UserId { get; set; }
         public virtual User? User { get; set; }
     }

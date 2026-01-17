@@ -7,7 +7,6 @@ namespace RestaurantManager.Models
     {
         public User()
         {
-            // Inicjalizacja kolekcji, aby uniknąć NullReferenceException
             Shifts = new HashSet<Shift>();
             Reservations = new HashSet<Reservation>();
             Availabilities = new HashSet<Availability>();
@@ -37,7 +36,6 @@ namespace RestaurantManager.Models
 
         public string? ProfilePicturePath { get; set; }
 
-        // Relacje
         public virtual Employee? Employee { get; set; }
 
         public virtual ICollection<Reservation> Reservations { get; set; }

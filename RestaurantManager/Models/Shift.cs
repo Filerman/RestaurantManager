@@ -1,24 +1,22 @@
 ﻿using System;
-using System.Collections.Generic; // Dodaj ten using
+using System.Collections.Generic; 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RestaurantManager.Models
 {
-    // Reprezentuje pojedynczą, przypisaną zmianę dla pracownika w ramach grafiku
-    public class Shift : IValidatableObject // Zmienione dla walidacji
+    public class Shift : IValidatableObject 
     {
         public int Id { get; set; }
 
         [Required]
-        public int ScheduleId { get; set; } // FK do Schedule
+        public int ScheduleId { get; set; } 
         public virtual Schedule Schedule { get; set; }
 
-        // *** POPRAWKA: UserId jest teraz opcjonalne ***
         [Display(Name = "Pracownik")]
-        public int? UserId { get; set; } // FK do User (który jest Employee)
+        public int? UserId { get; set; } 
         [ForeignKey("UserId")]
-        public virtual User? EmployeeUser { get; set; } // Też nullable
+        public virtual User? EmployeeUser { get; set; } 
 
         [Required(ErrorMessage = "Data zmiany jest wymagana.")]
         [DataType(DataType.Date)]
@@ -35,13 +33,11 @@ namespace RestaurantManager.Models
         [Display(Name = "Godzina zakończenia")]
         public TimeSpan EndTime { get; set; }
 
-        // Tag stanowiska pozostaje opcjonalny
         [Display(Name = "Stanowisko na zmianie")]
-        public int? PositionTagId { get; set; } // FK do PositionTag
+        public int? PositionTagId { get; set; } 
         [ForeignKey("PositionTagId")]
         public virtual PositionTag? ShiftPositionTag { get; set; }
 
-        // Implementacja IValidatableObject do walidacji godzin
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (EndTime <= StartTime)

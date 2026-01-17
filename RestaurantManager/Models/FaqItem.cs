@@ -15,6 +15,6 @@ namespace RestaurantManager.Models
         public string Answer { get; set; }
 
         [Display(Name = "Widoczne dla klientów?")]
-        public bool IsPublic { get; set; } = true; // Domyślnie publiczne
+        public bool IsPublic { get; set; } = true;
     }
 }

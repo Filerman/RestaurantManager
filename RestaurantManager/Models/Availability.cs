@@ -12,7 +12,6 @@ namespace RestaurantManager.Models
         public int UserId { get; set; }
 
         [ForeignKey(nameof(UserId))]
-        // POPRAWKA: Dodajemy '?' aby oznaczyć jako opcjonalne dla walidatora
         public virtual User? User { get; set; }
 
         [Required]

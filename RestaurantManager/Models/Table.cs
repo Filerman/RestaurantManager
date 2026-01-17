@@ -16,6 +16,6 @@ namespace RestaurantManager.Models
         public int Capacity { get; set; }
 
         [Display(Name = "Czy dostępny?")]
-        public bool IsAvailable { get; set; } = true; // Domyślnie stolik jest dostępny
+        public bool IsAvailable { get; set; } = true; 
     }
 }

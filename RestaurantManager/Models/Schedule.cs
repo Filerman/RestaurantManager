@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace RestaurantManager.Models
 {
-    // Reprezentuje opublikowany grafik na konkretny okres
     public class Schedule
     {
         public int Id { get; set; }
@@ -20,15 +19,13 @@ namespace RestaurantManager.Models
         public DateTime EndDate { get; set; }
 
         [Display(Name = "Opublikowany")]
-        public bool IsPublished { get; set; } = false; // Czy grafik jest widoczny dla pracowników
+        public bool IsPublished { get; set; } = false; 
 
         [Display(Name = "Data utworzenia")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // Kolekcja konkretnych zmian przypisanych w tym grafiku
         public virtual ICollection<Shift> Shifts { get; set; } = new List<Shift>();
 
-        // Walidacja sprawdzająca, czy EndDate jest po StartDate
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (EndDate < StartDate)

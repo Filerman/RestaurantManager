@@ -64,7 +64,6 @@ namespace RestaurantManager.Models
 
         public string? UserId { get; set; }
 
-        // Pola klienta mogą być puste przy zamówieniu "Na miejscu" (DineIn)
         [Display(Name = "Klient")]
         public string? CustomerName { get; set; }
 
