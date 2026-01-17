@@ -26,7 +26,7 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // GET: Schedules (Lista grafików)
+        // GET: /Schedules
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Index()
         {
@@ -36,7 +36,7 @@ namespace RestaurantManager.Controllers
             return View(schedules);
         }
 
-        // GET: Schedules/Create
+        // GET: /Schedules/Create
         [RoleAuthorize("Admin", "Manager")]
         public IActionResult Create()
         {
@@ -44,7 +44,7 @@ namespace RestaurantManager.Controllers
             return View(viewModel);
         }
 
-        // POST: Schedules/Create
+        // POST: /Schedules/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Admin", "Manager")]
@@ -93,14 +93,12 @@ namespace RestaurantManager.Controllers
             return View(viewModel);
         }
 
-        // GET: Schedules/Edit/5 (Edytor grafiku)
+        // GET: /Schedules/Edit/5
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
-            Console.WriteLine($"--->>> GET Edit: Attempting to load Schedule with ID: {id}");
 
-            // 1. Pobieramy grafik WRAZ ze zmianami
             var schedule = await _context.Schedules
                 .Include(s => s.Shifts)
                     .ThenInclude(sh => sh.EmployeeUser)
@@ -109,14 +107,7 @@ namespace RestaurantManager.Controllers
                     .ThenInclude(sh => sh.ShiftPositionTag)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
-            if (schedule == null)
-            {
-                Console.WriteLine($"--->>> GET Edit: Schedule with ID: {id} not found.");
-                return NotFound();
-            }
-            Console.WriteLine($"--->>> GET Edit: Schedule found: ID={schedule.Id}");
-
-            // --- Formatowanie listy pracowników (Staż + Godziny) ---
+            if (schedule == null) return NotFound();
 
             var employees = await _context.Employees.ToListAsync();
 
@@ -177,18 +168,10 @@ namespace RestaurantManager.Controllers
                 viewModel.Days.Add(dayViewModel);
             }
 
-            try
-            {
-                return View(viewModel);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"--->>> !!! EXCEPTION during GET Edit View() call: {ex.ToString()}");
-                return Content($"Error loading schedule editor: {ex.Message}. Check application logs.");
-            }
+            return View(viewModel);
         }
 
-        // POST: Schedules/Edit/5 (Zapisuje tylko status publikacji)
+        // POST: /Schedules/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Admin", "Manager")]
@@ -208,7 +191,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(Edit), new { id = id });
         }
 
-        // GET: Schedules/Delete/5
+        // GET: /Schedules/Delete/5
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Delete(int? id)
         {
@@ -218,7 +201,7 @@ namespace RestaurantManager.Controllers
             return View(schedule);
         }
 
-        // POST: Schedules/Delete/5
+        // POST: /Schedules/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Admin", "Manager")]
@@ -229,25 +212,22 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Schedules/MySchedule
+        // GET: /Schedules/MySchedule
         [RoleAuthorize("Employee", "Manager", "Admin")]
         public async Task<IActionResult> MySchedule(int? year, int? month, string viewType = "calendar")
         {
             var userId = GetUserIdFromSession();
             if (!userId.HasValue) return RedirectToAction("Login", "Auth");
 
-            // Domyślnie bieżący miesiąc i rok
             int currentYear = year ?? DateTime.Today.Year;
             int currentMonth = month ?? DateTime.Today.Month;
 
-            // Obsługa "przekręcania" roku
             if (currentMonth > 12) { currentMonth = 1; currentYear++; }
             else if (currentMonth < 1) { currentMonth = 12; currentYear--; }
 
             var startDate = new DateTime(currentYear, currentMonth, 1);
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
-            // Pobieramy zmiany
             var myShifts = await _context.Shifts
                 .Include(s => s.Schedule)
                 .Include(s => s.ShiftPositionTag)
@@ -262,13 +242,10 @@ namespace RestaurantManager.Controllers
             ViewBag.CurrentYear = currentYear;
             ViewBag.CurrentMonth = currentMonth;
             ViewBag.MonthName = startDate.ToString("MMMM yyyy", new CultureInfo("pl-PL"));
-
-            // Przekazujemy wybrany typ widoku (domyślnie "calendar")
             ViewBag.ViewType = viewType;
 
             return View(myShifts);
         }
-
 
         // GET: /Schedules/GetAvailableEmployees
         [HttpGet]
@@ -294,35 +271,35 @@ namespace RestaurantManager.Controllers
                     .FirstOrDefaultAsync(s => date >= s.StartDate && date <= s.EndDate);
 
                 var filteredEmployees = availableUsers
-                     .Where(u => u.Role == "Admin" || u.Role == "Manager" || (u.Employee != null && u.Employee.PositionTags.Any(pt => pt.Id == positionTagId)))
-                     .Select(u => {
-                         double hours = 0;
-                         string seniority = "-";
+                      .Where(u => u.Role == "Admin" || u.Role == "Manager" || (u.Employee != null && u.Employee.PositionTags.Any(pt => pt.Id == positionTagId)))
+                      .Select(u => {
+                          double hours = 0;
+                          string seniority = "-";
 
-                         if (u.Employee != null)
-                         {
-                             seniority = GetSeniorityString(u.Employee.HireDate);
-                             if (schedule != null && schedule.Shifts != null)
-                             {
-                                 hours = schedule.Shifts
-                                    .Where(s => s.UserId == u.Id)
-                                    .Sum(s => (s.EndTime - s.StartTime).TotalHours);
-                             }
-                         }
+                          if (u.Employee != null)
+                          {
+                              seniority = GetSeniorityString(u.Employee.HireDate);
+                              if (schedule != null && schedule.Shifts != null)
+                              {
+                                  hours = schedule.Shifts
+                                      .Where(s => s.UserId == u.Id)
+                                      .Sum(s => (s.EndTime - s.StartTime).TotalHours);
+                              }
+                          }
 
-                         return new
-                         {
-                             u.Id,
-                             DisplayName = u.Employee != null
+                          return new
+                          {
+                              u.Id,
+                              DisplayName = u.Employee != null
                                 ? $"{u.Employee.FullName} (Staż: {seniority} | Graf: {hours:F1}h)"
                                 : u.Username
-                         };
-                     })
-                     .OrderBy(u => u.DisplayName).ToList();
+                          };
+                      })
+                      .OrderBy(u => u.DisplayName).ToList();
 
                 return Json(filteredEmployees);
             }
-            catch (Exception ex) { Console.WriteLine($"--->>> Error in GetAvailableEmployees: {ex.ToString()}"); return Json(new List<object>()); }
+            catch { return Json(new List<object>()); }
         }
 
         // GET: /Schedules/GetShiftDetails
@@ -350,8 +327,6 @@ namespace RestaurantManager.Controllers
         [RoleAuthorize("Admin", "Manager")]
         public async Task<JsonResult> SaveShift(ShiftViewModel model)
         {
-            Console.WriteLine($"--->>> POST SaveShift received model: {JsonSerializer.Serialize(model)}");
-
             if (model.ScheduleId <= 0 || model.PositionTagId == null || model.PositionTagId <= 0)
             {
                 return Json(new { success = false, message = "Nieprawidłowe dane wejściowe (ID grafiku lub tag)." });
@@ -413,7 +388,7 @@ namespace RestaurantManager.Controllers
                 string positionTagName = (await _context.PositionTags.AsNoTracking().FirstOrDefaultAsync(t => t.Id == shiftEntity.PositionTagId))?.Name ?? "Brak tagu";
                 return Json(new { success = true, shift = new { id = shiftEntity.Id, date = shiftEntity.Date.ToString("yyyy-MM-dd"), startTime = shiftEntity.StartTime.ToString(@"hh\:mm"), endTime = shiftEntity.EndTime.ToString(@"hh\:mm"), positionTagId = shiftEntity.PositionTagId, positionTagName = positionTagName, assignedUserId = shiftEntity.UserId, assignedUserName = assignedUserName } });
             }
-            catch (Exception ex) { Console.WriteLine($"--->>> !!! Exception saving shift: {ex.ToString()}"); return Json(new { success = false, message = "Nieoczekiwany błąd serwera." }); }
+            catch { return Json(new { success = false, message = "Nieoczekiwany błąd serwera." }); }
         }
 
         // POST: /Schedules/DeleteShift
@@ -425,10 +400,9 @@ namespace RestaurantManager.Controllers
             var shift = await _context.Shifts.FindAsync(shiftId);
             if (shift == null) return Json(new { success = true });
             try { _context.Shifts.Remove(shift); await _context.SaveChangesAsync(); return Json(new { success = true }); }
-            catch (Exception ex) { Console.WriteLine($"--->>> !!! Error deleting shift: {ex.ToString()}"); return Json(new { success = false, message = "Wystąpił błąd serwera." }); }
+            catch { return Json(new { success = false, message = "Wystąpił błąd serwera." }); }
         }
 
-        // --- METODY POMOCNICZE ---
         private int? GetUserIdFromSession() { return HttpContext.Session.GetInt32("UserId"); }
 
         private string GetSeniorityString(DateTime hireDate)

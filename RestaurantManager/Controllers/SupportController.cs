@@ -31,7 +31,6 @@ namespace RestaurantManager.Controllers
                 .OrderByDescending(t => t.DateCreated)
                 .ToListAsync();
 
-            // GASZENIE KROPKI
             bool anyUpdated = false;
             foreach (var t in tickets.Where(x => x.HasUnreadResponse))
             {
@@ -126,7 +125,7 @@ namespace RestaurantManager.Controllers
 
             ticket.Status = status;
             ticket.ManagerResponse = managerResponse;
-            ticket.HasUnreadResponse = true; 
+            ticket.HasUnreadResponse = true;
 
             if (addToFaq && !string.IsNullOrWhiteSpace(managerResponse))
             {

@@ -18,7 +18,7 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // GET: /Faq/Index (Publiczny widok dla klientów i pracowników)
+        // GET: /Faq/Index
         public async Task<IActionResult> Index(string filter = "all")
         {
             var role = HttpContext.Session.GetString("UserRole");
@@ -28,12 +28,10 @@ namespace RestaurantManager.Controllers
 
             if (!isStaff)
             {
-                // Goście widzą TYLKO publiczne
                 query = query.Where(f => f.IsPublic);
             }
             else
             {
-                // Personel może filtrować
                 switch (filter)
                 {
                     case "internal":
@@ -42,7 +40,6 @@ namespace RestaurantManager.Controllers
                     case "public":
                         query = query.Where(f => f.IsPublic);
                         break;
-                        // case "all": brać wszystko
                 }
             }
 
@@ -54,7 +51,7 @@ namespace RestaurantManager.Controllers
             return View(faqs);
         }
 
-        // GET: /Faq/Manage (Panel Zarządzania - Tylko Manager/Admin)
+        // GET: /Faq/Manage
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Manage()
         {

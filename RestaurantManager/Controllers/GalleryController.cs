@@ -23,7 +23,7 @@ namespace RestaurantManager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // [GET] /Gallery/Index
+        // GET: /Gallery/Index
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -31,7 +31,7 @@ namespace RestaurantManager.Controllers
             return View(images);
         }
 
-        // [GET] /Gallery/Manage
+        // GET: /Gallery/Manage
         [HttpGet]
         [RoleAuthorize("Manager", "Admin")]
         public async Task<IActionResult> Manage()
@@ -40,7 +40,7 @@ namespace RestaurantManager.Controllers
             return View(images);
         }
 
-        // [POST] /Gallery/ToggleCarousel - NOWA METODA
+        // POST: /Gallery/ToggleCarousel
         [HttpPost]
         [RoleAuthorize("Manager", "Admin")]
         [ValidateAntiForgeryToken]
@@ -49,14 +49,14 @@ namespace RestaurantManager.Controllers
             var image = await _context.GalleryImages.FindAsync(id);
             if (image != null)
             {
-                image.IsInCarousel = !image.IsInCarousel; // Przełącz flagę
+                image.IsInCarousel = !image.IsInCarousel;
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Zaktualizowano status karuzeli.";
             }
             return RedirectToAction(nameof(Manage));
         }
 
-        // [POST] /Gallery/Upload
+        // POST: /Gallery/Upload
         [HttpPost]
         [RoleAuthorize("Manager", "Admin")]
         [ValidateAntiForgeryToken]
@@ -93,7 +93,7 @@ namespace RestaurantManager.Controllers
                 {
                     FilePath = "/images/gallery/" + uniqueFileName,
                     Caption = caption,
-                    IsInCarousel = false // Domyślnie nie w karuzeli
+                    IsInCarousel = false
                 };
 
                 _context.GalleryImages.Add(newImage);
@@ -109,7 +109,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(Manage));
         }
 
-        // [POST] /Gallery/Delete
+        // POST: /Gallery/Delete
         [HttpPost]
         [RoleAuthorize("Manager", "Admin")]
         [ValidateAntiForgeryToken]

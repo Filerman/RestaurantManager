@@ -17,14 +17,13 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
+        // GET: /Home/Index
         public async Task<IActionResult> Index()
         {
-            // Pobieramy ustawienia strony g³ównej wraz ze zdjêciami karuzeli
             var settings = await _context.HomePageSettings
                 .Include(x => x.CarouselImages)
                 .FirstOrDefaultAsync();
 
-            // Jeœli nie ma ustawieñ w bazie (pierwsze uruchomienie), tworzymy domyœlny obiekt
             if (settings == null)
             {
                 settings = new HomePageSetting
@@ -40,11 +39,13 @@ namespace RestaurantManager.Controllers
             return View(settings);
         }
 
+        // GET: /Home/Privacy
         public IActionResult Privacy()
         {
             return View();
         }
 
+        // GET: /Home/Error
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

@@ -23,7 +23,6 @@ namespace RestaurantManager.Controllers
         }
 
         // GET: /Availability
-        // POPRAWKA: Dodano parametr targetUserId do obsługi podglądu
         public async Task<IActionResult> Index(int? targetUserId)
         {
             var loggedUserId = HttpContext.Session.GetInt32("UserId");
@@ -35,8 +34,6 @@ namespace RestaurantManager.Controllers
             bool isViewingOthers = false;
             string titleHeader = "Moja Dostępność";
 
-            // LOGIKA PODGLĄDU:
-            // Jeśli podano targetUserId I jest on inny niż mój ID I mam uprawnienia Managera/Admina
             if (targetUserId.HasValue && targetUserId.Value != loggedUserId.Value && (role == "Admin" || role == "Manager"))
             {
                 userIdToDisplay = targetUserId.Value;
@@ -53,11 +50,9 @@ namespace RestaurantManager.Controllers
                 }
             }
 
-            // *** Pobieramy ustawienie terminu z ContactInfo (singleton settings) ***
             var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
             int deadlineDays = contactInfo?.AvailabilityDeadlineDays ?? 7;
             ViewBag.DeadlineDays = deadlineDays;
-            // *********************************************************************
 
             var availabilities = await _context.Availabilities
                 .Where(a => a.UserId == userIdToDisplay && a.Date >= DateTime.Today)
@@ -76,7 +71,6 @@ namespace RestaurantManager.Controllers
                 }
             };
 
-            // Przekazujemy flagi do widoku, aby wiedział jak się zachować
             ViewBag.IsViewingOthers = isViewingOthers;
             ViewBag.TitleHeader = titleHeader;
 
@@ -289,7 +283,7 @@ namespace RestaurantManager.Controllers
             return View(viewModel);
         }
 
-        // POST: /Availability/Provide (nawigacja)
+        // POST: /Availability/Provide
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Provide(ProvideAvailabilityViewModel model, string direction)
@@ -384,18 +378,14 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Provide", new { year = model.Year, month = model.Month });
         }
 
-        // --- ZARZĄDZANIE ---
-
-        // GET: Availability/Manage
+        // GET: /Availability/Manage
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Manage(int? year, int? month, string direction)
         {
-            // 1. Ustalanie daty bazowej (domyślnie: następny miesiąc od dzisiaj)
             var today = DateTime.Today;
             int targetYear = year ?? today.AddMonths(1).Year;
             int targetMonth = month ?? today.AddMonths(1).Month;
 
-            // 2. Obsługa nawigacji (jeśli kliknięto strzałkę)
             if (!string.IsNullOrEmpty(direction))
             {
                 var currentSelection = new DateTime(targetYear, targetMonth, 1);
@@ -405,16 +395,13 @@ namespace RestaurantManager.Controllers
                 targetYear = currentSelection.Year;
                 targetMonth = currentSelection.Month;
 
-                // Przekierowanie, aby wyczyścić parametry w URL (opcjonalne, ale ładniejsze)
                 return RedirectToAction("Manage", new { year = targetYear, month = targetMonth });
             }
 
-            // 3. Pobranie ustawienia terminu (dla alertów)
             var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
             int deadlineDays = contactInfo?.AvailabilityDeadlineDays ?? 7;
             ViewBag.DeadlineDays = deadlineDays;
 
-            // 4. Logika "Pilne" ma sens tylko dla NASTĘPNEGO miesiąca względem DZIŚ
             bool isNextMonthRelativeToToday = (targetYear == today.AddMonths(1).Year && targetMonth == today.AddMonths(1).Month);
             bool isUrgent = false;
 
@@ -425,13 +412,11 @@ namespace RestaurantManager.Controllers
                 isUrgent = daysRemaining <= deadlineDays;
             }
 
-            // 5. Pobranie pracowników
             var employees = await _context.Users
                 .Where(u => u.Role == "Employee")
                 .Include(u => u.Employee)
                 .ToListAsync();
 
-            // 6. Sprawdzenie, kto zgłosił dostępność w WYBRANYM miesiącu
             var employeesWithAvailability = await _context.Availabilities
                 .Where(a => a.Date.Month == targetMonth && a.Date.Year == targetYear)
                 .Select(a => a.UserId)
@@ -451,14 +436,14 @@ namespace RestaurantManager.Controllers
             {
                 NextMonth = targetMonth,
                 NextMonthYear = targetYear,
-                IsUrgent = isUrgent, // Będzie true tylko jeśli przeglądamy ten "krytyczny" miesiąc
+                IsUrgent = isUrgent,
                 EmployeesStatus = statusList
             };
 
             return View(vm);
         }
 
-        // POST: Availability/UpdateDeadline
+        // POST: /Availability/UpdateDeadline
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Admin", "Manager")]
@@ -467,7 +452,6 @@ namespace RestaurantManager.Controllers
             var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
             if (contactInfo == null)
             {
-                // Jeśli z jakiegoś powodu nie ma rekordu (choć DatabaseSeeder powinien go dodać), tworzymy go
                 contactInfo = new ContactInfo
                 {
                     AddressCity = "Brak",

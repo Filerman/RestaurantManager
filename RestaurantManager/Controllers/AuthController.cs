@@ -22,10 +22,11 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // --- LOGIN ---
+        // GET: /Auth/Login
         [HttpGet]
         public IActionResult Login() => View();
 
+        // POST: /Auth/Login
         [HttpPost, ValidateAntiForgeryToken]
         public IActionResult Login(string login, string password)
         {
@@ -47,12 +48,12 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // --- REGISTER ---
+        // GET: /Auth/Register
         [HttpGet]
         public IActionResult Register() => View();
 
+        // POST: /Auth/Register
         [HttpPost, ValidateAntiForgeryToken]
-        // Dodano parametr 'recoveryPin'
         public async Task<IActionResult> Register(string username, string email, string password, string phone, string recoveryPin)
         {
             if (await _context.Users.AnyAsync(u => u.Username == username || u.Email == email))
@@ -67,7 +68,7 @@ namespace RestaurantManager.Controllers
                 Email = email,
                 Password = password,
                 PhoneNumber = phone,
-                RecoveryPin = recoveryPin, // <-- ZAPISUJEMY PIN
+                RecoveryPin = recoveryPin,
                 Role = "Guest",
                 ProfilePicturePath = DefaultAvatar
             };
@@ -79,15 +80,14 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Login");
         }
 
-        // --- ODZYSKIWANIE HASŁA (PIN) ---
-
-        // KROK 1: Formularz podania Loginu i PINu
+        // GET: /Auth/ForgotPassword
         [HttpGet]
         public IActionResult ForgotPassword()
         {
             return View();
         }
 
+        // POST: /Auth/ForgotPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgotPassword(string login, string recoveryPin)
@@ -97,7 +97,6 @@ namespace RestaurantManager.Controllers
 
             if (user == null)
             {
-                // Bezpieczeństwo: nie zdradzamy, że użytkownik nie istnieje
                 TempData["Error"] = "Nieprawidłowe dane lub PIN.";
                 return View();
             }
@@ -108,18 +107,15 @@ namespace RestaurantManager.Controllers
                 return View();
             }
 
-            // SUKCES: PIN się zgadza.
-            // Zapisujemy ID użytkownika w sesji tymczasowej, żeby wiedzieć komu zmienić hasło w kroku 2.
             HttpContext.Session.SetInt32("ResetUserId", user.Id);
 
             return RedirectToAction("ResetPasswordByPin");
         }
 
-        // KROK 2: Ustawienie nowego hasła
+        // GET: /Auth/ResetPasswordByPin
         [HttpGet]
         public IActionResult ResetPasswordByPin()
         {
-            // Sprawdzamy czy użytkownik przeszedł pomyślnie krok 1
             if (HttpContext.Session.GetInt32("ResetUserId") == null)
             {
                 return RedirectToAction("Login");
@@ -127,6 +123,7 @@ namespace RestaurantManager.Controllers
             return View();
         }
 
+        // POST: /Auth/ResetPasswordByPin
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPasswordByPin(string newPassword, string confirmPassword)
@@ -152,7 +149,6 @@ namespace RestaurantManager.Controllers
                 user.Password = newPassword;
                 await _context.SaveChangesAsync();
 
-                // Czyścimy sesję resetowania
                 HttpContext.Session.Remove("ResetUserId");
 
                 TempData["Success"] = "Hasło zostało zmienione. Zaloguj się nowym hasłem.";
@@ -162,7 +158,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Login");
         }
 
-        // --- LOGOUT ---
+        // GET: /Auth/Logout
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
@@ -170,7 +166,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Login");
         }
 
-        // --- PROFILE ---
+        // GET: /Auth/Profile
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
@@ -187,7 +183,7 @@ namespace RestaurantManager.Controllers
             {
                 Username = user.Username,
                 Email = user.Email,
-                PhoneNumber = user.PhoneNumber, // <-- ODCZYT TELEFONU
+                PhoneNumber = user.PhoneNumber,
                 Role = user.Role,
                 ProfilePicturePath = string.IsNullOrEmpty(user.ProfilePicturePath) ? DefaultAvatar : user.ProfilePicturePath
             };
@@ -195,7 +191,7 @@ namespace RestaurantManager.Controllers
             if (user.Employee != null)
             {
                 vm.FullName = user.Employee.FullName;
-                vm.Phone = user.Employee.Phone; // Telefon służbowy
+                vm.Phone = user.Employee.Phone;
                 vm.HireDate = user.Employee.HireDate;
                 vm.PositionTags = user.Employee.PositionTags.ToList();
 
@@ -214,7 +210,7 @@ namespace RestaurantManager.Controllers
             return View(vm);
         }
 
-        // --- EDIT PROFILE ---
+        // GET: /Auth/EditProfile
         [HttpGet]
         public async Task<IActionResult> EditProfile()
         {
@@ -228,13 +224,14 @@ namespace RestaurantManager.Controllers
             {
                 Username = user.Username,
                 Email = user.Email,
-                PhoneNumber = user.PhoneNumber, // <-- PRZEKAZANIE DO EDYCJI
+                PhoneNumber = user.PhoneNumber,
                 Role = user.Role,
                 ProfilePicturePath = string.IsNullOrEmpty(user.ProfilePicturePath) ? DefaultAvatar : user.ProfilePicturePath
             };
             return View(vm);
         }
 
+        // POST: /Auth/EditProfile
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProfile(ProfileViewModel vm)
         {
@@ -244,7 +241,6 @@ namespace RestaurantManager.Controllers
             var user = await _context.Users.FindAsync(userId.Value);
             if (user == null) return RedirectToAction("Login");
 
-            // Email check
             if (vm.Email != user.Email)
             {
                 if (await _context.Users.AnyAsync(u => u.Email == vm.Email && u.Id != user.Id))
@@ -252,7 +248,6 @@ namespace RestaurantManager.Controllers
                 else user.Email = vm.Email;
             }
 
-            // Hasło check
             if (!string.IsNullOrWhiteSpace(vm.NewPassword))
             {
                 if (vm.OldPassword != user.Password) ModelState.AddModelError("OldPassword", "Obecne hasło jest nieprawidłowe.");
@@ -266,10 +261,8 @@ namespace RestaurantManager.Controllers
                 return View(vm);
             }
 
-            // *** AKTUALIZACJA TELEFONU ***
             user.PhoneNumber = vm.PhoneNumber;
 
-            // Zapis zdjęcia
             if (vm.ProfileImage != null && vm.ProfileImage.Length > 0)
             {
                 var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", _profileFolder);
@@ -294,6 +287,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction("Profile");
         }
 
+        // GET: /Auth/AccessDenied
         public IActionResult AccessDenied()
         {
             Response.StatusCode = 403;

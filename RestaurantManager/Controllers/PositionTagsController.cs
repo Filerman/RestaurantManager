@@ -18,23 +18,21 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // GET: PositionTags
+        // GET: /PositionTags
         public async Task<IActionResult> Index()
         {
             return View(await _context.PositionTags.ToListAsync());
         }
 
-
-        // GET: PositionTags/Create
+        // GET: /PositionTags/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: PositionTags/Create
+        // POST: /PositionTags/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        // ZMIANA: Dodano HourlyRate do Bind
         public async Task<IActionResult> Create([Bind("Id,Name,HourlyRate")] PositionTag positionTag)
         {
             if (ModelState.IsValid)
@@ -46,7 +44,7 @@ namespace RestaurantManager.Controllers
             return View(positionTag);
         }
 
-        // GET: PositionTags/Edit/5
+        // GET: /PositionTags/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -57,10 +55,9 @@ namespace RestaurantManager.Controllers
             return View(positionTag);
         }
 
-        // POST: PositionTags/Edit/5
+        // POST: /PositionTags/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        // ZMIANA: Dodano HourlyRate do Bind
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,HourlyRate")] PositionTag positionTag)
         {
             if (id != positionTag.Id) return NotFound();
@@ -82,7 +79,7 @@ namespace RestaurantManager.Controllers
             return View(positionTag);
         }
 
-        // GET: PositionTags/Delete/5
+        // GET: /PositionTags/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -93,7 +90,7 @@ namespace RestaurantManager.Controllers
             return View(positionTag);
         }
 
-        // POST: PositionTags/Delete/5
+        // POST: /PositionTags/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

@@ -1,4 +1,4 @@
-﻿using System; // Ważne dla DateTime
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using RestaurantManager.Data;
 using RestaurantManager.Models;
-using RestaurantManager.ViewModels; // Dodaj ten using dla PayrollViewModel
+using RestaurantManager.ViewModels;
 using RestaurantManager.Filters;
 using System.Collections.Generic;
 
@@ -22,23 +22,18 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // --- NOWA FUNKCJONALNOŚĆ: WYPŁATY ---
-
+        // GET: /Employees/Payroll
         [HttpGet]
         public async Task<IActionResult> Payroll(int? month, int? year)
         {
-            // Domyślnie obecny miesiąc i rok
             int selectedMonth = month ?? DateTime.Now.Month;
             int selectedYear = year ?? DateTime.Now.Year;
-
-            // 1. Pobierz wszystkie zmiany z danego miesiąca, które mają przypisanego pracownika i tag stanowiska
             var shifts = await _context.Shifts
                 .Where(s => s.Date.Month == selectedMonth && s.Date.Year == selectedYear && s.UserId != null && s.PositionTagId != null)
                 .Include(s => s.EmployeeUser).ThenInclude(u => u.Employee)
-                .Include(s => s.ShiftPositionTag) // Ważne: pobieramy stawkę z tagu
+                .Include(s => s.ShiftPositionTag)
                 .ToListAsync();
 
-            // 2. Grupuj zmiany po pracowniku i oblicz wypłatę
             var payrollList = shifts
                 .GroupBy(s => s.UserId)
                 .Select(g => {
@@ -47,7 +42,6 @@ namespace RestaurantManager.Controllers
 
                     double totalHours = g.Sum(s => (s.EndTime - s.StartTime).TotalHours);
 
-                    // Obliczenie pensji: Suma (Godziny zmiany * Stawka tagu tej zmiany)
                     decimal totalSalary = g.Sum(s =>
                         (decimal)(s.EndTime - s.StartTime).TotalHours * (s.ShiftPositionTag?.HourlyRate ?? 0)
                     );
@@ -74,9 +68,7 @@ namespace RestaurantManager.Controllers
             return View(vm);
         }
 
-        // -------------------------------------
-
-        // GET: Employees
+        // GET: /Employees
         public async Task<IActionResult> Index()
         {
             var employeesAsUsers = await _context.Users
@@ -88,7 +80,7 @@ namespace RestaurantManager.Controllers
             return View(employeesAsUsers);
         }
 
-        // GET: Employees/Details/5
+        // GET: /Employees/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -103,7 +95,7 @@ namespace RestaurantManager.Controllers
             return View(user);
         }
 
-        // GET: Employees/Edit/5
+        // GET: /Employees/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -121,7 +113,7 @@ namespace RestaurantManager.Controllers
                 {
                     UserId = user.Id,
                     FullName = user.Username,
-                    HireDate = DateTime.Now // Domyślna data dla nowego rekordu
+                    HireDate = DateTime.Now
                 };
             }
 
@@ -132,7 +124,7 @@ namespace RestaurantManager.Controllers
             return View(employee);
         }
 
-        // POST: Employees/Edit/5
+        // POST: /Employees/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, int[] selectedTagIds)
@@ -148,7 +140,6 @@ namespace RestaurantManager.Controllers
                 employeeToUpdate = new Employee { UserId = id };
             }
 
-            // *** POPRAWKA: Dodano e.HireDate do listy aktualizowanych pól ***
             if (await TryUpdateModelAsync<Employee>(
                 employeeToUpdate,
                 "",
@@ -218,7 +209,7 @@ namespace RestaurantManager.Controllers
             }
         }
 
-        // GET: Employees/Delete/5
+        // GET: /Employees/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -232,13 +223,13 @@ namespace RestaurantManager.Controllers
             return View(user);
         }
 
-        // POST: Employees/Delete/5
+        // POST: /Employees/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            var employee = await _context.Employees.FindAsync(id); // Może być null
+            var employee = await _context.Employees.FindAsync(id);
 
             if (employee != null) _context.Employees.Remove(employee);
             if (user != null) _context.Users.Remove(user);

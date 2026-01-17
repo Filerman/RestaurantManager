@@ -25,10 +25,10 @@ namespace RestaurantManager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // GET: /Content/ManageHome
         [HttpGet]
         public async Task<IActionResult> ManageHome()
         {
-            // Pobieramy ustawienia (powinien być tylko jeden rekord, jeśli nie ma - tworzymy domyślny)
             var settings = await _context.HomePageSettings
                 .Include(x => x.CarouselImages)
                 .FirstOrDefaultAsync();
@@ -51,6 +51,7 @@ namespace RestaurantManager.Controllers
             return View(vm);
         }
 
+        // POST: /Content/ManageHome
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ManageHome(HomeContentViewModel model)
@@ -63,7 +64,6 @@ namespace RestaurantManager.Controllers
                 settings.HeroTitle = model.HeroTitle;
                 settings.HeroSubtitle = model.HeroSubtitle;
 
-                // Obsługa zdjęć
                 if (model.NewImages != null && model.NewImages.Count > 0)
                 {
                     string uploadFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "carousel");
@@ -96,18 +96,17 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction(nameof(ManageHome));
             }
 
-            // Przeładuj zdjęcia w przypadku błędu walidacji
             model.ExistingImages = await _context.CarouselImages.Where(x => x.HomePageSettingId == model.Id).ToListAsync();
             return View(model);
         }
 
+        // POST: /Content/DeleteImage/5
         [HttpPost]
         public async Task<IActionResult> DeleteImage(int id)
         {
             var img = await _context.CarouselImages.FindAsync(id);
             if (img != null)
             {
-                // Opcjonalnie: usuń plik fizycznie z dysku
                 var path = Path.Combine(_webHostEnvironment.WebRootPath, img.ImagePath.TrimStart('/'));
                 if (System.IO.File.Exists(path))
                 {

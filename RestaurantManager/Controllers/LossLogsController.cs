@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering; // Do SelectListItem
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using RestaurantManager.Data;
 using RestaurantManager.Models;
@@ -20,17 +20,16 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // [GET] /LossLogs/Index - Rejestr strat z filtrowaniem
+        // GET: /LossLogs/Index
         [HttpGet]
         [RoleAuthorize("Manager", "Admin")]
         public async Task<IActionResult> Index(DateTime? startDate, DateTime? endDate)
         {
             var query = _context.LossLogs
                 .Include(l => l.ReportedByUser)
-                .Include(l => l.MenuItem) // Dołączamy info o menu
+                .Include(l => l.MenuItem)
                 .AsQueryable();
 
-            // Domyślne filtrowanie (np. bieżący miesiąc, jeśli brak dat)
             if (!startDate.HasValue) startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
             if (!endDate.HasValue) endDate = DateTime.Now.Date.AddDays(1).AddSeconds(-1);
 
@@ -38,19 +37,17 @@ namespace RestaurantManager.Controllers
 
             var lossLogs = await query.OrderByDescending(l => l.DateReported).ToListAsync();
 
-            // Przekazujemy daty do widoku, żeby zachować stan filtrów
             ViewBag.StartDate = startDate.Value.ToString("yyyy-MM-dd");
             ViewBag.EndDate = endDate.Value.ToString("yyyy-MM-dd");
 
             return View(lossLogs);
         }
 
-        // [GET] /LossLogs/Report - Formularz zgłaszania straty
+        // GET: /LossLogs/Report
         [HttpGet]
         [RoleAuthorize("Employee", "Manager", "Admin")]
         public async Task<IActionResult> Report()
         {
-            // Pobieramy listę dań do selecta
             ViewBag.MenuItems = await _context.MenuItems
                 .Where(m => m.IsAvailable)
                 .Select(m => new SelectListItem
@@ -63,12 +60,12 @@ namespace RestaurantManager.Controllers
             var model = new LossLog
             {
                 DateReported = DateTime.Now,
-                Quantity = 1 // Domyślna ilość
+                Quantity = 1
             };
             return View(model);
         }
 
-        // [POST] /LossLogs/Report - Zapisanie straty
+        // POST: /LossLogs/Report
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Employee", "Manager", "Admin")]
@@ -80,7 +77,6 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            // 1. Walidacja "Menu" vs "Własne" (itemSource pochodzi z radio buttonów w widoku)
             if (itemSource == "menu")
             {
                 if (lossLog.MenuItemId == null)
@@ -89,7 +85,7 @@ namespace RestaurantManager.Controllers
                 lossLog.CustomItemName = null;
                 lossLog.CustomItemCost = null;
             }
-            else // itemSource == "custom"
+            else
             {
                 if (string.IsNullOrWhiteSpace(lossLog.CustomItemName))
                     ModelState.AddModelError("CustomItemName", "Wpisz nazwę przedmiotu.");
@@ -99,19 +95,15 @@ namespace RestaurantManager.Controllers
                 lossLog.MenuItemId = null;
             }
 
-            // 2. Uzupełnianie danych systemowych
             lossLog.ReportedByUserId = userId.Value;
             lossLog.DateReported = DateTime.Now;
 
-            // Ignorujemy walidację nawigacji, bo ustawiamy ID ręcznie
             ModelState.Remove(nameof(lossLog.ReportedByUser));
             ModelState.Remove(nameof(lossLog.MenuItem));
-            // Ignorujemy EstimatedValue, bo zaraz ją sami policzymy
             ModelState.Remove(nameof(lossLog.EstimatedValue));
 
             if (ModelState.IsValid)
             {
-                // 3. Obliczenie wartości straty (EstimatedValue)
                 if (lossLog.MenuItemId != null)
                 {
                     var menuItem = await _context.MenuItems.FindAsync(lossLog.MenuItemId);
@@ -132,7 +124,6 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction(nameof(Report));
             }
 
-            // W razie błędu, ponownie ładujemy listę dań
             ViewBag.MenuItems = await _context.MenuItems
                 .Where(m => m.IsAvailable)
                 .Select(m => new SelectListItem
@@ -145,7 +136,7 @@ namespace RestaurantManager.Controllers
             return View(lossLog);
         }
 
-        // [POST] /LossLogs/Delete
+        // POST: /LossLogs/Delete
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Manager", "Admin")]

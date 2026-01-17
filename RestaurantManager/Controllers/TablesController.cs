@@ -18,17 +18,16 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // GET: Tables
+        // GET: /Tables
         public async Task<IActionResult> Index()
         {
-            // Pobieramy aktualne ustawienie czasu (jeśli istnieje)
             var settings = await _context.ContactInfos.FirstOrDefaultAsync();
-            ViewBag.DefaultOccupancyMinutes = settings?.DefaultTableOccupancyMinutes ?? 120; // Domyślnie 2h
+            ViewBag.DefaultOccupancyMinutes = settings?.DefaultTableOccupancyMinutes ?? 120;
 
             return View(await _context.Tables.ToListAsync());
         }
 
-        // Aktualizacja domyślnego czasu zajętości
+        // POST: /Tables/UpdateOccupancy
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateOccupancy(int minutes)
@@ -36,10 +35,8 @@ namespace RestaurantManager.Controllers
             var settings = await _context.ContactInfos.FirstOrDefaultAsync();
             if (settings == null)
             {
-                // Jeśli nie ma rekordu, tworzymy go (teoretycznie seed powinien to zrobić, ale dla bezpieczeństwa)
                 settings = new ContactInfo
                 {
-                    // Wymagane pola (atrapa, bo seed powinien był to wypełnić)
                     AddressStreet = "-",
                     AddressCity = "-",
                     AddressZipCode = "-",
@@ -55,31 +52,24 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Tables/Details/5
+        // GET: /Tables/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var table = await _context.Tables
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (table == null)
-            {
-                return NotFound();
-            }
+            var table = await _context.Tables.FirstOrDefaultAsync(m => m.Id == id);
+            if (table == null) return NotFound();
 
             return View(table);
         }
 
-        // GET: Tables/Create
+        // GET: /Tables/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Tables/Create
+        // POST: /Tables/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Capacity,IsAvailable")] Table table)
@@ -93,31 +83,23 @@ namespace RestaurantManager.Controllers
             return View(table);
         }
 
-        // GET: Tables/Edit/5
+        // GET: /Tables/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var table = await _context.Tables.FindAsync(id);
-            if (table == null)
-            {
-                return NotFound();
-            }
+            if (table == null) return NotFound();
+
             return View(table);
         }
 
-        // POST: Tables/Edit/5
+        // POST: /Tables/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Capacity,IsAvailable")] Table table)
         {
-            if (id != table.Id)
-            {
-                return NotFound();
-            }
+            if (id != table.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -128,39 +110,26 @@ namespace RestaurantManager.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TableExists(table.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!TableExists(table.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
             return View(table);
         }
 
-        // GET: Tables/Delete/5
+        // GET: /Tables/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var table = await _context.Tables
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (table == null)
-            {
-                return NotFound();
-            }
+            var table = await _context.Tables.FirstOrDefaultAsync(m => m.Id == id);
+            if (table == null) return NotFound();
 
             return View(table);
         }
 
-        // POST: Tables/Delete/5
+        // POST: /Tables/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

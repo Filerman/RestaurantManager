@@ -23,24 +23,20 @@ namespace RestaurantManager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // GET: Announcements (Widok dla klienta)
+        // GET: Announcements 
         public async Task<IActionResult> Index()
         {
             var now = DateTime.Now;
 
-            // *** LOGIKA FILTROWANIA ***
-            // Ogłoszenie jest aktywne, jeśli:
-            // 1. Data "Od" jest mniejsza lub równa TERAZ (ValidFrom <= now)
-            // 2. ORAZ (Data "Do" jest pusta LUB Data "Do" jest większa od TERAZ)
             var activeNews = await _context.Announcements
                 .Where(a => a.ValidFrom <= now && (a.ValidUntil == null || a.ValidUntil >= now))
-                .OrderByDescending(a => a.ValidFrom) // Sortujemy od najnowszych (wg daty startu)
+                .OrderByDescending(a => a.ValidFrom) 
                 .ToListAsync();
 
             return View(activeNews);
         }
 
-        // GET: Announcements/Manage (Panel Managera - widzi wszystko)
+        // GET: Announcements/Manage (Panel Managera)
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Manage()
         {
@@ -54,7 +50,6 @@ namespace RestaurantManager.Controllers
         [RoleAuthorize("Admin", "Manager")]
         public IActionResult Create()
         {
-            // Domyślnie ustawiamy "Widoczne od" na Teraz
             var vm = new AnnouncementViewModel
             {
                 ValidFrom = DateTime.Now
@@ -68,7 +63,7 @@ namespace RestaurantManager.Controllers
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Create(AnnouncementViewModel model)
         {
-            // Walidacja dat: "Ważne do" nie może być przed "Ważne od"
+            // Walidacja dat
             if (model.ValidUntil.HasValue && model.ValidUntil < model.ValidFrom)
             {
                 ModelState.AddModelError("ValidUntil", "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.");
@@ -95,9 +90,9 @@ namespace RestaurantManager.Controllers
                 {
                     Title = model.Title,
                     Content = model.Content,
-                    ValidFrom = model.ValidFrom, // Zapisujemy datę startu
+                    ValidFrom = model.ValidFrom,
                     ValidUntil = model.ValidUntil,
-                    DateCreated = DateTime.Now, // Data techniczna utworzenia
+                    DateCreated = DateTime.Now,
                     ImagePath = imagePath
                 };
 
@@ -123,7 +118,7 @@ namespace RestaurantManager.Controllers
                 Id = announcement.Id,
                 Title = announcement.Title,
                 Content = announcement.Content,
-                ValidFrom = announcement.ValidFrom, // Mapujemy datę startu
+                ValidFrom = announcement.ValidFrom, 
                 ValidUntil = announcement.ValidUntil,
                 ExistingImagePath = announcement.ImagePath
             };
@@ -153,7 +148,7 @@ namespace RestaurantManager.Controllers
 
                     announcement.Title = model.Title;
                     announcement.Content = model.Content;
-                    announcement.ValidFrom = model.ValidFrom; // Aktualizacja daty startu
+                    announcement.ValidFrom = model.ValidFrom;
                     announcement.ValidUntil = model.ValidUntil;
 
                     if (model.Image != null)

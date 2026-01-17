@@ -51,7 +51,7 @@ namespace RestaurantManager.Controllers
                     MenuItemId = menuItem.Id,
                     MenuItemName = menuItem.Name,
                     Price = menuItem.Price,
-                    Quantity = quantity 
+                    Quantity = quantity
                 });
             }
 
@@ -98,7 +98,7 @@ namespace RestaurantManager.Controllers
                 if (quantity > 0)
                     item.Quantity = quantity;
                 else
-                    cart.Remove(item); // Jeśli 0, usuwamy
+                    cart.Remove(item);
 
                 SaveCartToSession(cart);
             }

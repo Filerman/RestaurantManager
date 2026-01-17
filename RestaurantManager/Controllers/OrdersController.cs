@@ -24,7 +24,7 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // --- SEKCJA POS (DLA PERSONELU) ---
+        // GET: /Orders/Index (POS)
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> Index(string activeTab = "online")
         {
@@ -40,6 +40,7 @@ namespace RestaurantManager.Controllers
             return View(orders);
         }
 
+        // POST: /Orders/UpdateStatus
         [HttpPost]
         [RoleAuthorize("Admin", "Manager", "Employee")]
         [ValidateAntiForgeryToken]
@@ -54,7 +55,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(Index), new { activeTab = returnTab });
         }
 
-        // --- MAPA STOLIKÓW ---
+        // GET: /Orders/Tables
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> Tables()
         {
@@ -69,7 +70,7 @@ namespace RestaurantManager.Controllers
             return View(tables);
         }
 
-        // --- ZARZĄDZANIE KONKRETNYM STOLIKIEM ---
+        // GET: /Orders/ManageTable/5
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> ManageTable(int id, string activeCategory = null)
         {
@@ -96,7 +97,7 @@ namespace RestaurantManager.Controllers
             return View(vm);
         }
 
-        // --- DODAWANIE DO STOLIKA ---
+        // POST: /Orders/AddToTable
         [HttpPost]
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> AddToTable(int tableId, int menuItemId, string returnCategory)
@@ -142,7 +143,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(ManageTable), new { id = tableId, activeCategory = returnCategory });
         }
 
-        // --- ODZNACZANIE WYDANYCH DAŃ ---
+        // POST: /Orders/ToggleItemServed
         [HttpPost]
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> ToggleItemServed(int orderItemId, int tableId)
@@ -156,7 +157,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(ManageTable), new { id = tableId });
         }
 
-        // --- ZAMYKANIE STOLIKA ---
+        // POST: /Orders/CloseTable
         [HttpPost]
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> CloseTable(int orderId, PaymentMethod paymentMethod)
@@ -172,7 +173,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(Receipt), new { id = orderId });
         }
 
-        // --- WIDOK RACHUNKU ---
+        // GET: /Orders/Receipt/5
         public async Task<IActionResult> Receipt(int id)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -191,12 +192,10 @@ namespace RestaurantManager.Controllers
                 return RedirectToAction("AccessDenied", "Auth");
             }
 
-            // --- POPRAWKA: Składamy adres ręcznie ---
             var contactInfo = await _context.ContactInfos.AsNoTracking().FirstOrDefaultAsync();
 
             ViewBag.RestaurantName = contactInfo?.RestaurantName ?? "Restauracja";
 
-            // Tutaj łączymy stringi adresu
             if (contactInfo != null)
             {
                 ViewBag.Address = $"{contactInfo.AddressStreet}, {contactInfo.AddressZipCode} {contactInfo.AddressCity}";
@@ -211,7 +210,7 @@ namespace RestaurantManager.Controllers
             return View(order);
         }
 
-        // --- ARCHIWUM ZAMÓWIEŃ ---
+        // GET: /Orders/Archive
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> Archive()
         {
@@ -225,8 +224,7 @@ namespace RestaurantManager.Controllers
             return View(archivedOrders);
         }
 
-        // --- SEKCJA KLIENTA (E-COMMERCE) ---
-
+        // GET: /Orders/Checkout
         public async Task<IActionResult> Checkout()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -272,6 +270,7 @@ namespace RestaurantManager.Controllers
             return View(vm);
         }
 
+        // POST: /Orders/Checkout
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Checkout(OrderCheckoutViewModel model)
@@ -410,6 +409,7 @@ namespace RestaurantManager.Controllers
             ViewBag.CityFeesJson = System.Text.Json.JsonSerializer.Serialize(feesDict);
         }
 
+        // GET: /Orders/Confirmation/5
         public async Task<IActionResult> Confirmation(int id)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -429,6 +429,7 @@ namespace RestaurantManager.Controllers
             return View(order);
         }
 
+        // GET: /Orders/History
         public async Task<IActionResult> History()
         {
             var userId = HttpContext.Session.GetInt32("UserId");

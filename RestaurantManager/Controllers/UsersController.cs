@@ -14,8 +14,6 @@ namespace RestaurantManager.Controllers
     public class UsersController : Controller
     {
         private readonly AppDbContext _context;
-
-        // Definicja dostępnych ról
         private readonly List<string> _roles = new List<string> { "Guest", "Employee", "Manager", "Admin" };
 
         public UsersController(AppDbContext context)
@@ -23,31 +21,27 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
+        // GET: /Users/Directory
         [RoleAuthorize("Admin", "Manager", "Employee")]
         public async Task<IActionResult> Directory(string searchString, string filter = "all")
         {
             var usersQuery = _context.Users
-                .Include(u => u.Employee) // Dołączamy dane pracownika (telefon, imię)
+                .Include(u => u.Employee)
                 .AsNoTracking();
 
-            // 1. Filtrowanie po typie (Wszyscy / Pracownicy / Klienci)
             switch (filter)
             {
                 case "employees":
-                    // Pracownicy to: Admin, Manager, Employee
                     usersQuery = usersQuery.Where(u => u.Role == "Admin" || u.Role == "Manager" || u.Role == "Employee");
                     break;
                 case "clients":
-                    // Klienci to: Guest
                     usersQuery = usersQuery.Where(u => u.Role == "Guest");
                     break;
                 case "all":
                 default:
-                    // Brak dodatkowego filtra
                     break;
             }
 
-            // 2. Wyszukiwanie (Search)
             if (!string.IsNullOrEmpty(searchString))
             {
                 searchString = searchString.ToLower();
@@ -58,17 +52,17 @@ namespace RestaurantManager.Controllers
             }
 
             var users = await usersQuery
-                .OrderByDescending(u => u.Role) // Najpierw ważniejsze role
+                .OrderByDescending(u => u.Role)
                 .ThenBy(u => u.Username)
                 .ToListAsync();
 
             ViewData["CurrentFilter"] = searchString;
-            ViewData["SelectedFilter"] = filter; // Przekazujemy wybrany filtr do widoku
+            ViewData["SelectedFilter"] = filter;
 
             return View(users);
         }
 
-        // GET: Users
+        // GET: /Users/Index
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Index()
         {
@@ -76,14 +70,14 @@ namespace RestaurantManager.Controllers
             return View(users);
         }
 
-        // GET: Users/Details/5
+        // GET: /Users/Details/5
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
             var user = await _context.Users
-                .Include(u => u.Employee) // Warto dołączyć employee też tutaj
+                .Include(u => u.Employee)
                 .ThenInclude(e => e.PositionTags)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
@@ -92,7 +86,7 @@ namespace RestaurantManager.Controllers
             return View(user);
         }
 
-        // GET: Users/Edit/5
+        // GET: /Users/Edit/5
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -116,7 +110,7 @@ namespace RestaurantManager.Controllers
             return View(user);
         }
 
-        // POST: Users/Edit/5
+        // POST: /Users/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Admin", "Manager")]
@@ -138,7 +132,7 @@ namespace RestaurantManager.Controllers
             ModelState.Remove("Employee");
             ModelState.Remove("Reservations");
             ModelState.Remove("Availabilities");
-            ModelState.Remove("Shifts"); // Dodano na wszelki wypadek
+            ModelState.Remove("Shifts");
 
             if (await _context.Users.AnyAsync(u => u.Id != id && u.Username == userForm.Username))
             {
@@ -188,14 +182,13 @@ namespace RestaurantManager.Controllers
             return View(userForm);
         }
 
-        // GET: Users/Delete/5
+        // GET: /Users/Delete/5
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
-            var user = await _context.Users
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var user = await _context.Users.FirstOrDefaultAsync(m => m.Id == id);
             if (user == null) return NotFound();
 
             var editorRole = HttpContext.Session.GetString("UserRole");
@@ -208,7 +201,7 @@ namespace RestaurantManager.Controllers
             return View(user);
         }
 
-        // POST: Users/Delete/5
+        // POST: /Users/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Admin", "Manager")]
@@ -238,8 +231,7 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
-        // GET: Users/AdminResetPassword/5
+        // GET: /Users/AdminResetPassword/5
         [Filters.RoleAuthorize("Admin")]
         public async Task<IActionResult> AdminResetPassword(int? id)
         {
@@ -251,7 +243,7 @@ namespace RestaurantManager.Controllers
             return View(user);
         }
 
-        // POST: Users/AdminResetPassword/5
+        // POST: /Users/AdminResetPassword/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Filters.RoleAuthorize("Admin")]
@@ -266,7 +258,6 @@ namespace RestaurantManager.Controllers
                 return View(user);
             }
 
-            // Nadpisujemy hasło (bez sprawdzania starego!)
             user.Password = newPassword;
 
             await _context.SaveChangesAsync();

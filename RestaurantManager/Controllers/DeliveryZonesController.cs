@@ -18,16 +18,13 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
-        // GET: DeliveryZones
+        // GET: /DeliveryZones
         public async Task<IActionResult> Index()
         {
-            // 1. Pobierz dane kontaktowe, aby wyświetlić aktualny czas dostawy
             var contactInfo = await _context.ContactInfos.FirstOrDefaultAsync();
 
-            // Przekazujemy czas do widoku (domyślnie 45 min jeśli brak danych)
             ViewBag.EstimatedDeliveryTime = contactInfo?.EstimatedDeliveryTimeMinutes ?? 45;
 
-            // 2. AUTOMATYZACJA: Sprawdź, czy miasto restauracji jest na liście
             if (contactInfo != null && !string.IsNullOrEmpty(contactInfo.AddressCity))
             {
                 var baseCityName = contactInfo.AddressCity.Trim();
@@ -49,7 +46,7 @@ namespace RestaurantManager.Controllers
             return View(await _context.DeliveryZones.OrderBy(z => z.DeliveryFee).ToListAsync());
         }
 
-        // NOWA AKCJA: Aktualizacja czasu dostawy bezpośrednio z widoku Stref
+        // POST: /DeliveryZones/UpdateDeliveryTime
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateDeliveryTime(int minutes)
@@ -61,7 +58,6 @@ namespace RestaurantManager.Controllers
                 _context.ContactInfos.Add(contactInfo);
             }
 
-            // Walidacja minimum 15 minut
             if (minutes < 15) minutes = 15;
 
             contactInfo.EstimatedDeliveryTimeMinutes = minutes;
@@ -71,13 +67,13 @@ namespace RestaurantManager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: DeliveryZones/Create
+        // GET: /DeliveryZones/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: DeliveryZones/Create
+        // POST: /DeliveryZones/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(DeliveryZone deliveryZone)
@@ -98,7 +94,7 @@ namespace RestaurantManager.Controllers
             return View(deliveryZone);
         }
 
-        // GET: DeliveryZones/Edit/5
+        // GET: /DeliveryZones/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -107,7 +103,7 @@ namespace RestaurantManager.Controllers
             return View(deliveryZone);
         }
 
-        // POST: DeliveryZones/Edit/5
+        // POST: /DeliveryZones/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, DeliveryZone deliveryZone)
@@ -132,7 +128,7 @@ namespace RestaurantManager.Controllers
             return View(deliveryZone);
         }
 
-        // GET: DeliveryZones/Delete/5
+        // GET: /DeliveryZones/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -141,7 +137,7 @@ namespace RestaurantManager.Controllers
             return View(deliveryZone);
         }
 
-        // POST: DeliveryZones/Delete/5
+        // POST: /DeliveryZones/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

@@ -1,21 +1,26 @@
-/* --- MOTYW MODERN BISTRO --- */
+/*
+    MODERN BISTRO THEME
+    G³ówny arkusz stylów aplikacji.
+*/
 
 :root {
-    /* G³ówna paleta kolorów */
-    --bs-primary: #2C3E50; /* Ciemny granat/szary - profesjonalizm */
+    /* ZMIENNE KOLORYSTYCZNE */
+    /* Kolory podstawowe */
+    --bs-primary: #2C3E50;
     --bs-primary-rgb: 44, 62, 80;
-    --bs-secondary: #95A5A6; /* Szaroœæ */
-    --bs-success: #27AE60; /* Naturalna zieleñ */
-    --bs-danger: #E74C3C; /* Stonowana czerwieñ */
-    --bs-warning: #F1C40F; /* Z³oty ¿ó³ty */
-    /* T³a */
-    --bs-body-bg: #F8F9FA; /* Bardzo jasny szary, prawie bia³y */
+    --bs-secondary: #95A5A6;
+    /* Kolory statusów */
+    --bs-success: #27AE60;
+    --bs-danger: #E74C3C;
+    --bs-warning: #F1C40F;
+    /* T³o i tekst */
+    --bs-body-bg: #F8F9FA;
     --bs-body-color: #333333;
-    /* Akcenty */
+    /* Kolory pomocnicze */
     --bg-primary-soft: rgba(44, 62, 80, 0.08);
 }
 
-/* TYPOGRAFIA */
+/* USTAWIENIA OGÓLNE STRONY */
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-size: 0.95rem;
@@ -24,18 +29,20 @@ body {
     background-color: var(--bs-body-bg);
 }
 
+/* NAG£ÓWKI */
 h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     color: #1a1a1a;
-    letter-spacing: -0.5px; /* Nowoczesny 'tight' spacing */
+    letter-spacing: -0.5px;
 }
 
-/* NAVBAR & HEADER */
+/* PASEK NAWIGACJI */
 .navbar {
     backdrop-filter: blur(10px);
     background-color: rgba(255, 255, 255, 0.95) !important;
 }
 
+/* LINKI W MENU */
 .nav-link {
     font-weight: 500;
     color: #555;
@@ -46,6 +53,7 @@ h1, h2, h3, h4, h5, h6 {
         color: var(--bs-primary) !important;
     }
 
+/* POMOCNICZE KLASY TEKSTOWE */
 .tracking-tight {
     letter-spacing: -0.5px;
 }
@@ -54,16 +62,17 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: 1px;
 }
 
+/* T£O POMOCNICZE */
 .bg-primary-soft {
     background-color: var(--bg-primary-soft);
 }
 
-/* KARTY (CARDS) - KLUCZOWY ELEMENT STYLU */
+/* KARTY (KONTENERY TREŒCI) */
 .card {
     border: none;
     border-radius: 12px;
     background-color: #ffffff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); /* Bardzo delikatny cieñ */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -72,6 +81,7 @@ h1, h2, h3, h4, h5, h6 {
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
     }
 
+/* NAG£ÓWEK KARTY */
 .card-header {
     background-color: #fff;
     border-bottom: 1px solid rgba(0,0,0,0.05);
@@ -80,7 +90,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 1rem 1.5rem;
 }
 
-/* PRZYCISKI */
+/* PRZYCISKI - BAZA */
 .btn {
     border-radius: 8px;
     font-weight: 500;
@@ -88,6 +98,7 @@ h1, h2, h3, h4, h5, h6 {
     transition: all 0.2s;
 }
 
+/* PRZYCISK G£ÓWNY */
 .btn-primary {
     background-color: var(--bs-primary);
     border-color: var(--bs-primary);
@@ -101,17 +112,19 @@ h1, h2, h3, h4, h5, h6 {
         box-shadow: 0 6px 12px rgba(44, 62, 80, 0.25);
     }
 
+/* PRZYCISK NIEBEZPIECZEÑSTWA (np. USUÑ) */
 .btn-danger {
     box-shadow: 0 4px 6px rgba(231, 76, 60, 0.2);
 }
 
-/* DROPDOWN MENU */
+/* MENU ROZWIJANE */
 .dropdown-menu {
     border-radius: 12px;
     border: 1px solid rgba(0,0,0,0.04);
     box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
+/* ELEMENTY MENU ROZWIJANEGO */
 .dropdown-item {
     padding: 0.5rem 1rem;
     font-weight: 500;
@@ -125,7 +138,7 @@ h1, h2, h3, h4, h5, h6 {
         color: var(--bs-primary);
     }
 
-/* TABELE */
+/* TABELE DANYCH */
 .table {
     --bs-table-bg: transparent;
 }
@@ -145,14 +158,14 @@ h1, h2, h3, h4, h5, h6 {
         vertical-align: middle;
     }
 
-/* BADGES */
+/* ETYKIETY (BADGES) */
 .badge {
     padding: 0.5em 0.8em;
     border-radius: 6px;
     font-weight: 600;
 }
 
-/* FORMULARZE */
+/* POLA FORMULARZY */
 .form-control, .form-select {
     border-radius: 8px;
     border: 1px solid #ced4da;
@@ -164,7 +177,7 @@ h1, h2, h3, h4, h5, h6 {
         box-shadow: 0 0 0 4px var(--bg-primary-soft);
     }
 
-/* ANIMACJA WEJŒCIA */
+/* ANIMACJA POJAWIANIA SIÊ */
 .fade-in {
     animation: fadeIn 0.4s ease-in-out;
 }
@@ -181,7 +194,7 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
-/* STYL DLA ALERTÓW */
+/* POWIADOMIENIA (ALERTY) */
 .alert {
     border: none;
     border-radius: 10px;

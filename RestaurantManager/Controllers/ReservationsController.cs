@@ -7,7 +7,7 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
-using System; // Potrzebne dla DateTime
+using System;
 
 namespace RestaurantManager.Controllers
 {
@@ -22,7 +22,6 @@ namespace RestaurantManager.Controllers
             var userId = HttpContext.Session.GetInt32("UserId");
             var userRole = HttpContext.Session.GetString("UserRole");
 
-            // tylko zalogowani
             if (!userId.HasValue)
                 return RedirectToAction("Login", "Auth");
 
@@ -30,12 +29,10 @@ namespace RestaurantManager.Controllers
                 .Include(r => r.Table)
                 .Include(r => r.User);
 
-            // FILTRACJA: Jeśli rola to Guest, pokaż tylko JEGO rezerwacje
             if (userRole == "Guest")
             {
                 query = query.Where(r => r.UserId == userId.Value);
             }
-            // Pracownicy widzą wszystko
 
             var list = query.OrderByDescending(r => r.DateTime).ToList();
             return View(list);
@@ -76,15 +73,11 @@ namespace RestaurantManager.Controllers
             ModelState.Remove(nameof(r.User));
             ModelState.Remove(nameof(r.Table));
 
-            // --- WALIDACJA LOGICZNA ---
-
-            // 1. Sprawdzenie czy data nie jest w przeszłości
             if (r.DateTime < DateTime.Now)
             {
                 ModelState.AddModelError("DateTime", "Nie można dokonać rezerwacji w przeszłości.");
             }
 
-            // 2. Sprawdzenie godzin otwarcia
             var dayOfWeek = r.DateTime.DayOfWeek;
             var openingHour = _ctx.OpeningHours.FirstOrDefault(oh => oh.DayOfWeek == dayOfWeek);
 
@@ -104,10 +97,8 @@ namespace RestaurantManager.Controllers
                 }
             }
 
-            // 3. Sprawdzenie konfliktu rezerwacji (Czy stolik jest wolny?)
             if (ModelState.IsValid)
             {
-                // ZMIANA: Pobieramy czas trwania rezerwacji z ustawień (lub domyślnie 120 min)
                 var settings = _ctx.ContactInfos.FirstOrDefault();
                 int occupancyMinutes = settings?.DefaultTableOccupancyMinutes ?? 120;
 
@@ -130,8 +121,6 @@ namespace RestaurantManager.Controllers
                     ModelState.AddModelError("TableId", $"Ten stolik jest już zarezerwowany w tym czasie (zakładany czas wizyty: {occupancyMinutes} min). Wybierz inną godzinę lub stolik.");
                 }
             }
-
-            // --- KONIEC WALIDACJI ---
 
             if (!ModelState.IsValid)
             {

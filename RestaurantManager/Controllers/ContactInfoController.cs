@@ -22,6 +22,7 @@ namespace RestaurantManager.Controllers
             _context = context;
         }
 
+        // GET: /ContactInfo
         public async Task<IActionResult> Index()
         {
             var contact = await _context.ContactInfos.FirstOrDefaultAsync();
@@ -34,6 +35,7 @@ namespace RestaurantManager.Controllers
             return View(contact);
         }
 
+        // GET: /ContactInfo/Edit
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Edit()
         {
@@ -68,13 +70,13 @@ namespace RestaurantManager.Controllers
             return View(vm);
         }
 
+        // POST: /ContactInfo/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Admin", "Manager")]
         public async Task<IActionResult> Edit(ContactInfoEditViewModel model)
         {
             ModelState.Remove(nameof(model.OpeningHours));
-            // Usuwamy walidację pola Contact.LogoPath, bo może być nullem
             ModelState.Remove("Contact.LogoPath");
 
             if (ModelState.IsValid)
@@ -88,7 +90,6 @@ namespace RestaurantManager.Controllers
                     _context.ContactInfos.Add(dbContact);
                 }
 
-                // 1. Aktualizacja prostych pól
                 dbContact.RestaurantName = model.Contact.RestaurantName;
                 dbContact.AddressStreet = model.Contact.AddressStreet;
                 dbContact.AddressCity = model.Contact.AddressCity;
@@ -97,42 +98,30 @@ namespace RestaurantManager.Controllers
                 dbContact.ContactEmail = model.Contact.ContactEmail;
                 dbContact.GoogleMapsLink = model.Contact.GoogleMapsLink;
                 dbContact.EstimatedDeliveryTimeMinutes = model.Contact.EstimatedDeliveryTimeMinutes;
-
-                // *** NOWOŚĆ: Zapis flagi wyboru ***
                 dbContact.ShowLogoInHeader = model.Contact.ShowLogoInHeader;
 
-                // 2. Obsługa zapisu Logo z Base64 (z Croppera)
                 if (!string.IsNullOrEmpty(model.CroppedLogoBase64))
                 {
-                    // Przygotuj folder
                     var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", _logoFolder);
                     if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
 
-                    // Konwersja Base64 na plik
-                    // Format stringa: "data:image/png;base64,iVBORw0KGgo..."
                     var base64Data = model.CroppedLogoBase64.Split(',')[1];
                     var bytes = Convert.FromBase64String(base64Data);
 
-                    // Unikalna nazwa
                     var fileName = $"logo_{Guid.NewGuid().ToString().Substring(0, 8)}.png";
                     var filePath = Path.Combine(uploads, fileName);
 
-                    // Usuń stare logo
                     if (!string.IsNullOrEmpty(dbContact.LogoPath))
                     {
                         var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", dbContact.LogoPath.TrimStart('/'));
                         if (System.IO.File.Exists(oldPath)) try { System.IO.File.Delete(oldPath); } catch { }
                     }
 
-                    // Zapisz nowy
                     await System.IO.File.WriteAllBytesAsync(filePath, bytes);
                     dbContact.LogoPath = "/" + Path.Combine(_logoFolder, fileName).Replace("\\", "/");
-
-                    // Jeśli wgrano logo, automatycznie przełącz na widok logo (opcjonalne UX)
                     dbContact.ShowLogoInHeader = true;
                 }
 
-                // 3. Zapis Godzin
                 if (model.OpeningHours != null)
                 {
                     foreach (var hour in model.OpeningHours)
@@ -160,7 +149,7 @@ namespace RestaurantManager.Controllers
             return View(model);
         }
 
-        // *** NOWOŚĆ: Akcja usuwania logo ***
+        // POST: /ContactInfo/DeleteLogo
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RoleAuthorize("Admin", "Manager")]
@@ -173,7 +162,7 @@ namespace RestaurantManager.Controllers
                 if (System.IO.File.Exists(oldPath)) try { System.IO.File.Delete(oldPath); } catch { }
 
                 contact.LogoPath = null;
-                contact.ShowLogoInHeader = false; // Wracamy do nazwy tekstowej
+                contact.ShowLogoInHeader = false;
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Logo zostało usunięte.";
             }
