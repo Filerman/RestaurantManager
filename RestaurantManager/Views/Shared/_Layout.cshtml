@@ -17,26 +17,21 @@
     bool isEmployee = (role == "Employee" || role == "Manager" || role == "Admin");
     bool isManager = (role == "Manager" || role == "Admin");
 
-    // Branding
     var brandingInfo = _context.ContactInfos.AsNoTracking().FirstOrDefault();
     string restaurantName = brandingInfo?.RestaurantName ?? "Bistro Manager";
     string? logoUrl = brandingInfo?.LogoPath;
 
-    // Logika wyświetlania logo:
     bool showLogo = (brandingInfo?.ShowLogoInHeader ?? false) && !string.IsNullOrEmpty(logoUrl);
 
-    // Koszyk
     var cart = Context.Session.GetObject<List<CartItemViewModel>>("Cart");
     int cartCount = cart?.Sum(x => x.Quantity) ?? 0;
 
-    // HelpDesk (Manager)
     int openTicketsCount = 0;
     if (isManager)
     {
         openTicketsCount = _context.SupportTickets.Count(t => t.Status == TicketStatus.New || t.Status == TicketStatus.InProgress);
     }
 
-    // --- KROPKA POWIADOMIENIA ---
     bool hasTicketResponse = false;
     if (logged)
     {

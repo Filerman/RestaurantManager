@@ -194,21 +194,19 @@
 </div>
 
 <style>
-    /* Stylizacja zakładek (Pills) */
     .nav-pills .nav-link {
-        color: #212529; /* Ciemny tekst dla nieaktywnych */
-        background-color: #fff; /* Białe tło dla nieaktywnych */
-        border-color: #dee2e6 !important; /* Szare obramowanie */
+        color: #212529; 
+        background-color: #fff; 
+        border-color: #dee2e6 !important; 
     }
 
         .nav-pills .nav-link.active {
-            background-color: #212529 !important; /* Czarny dla aktywnego */
-            color: #fff !important; /* Biały tekst */
+            background-color: #212529 !important; 
+            color: #fff !important; 
             border-color: #212529 !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15); /* Cień dla wyróżnienia */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15); 
         }
 
-    /* Efekty dla kart produktów */
     .text-truncate-2 {
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -238,7 +236,6 @@
         transition: all 0.3s ease;
     }
 
-    /* Przyciemnienie tła modala */
     .modal-backdrop.show {
         opacity: 0.7;
     }
@@ -247,13 +244,12 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         var form = document.getElementById('closeTableForm');
-        // Pobieramy wartość z serwera (Razor) do zmiennej JS
         var hasUnservedItems = @(hasUnservedItems.ToString().ToLower());
 
         if (form) {
             form.addEventListener('submit', function(e) {
                 if (hasUnservedItems) {
-                    e.preventDefault(); // Blokujemy wysłanie
+                    e.preventDefault(); 
                     var modal = new bootstrap.Modal(document.getElementById('unservedItemsModal'));
                     modal.show();
                 } else {

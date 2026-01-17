@@ -10,14 +10,11 @@ namespace RestaurantManager
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Baza danych
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Kontrolery
             builder.Services.AddControllersWithViews();
 
-            // 1. NAPRAWA SESJI (Kluczowe dla dzia³ania na localhost)
             builder.Services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(60);
@@ -25,14 +22,12 @@ namespace RestaurantManager
                 options.Cookie.IsEssential = true;
                 options.Cookie.Name = ".RestaurantManager.Session";
 
-                // Te dwie opcje sprawiaj¹, ¿e przegl¹darka nie blokuje ciasteczka
                 options.Cookie.SameSite = SameSiteMode.Lax;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             });
 
             builder.Services.AddHttpContextAccessor();
 
-            // 2. Auth Cookies
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
@@ -52,8 +47,6 @@ namespace RestaurantManager
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
-            // 3. Wymuszenie polityki ciasteczek
             app.UseCookiePolicy(new CookiePolicyOptions
             {
                 MinimumSameSitePolicy = SameSiteMode.Lax,
@@ -62,7 +55,6 @@ namespace RestaurantManager
 
             app.UseRouting();
 
-            // 4. Kolejnoœæ: Sesja -> Auth -> Uprawnienia
             app.UseSession();
             app.UseAuthentication();
             app.UseAuthorization();

@@ -16,7 +16,6 @@ namespace RestaurantManager.ViewModels
         [Display(Name = "Treść")]
         public string Content { get; set; }
 
-        // *** NOWOŚĆ ***
         [Required(ErrorMessage = "Data rozpoczęcia jest wymagana")]
         [Display(Name = "Widoczne od")]
         public DateTime ValidFrom { get; set; } = DateTime.Now;

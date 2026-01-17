@@ -8,12 +8,12 @@ namespace RestaurantManager.ViewModels
         [Required(ErrorMessage = "Data rozpoczęcia jest wymagana.")]
         [DataType(DataType.Date)]
         [Display(Name = "Data rozpoczęcia grafiku")]
-        public DateTime StartDate { get; set; } = DateTime.Today; // Domyślnie dzisiaj
+        public DateTime StartDate { get; set; } = DateTime.Today;
 
         [Required(ErrorMessage = "Data zakończenia jest wymagana.")]
         [DataType(DataType.Date)]
         [Display(Name = "Data zakończenia grafiku")]
-        public DateTime EndDate { get; set; } = DateTime.Today.AddDays(6); // Domyślnie tydzień od dzisiaj
+        public DateTime EndDate { get; set; } = DateTime.Today.AddDays(6); 
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
@@ -23,7 +23,7 @@ namespace RestaurantManager.ViewModels
                     "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.",
                     new[] { nameof(EndDate) });
             }
-            if ((EndDate - StartDate).TotalDays > 90) // Ograniczenie długości grafiku
+            if ((EndDate - StartDate).TotalDays > 90)
             {
                 yield return new ValidationResult(
                     "Grafik nie może obejmować więcej niż 90 dni.",

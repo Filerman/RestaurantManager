@@ -242,7 +242,6 @@
     }
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
-        // Prosty skrypt do podświetlania wybranej opcji nagłówka
         function updateHeaderOptions(radio) {
             document.querySelectorAll('.header-option').forEach(el => {
                 el.classList.remove('border-primary', 'bg-primary', 'bg-opacity-10');
@@ -293,7 +292,6 @@
                     var canvas = cropper.getCroppedCanvas({ height: 300 });
                     resultInput.value = canvas.toDataURL('image/png');
                     previewContainer.style.display = 'block';
-                    // Automatycznie zaznacz opcję z Logo po wgraniu
                     const logoRadio = document.querySelector('input[name="Contact.ShowLogoInHeader"][value="true"]');
                     if(logoRadio) {
                         logoRadio.checked = true;

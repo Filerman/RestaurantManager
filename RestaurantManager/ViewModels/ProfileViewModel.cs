@@ -13,7 +13,6 @@ namespace RestaurantManager.ViewModels
         [EmailAddress]
         public string Email { get; set; }
 
-        // *** NOWOŚĆ: Telefon użytkownika (dla Gości i Pracowników prywatnie) ***
         [Phone]
         [Display(Name = "Numer telefonu")]
         public string? PhoneNumber { get; set; }
@@ -40,9 +39,8 @@ namespace RestaurantManager.ViewModels
         [Compare("NewPassword", ErrorMessage = "Hasła nie są identyczne.")]
         public string? ConfirmPassword { get; set; }
 
-        // Dane pracownicze (tylko do odczytu)
         public string? FullName { get; set; }
-        public string? Phone { get; set; } // Telefon służbowy z tabeli Employee
+        public string? Phone { get; set; } 
         public string? SeniorityString { get; set; }
         public DateTime? HireDate { get; set; }
         public List<PositionTag> PositionTags { get; set; } = new List<PositionTag>();

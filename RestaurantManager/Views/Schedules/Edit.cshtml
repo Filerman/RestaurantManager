@@ -6,7 +6,6 @@
 }
 
 <style>
-    /* Wymuszenie zaokrąglonych rogów i efektu przyciemnienia */
     .rounded-4 {
         border-radius: 1.25rem !important;
     }
@@ -16,11 +15,10 @@
         border: none;
     }
 
-    /* Klasa przyciemniająca okno pod spodem */
     .modal-darken {
         filter: brightness(0.5);
         transition: filter 0.3s ease;
-        pointer-events: none; /* Blokuje interakcję z oknem pod spodem */
+        pointer-events: none; 
     }
 </style>
 
@@ -126,7 +124,6 @@
     </div>
 </div>
 
-@* Modal Dodawania/Edycji *@
 <div class="modal fade" id="shiftModal" tabindex="-1" aria-labelledby="shiftModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -191,7 +188,6 @@
     </div>
 </div>
 
-@* Modal Potwierdzenia Usuwania *@
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -245,7 +241,6 @@
             const csrfToken = $('input[name="__RequestVerificationToken"]').first().val();
             let shiftIdToDelete = null;
 
-            // Logika przyciemniania okna edycji, gdy wyskakuje potwierdzenie usunięcia
             $(deleteConfirmModalElement).on('show.bs.modal', function () {
                 if ($('#shiftModal').hasClass('show')) {
                     $('#shiftModal .modal-content').addClass('modal-darken');

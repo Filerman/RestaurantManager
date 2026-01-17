@@ -2,7 +2,6 @@
 @model RestaurantManager.ViewModels.OrderCheckoutViewModel
 @{
     ViewData["Title"] = "Finalizacja Zamówienia";
-    // Zabezpieczenie: jeśli TotalAmount jest 0 (np. po błędzie walidacji bez odświeżenia modelu), spróbujmy pobrać z ViewBag lub zostawmy 0
     decimal cartTotal = Model.TotalAmount;
 
     var todayHours = ViewBag.TodayOpeningHours as RestaurantManager.Models.OpeningHour;
@@ -16,7 +15,6 @@
 
             <form asp-action="Checkout" method="post" id="checkoutForm">
 
-                @* POPRAWKA 1: Ukrycie pustego validation summary *@
                 <div asp-validation-summary="All" class="alert alert-danger border-0 shadow-sm rounded-3 mb-4 small" role="alert" style="@(ViewData.ModelState.IsValid ? "display:none" : "")"></div>
 
                 <div class="alert alert-primary bg-primary bg-opacity-10 border-0 shadow-sm rounded-4 d-flex align-items-center mb-4 p-3">

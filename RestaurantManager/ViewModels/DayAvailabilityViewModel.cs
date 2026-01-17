@@ -5,8 +5,8 @@ namespace RestaurantManager.ViewModels
 {
     public class DayAvailabilityViewModel
     {
-        public int Day { get; set; }          // 1-31
-        public bool IsAvailable { get; set; } // checkbox
+        public int Day { get; set; } 
+        public bool IsAvailable { get; set; } 
 
         [DataType(DataType.Time)]
         public TimeSpan? StartTime { get; set; }

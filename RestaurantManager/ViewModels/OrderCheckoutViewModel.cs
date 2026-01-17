@@ -32,7 +32,6 @@ namespace RestaurantManager.ViewModels
         [Display(Name = "Typ zamówienia")]
         public OrderType OrderType { get; set; }
 
-        // *** NOWOŚĆ: Wybór płatności w formularzu ***
         [Required(ErrorMessage = "Wybierz sposób płatności")]
         [Display(Name = "Sposób płatności")]
         public PaymentMethod PaymentMethod { get; set; }
@@ -41,7 +40,6 @@ namespace RestaurantManager.ViewModels
         public bool IsAsap { get; set; } = true;
 
         [Display(Name = "Data realizacji")]
-        // Usuwamy Required, bo przy ASAP data jest ustawiana automatycznie w kontrolerze
         public DateTime ScheduledDate { get; set; } = DateTime.Now;
 
         [Display(Name = "Uwagi do zamówienia")]

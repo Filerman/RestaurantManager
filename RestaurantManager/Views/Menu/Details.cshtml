@@ -4,7 +4,6 @@
 @{
     ViewData["Title"] = Model.Name;
     var role = Context.Session.GetString("UserRole");
-    // ZMIANA: Pracownik nie zarządza
     bool canManage = (role == "Manager" || role == "Admin");
     bool hasImage = !string.IsNullOrEmpty(Model.ImagePath);
 }

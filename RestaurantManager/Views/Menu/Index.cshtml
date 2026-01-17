@@ -4,13 +4,11 @@
 @{
     ViewData["Title"] = "Menu Restauracji";
 
-    // Grupujemy pozycje po kategorii
     var categories = Model.OrderBy(m => m.Category)
                           .GroupBy(m => m.Category)
                           .ToList();
 
     var role = Context.Session.GetString("UserRole");
-    // ZMIANA: Pracownik nie może zarządzać (tylko Manager i Admin)
     var canManage = (role == "Manager" || role == "Admin");
 }
 
@@ -60,7 +58,6 @@
                         @foreach (var item in group)
                         {
                             <div class="col-md-6 col-lg-4 col-xl-3">
-                                @* Wklejam kod karty bezpośrednio, aby użyć lokalnego canManage *@
                                 <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-menu bg-white">
                                     <div class="position-relative">
                                         @if (!string.IsNullOrEmpty(item.ImagePath))
@@ -148,7 +145,6 @@
                         @foreach (var item in group)
                         {
                             <div class="col-md-6 col-lg-4 col-xl-3">
-                                @* Kod karty powtórzony dla innych zakładek - to samo co wyżej *@
                                 <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden card-menu bg-white">
                                     <div class="position-relative">
                                         @if (!string.IsNullOrEmpty(item.ImagePath))
