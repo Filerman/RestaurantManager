@@ -31,21 +31,27 @@
             </p>
         </div>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center">
             <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 fw-medium btn-sm d-flex align-items-center">
                 <i class="bi bi-arrow-left me-2"></i> Wróć do listy
             </a>
 
-            <form asp-action="Edit" class="d-flex align-items-center gap-2 bg-white p-1 ps-3 rounded-pill shadow-sm border">
+            <form asp-action="Edit" class="d-flex align-items-center gap-2">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="Id" />
                 <input type="hidden" asp-for="StartDate" />
                 <input type="hidden" asp-for="EndDate" />
 
-                <div class="form-check form-switch">
-                    <input type="checkbox" class="form-check-input" asp-for="IsPublished" role="switch" id="publishSwitch" style="cursor: pointer;">
-                    <label class="form-check-label fw-medium small cursor-pointer me-2" asp-for="IsPublished" for="publishSwitch">Opublikuj</label>
+                <div class="bg-white p-1 ps-3 pe-2 rounded-pill shadow-sm border d-flex align-items-center">
+                    <div class="form-check form-switch mb-0">
+                        <input type="checkbox" class="form-check-input" asp-for="IsPublished" role="switch" id="publishSwitch" style="cursor: pointer;">
+                        <label class="form-check-label fw-medium small cursor-pointer me-2" asp-for="IsPublished" for="publishSwitch">Opublikuj</label>
+                    </div>
                 </div>
+
+                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm btn-sm d-flex align-items-center">
+                    <i class="bi bi-save me-2"></i> Zapisz zmiany
+                </button>
             </form>
         </div>
     </div>

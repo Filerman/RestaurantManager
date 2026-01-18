@@ -96,7 +96,6 @@ namespace RestaurantManager.Controllers
                 dbContact.AddressZipCode = model.Contact.AddressZipCode;
                 dbContact.PhoneNumber = model.Contact.PhoneNumber;
                 dbContact.ContactEmail = model.Contact.ContactEmail;
-                dbContact.GoogleMapsLink = model.Contact.GoogleMapsLink;
                 dbContact.EstimatedDeliveryTimeMinutes = model.Contact.EstimatedDeliveryTimeMinutes;
                 dbContact.ShowLogoInHeader = model.Contact.ShowLogoInHeader;
 

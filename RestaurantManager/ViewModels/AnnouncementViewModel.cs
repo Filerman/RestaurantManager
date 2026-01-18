@@ -7,6 +7,7 @@ namespace RestaurantManager.ViewModels
     public class AnnouncementViewModel
     {
         public int Id { get; set; }
+        public bool RemoveImage { get; set; }
 
         [Required(ErrorMessage = "Tytuł jest wymagany")]
         [Display(Name = "Tytuł")]

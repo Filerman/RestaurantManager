@@ -151,6 +151,13 @@ namespace RestaurantManager.Controllers
                     announcement.ValidFrom = model.ValidFrom;
                     announcement.ValidUntil = model.ValidUntil;
 
+                    if (model.RemoveImage && !string.IsNullOrEmpty(announcement.ImagePath))
+                    {
+                        string oldPath = Path.Combine(_webHostEnvironment.WebRootPath, announcement.ImagePath.TrimStart('/'));
+                        if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                        announcement.ImagePath = null;
+                    }
+
                     if (model.Image != null)
                     {
                         if (!string.IsNullOrEmpty(announcement.ImagePath))

@@ -117,6 +117,11 @@ namespace RestaurantManager.Controllers
                 };
             }
 
+            if (string.IsNullOrEmpty(employee.Phone) && !string.IsNullOrEmpty(user.PhoneNumber))
+            {
+                employee.Phone = user.PhoneNumber;
+            }
+
             ViewData["AllTags"] = await _context.PositionTags.ToListAsync();
             ViewData["SelectedTagIds"] = employee.PositionTags.Select(t => t.Id).ToHashSet();
             ViewData["EmployeeEmail"] = user.Email;

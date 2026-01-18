@@ -30,7 +30,8 @@
                     <div class="card shadow-sm border-0 rounded-4 overflow-hidden h-100 hover-lift transition">
                         @if (!string.IsNullOrEmpty(item.ImagePath))
                         {
-                            <div class="ratio ratio-21x9">
+                            @* ZMIANA: Zmieniono ratio-21x9 na ratio-16x9 *@
+                            <div class="ratio ratio-16x9">
                                 <img src="@item.ImagePath" class="card-img-top object-fit-cover" alt="@item.Title">
                             </div>
                         }

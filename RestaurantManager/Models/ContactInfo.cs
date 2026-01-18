@@ -36,8 +36,6 @@ namespace RestaurantManager.Models
         [Display(Name = "Email kontaktowy")]
         public string ContactEmail { get; set; }
 
-        [Display(Name = "Link do Map Google (opcjonalnie)")]
-        public string? GoogleMapsLink { get; set; }
 
         [Display(Name = "Średni czas realizacji (minuty)")]
         [Range(15, 240, ErrorMessage = "Czas musi wynosić od 15 do 240 minut")]

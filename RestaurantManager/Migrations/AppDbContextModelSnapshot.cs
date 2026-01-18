@@ -152,9 +152,6 @@ namespace RestaurantManager.Migrations
                     b.Property<int>("EstimatedDeliveryTimeMinutes")
                         .HasColumnType("int");
 
-                    b.Property<string>("GoogleMapsLink")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("LogoPath")
                         .HasColumnType("nvarchar(max)");
 
