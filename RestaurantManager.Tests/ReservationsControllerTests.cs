@@ -28,13 +28,15 @@ namespace RestaurantManager.Tests
                 ContactEmail = "a@a.pl"
             });
 
-            // Istniejąca rezerwacja: DZIŚ 18:00 - 20:00
-            var today18 = DateTime.Today.AddHours(18);
+            // ZMIANA: Używamy daty jutrzejszej, aby uniknąć błędu "rezerwacja w przeszłości"
+            // niezależnie od godziny uruchomienia testu.
+            var tomorrow18 = DateTime.Today.AddDays(1).AddHours(18);
 
+            // Istniejąca rezerwacja: JUTRO 18:00 - 20:00
             context.Reservations.Add(new Reservation
             {
                 TableId = 1,
-                DateTime = today18,
+                DateTime = tomorrow18,
                 Status = ReservationStatus.Confirmed,
                 CustomerName = "Jan Kowalski",
                 CustomerPhone = "123",
@@ -56,7 +58,7 @@ namespace RestaurantManager.Tests
             var newReservation = new Reservation
             {
                 TableId = 1,
-                DateTime = today18.AddHours(1), // 19:00 (w trakcie innej rezerwacji)
+                DateTime = tomorrow18.AddHours(1), // 19:00 (w trakcie innej rezerwacji)
                 CustomerName = "Anna Nowak",
                 CustomerPhone = "999",
                 CustomerEmail = "anna@test.pl"
@@ -66,8 +68,9 @@ namespace RestaurantManager.Tests
 
             // Assert
             var viewResult = Assert.IsType<ViewResult>(result);
-            Assert.False(controller.ModelState.IsValid);
-            Assert.True(controller.ModelState.ContainsKey("TableId")); // Błąd powinien dotyczyć stolika
+
+            Assert.False(controller.ModelState.IsValid, "ModelState powinno być nieprawidłowe z powodu konfliktu.");
+            Assert.True(controller.ModelState.ContainsKey("TableId"), "Powinien wystąpić błąd dotyczący zajętego stolika (TableId).");
         }
     }
 }
